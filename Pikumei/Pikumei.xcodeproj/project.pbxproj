@@ -34,8 +34,14 @@
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				Library/Assets.xcassets,
+				Model/AppPhase.swift,
 				PikumeiApp.swift,
-				View/ContentView.swift,
+				View/BattleView.swift,
+				View/LaunchingView.swift,
+				View/MainView.swift,
+				View/MonsterListView.swift,
+				View/MonsterScanView.swift,
+				View/RootView.swift,
 			);
 			target = 3B1E68C22F41F508000F1DC9 /* Pikumei */;
 		};
@@ -43,8 +49,14 @@
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				Library/Assets.xcassets,
+				Model/AppPhase.swift,
 				PikumeiApp.swift,
-				View/ContentView.swift,
+				View/BattleView.swift,
+				View/LaunchingView.swift,
+				View/MainView.swift,
+				View/MonsterListView.swift,
+				View/MonsterScanView.swift,
+				View/RootView.swift,
 			);
 			target = 3B1E68CF2F41F509000F1DC9 /* PikumeiTests */;
 		};
