@@ -1,3 +1,52 @@
+# チーム内ルール（開発用）
+
+## アーキテクチャ
+- 基本構成：Model / View / ViewModel / Logic
+- UI とロジックは分離する
+
+
+### ファイル構成
+
+```
+Pikumei/
+├── Model/            # アプリ内で扱うデータ構造（struct / enum）
+│   └── ...
+
+├── View/             # SwiftUI の画面
+│   ├── Screens/      # 各画面（Scan / Result / Battle など）
+│   └── Components/   # 再利用する UI コンポーネント
+
+├── ViewModel/        # 状態管理・処理の呼び出し
+│   ├── Logic/        # ゲームロジック（ステータス計算・バトル処理）
+│   ├── ML/           # CoreML / Vision による分類処理
+│   └── Camera/       # カメラ制御・画像取得
+
+├── Utils/            # Extension 類
+│   └── Extensions/
+│       └── ...
+
+├── Library/          # 非コードリソース
+│   ├── Assets/       # 画像・色など
+│   ├── MLModels/     # .mlmodel ファイル
+│   └── Preview/      # SwiftUI Preview 用
+
+```
+
+## ブランチルール
+- main：発表・デモ用
+- develop：開発用
+- feature/〇〇：機能開発
+
+## コンフリクト時の対応
+- コンフリクト状態を一度コミットする
+- その後、修正した内容を別コミットとして追加する
+
+## コミットルール
+- コミットメッセージは日本語
+- 変更の粒度を意識する（1コミット1変更）
+
+----
+
 # プロダクト名 
 <!-- プロダクト名に変更してください -->
 
