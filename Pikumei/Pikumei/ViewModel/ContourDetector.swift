@@ -45,7 +45,8 @@ enum ContourDetector {
             throw ContourError.processingFailed
         }
 
-        return UIImage(cgImage: outputCG)
+        // 元画像の向き情報を引き継ぐ（カメラ撮影時の回転を維持）
+        return UIImage(cgImage: outputCG, scale: image.scale, orientation: image.imageOrientation)
     }
 }
 
