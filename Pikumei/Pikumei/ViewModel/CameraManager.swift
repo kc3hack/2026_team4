@@ -44,9 +44,12 @@ class CameraManager: NSObject, ObservableObject {
         session.stopRunning()
     }
 
-    /// 写真を撮影して UIImage を返す
+    /// 写真を撮影して UIImage を返す（連打防止付き）
     func capturePhoto() async throws -> UIImage {
-        try await withCheckedThrowingContinuation { continuation in
+        guard photoContinuation == nil else {
+            throw CameraError.captureFailed
+        }
+        return try await withCheckedThrowingContinuation { continuation in
             self.photoContinuation = continuation
             let settings = AVCapturePhotoSettings()
             self.photoOutput.capturePhoto(with: settings, delegate: self)

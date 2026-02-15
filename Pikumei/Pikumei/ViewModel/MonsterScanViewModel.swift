@@ -24,7 +24,7 @@ class MonsterScanViewModel: ObservableObject {
         cameraManager.stopSession()
     }
 
-    /// 撮影 → 輪郭検出 → 切り抜き
+    /// 撮影 → 前景検出 → 切り抜き
     func captureAndProcess() {
         Task {
             phase = .processing
@@ -32,7 +32,7 @@ class MonsterScanViewModel: ObservableObject {
 
             do {
                 let photo = try await cameraManager.capturePhoto()
-                let cutout = try await ContourDetector.detectAndCutout(from: photo)
+                let cutout = try await SubjectDetector.detectAndCutout(from: photo)
                 cutoutImage = cutout
                 phase = .result
             } catch {

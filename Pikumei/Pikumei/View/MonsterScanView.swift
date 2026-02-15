@@ -20,7 +20,7 @@ struct MonsterScanView: View {
                 resultView
             }
         }
-        .task {
+        .onAppear {
             viewModel.startCamera()
         }
         .onDisappear {

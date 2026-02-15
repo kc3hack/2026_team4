@@ -1,5 +1,5 @@
 //
-//  ContourDetector.swift
+//  SubjectDetector.swift
 //  Pikumei
 //
 
@@ -8,12 +8,12 @@ import Vision
 import CoreImage
 
 /// Subject Lifting API で前景を切り抜くユーティリティ
-enum ContourDetector {
+enum SubjectDetector {
 
     /// 元画像から前景を自動セグメンテーションして切り抜いた画像を返す
     static func detectAndCutout(from image: UIImage) async throws -> UIImage {
         guard let cgImage = image.cgImage else {
-            throw ContourError.invalidImage
+            throw SubjectDetectorError.invalidImage
         }
 
         // 1. VNGenerateForegroundInstanceMaskRequest で前景マスクを生成
@@ -22,7 +22,7 @@ enum ContourDetector {
         try handler.perform([request])
 
         guard let result = request.results?.first else {
-            throw ContourError.noSubjectFound
+            throw SubjectDetectorError.noSubjectFound
         }
 
         // 2. マスクを元画像サイズの CVPixelBuffer として取得
@@ -42,7 +42,7 @@ enum ContourDetector {
         ])
 
         guard let outputCG = context.createCGImage(blended, from: blended.extent) else {
-            throw ContourError.processingFailed
+            throw SubjectDetectorError.processingFailed
         }
 
         // 元画像の向き情報を引き継ぐ（カメラ撮影時の回転を維持）
@@ -51,7 +51,7 @@ enum ContourDetector {
 }
 
 /// 切り抜き関連のエラー
-enum ContourError: LocalizedError {
+enum SubjectDetectorError: LocalizedError {
     case invalidImage
     case processingFailed
     case noSubjectFound
