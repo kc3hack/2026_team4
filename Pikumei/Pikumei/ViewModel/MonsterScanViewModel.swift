@@ -15,19 +15,13 @@ class MonsterScanViewModel: ObservableObject {
 
     let cameraManager = CameraManager()
 
-    /// カメラセットアップ＆開始
     func startCamera() {
-        Task.detached { [cameraManager] in
-            cameraManager.configure()
-            cameraManager.startSession()
-        }
+        cameraManager.configure()
+        cameraManager.startSession()
     }
 
-    /// カメラ停止
     func stopCamera() {
-        Task.detached { [cameraManager] in
-            cameraManager.stopSession()
-        }
+        cameraManager.stopSession()
     }
 
     /// 撮影 → 輪郭検出 → 切り抜き
@@ -44,13 +38,11 @@ class MonsterScanViewModel: ObservableObject {
             } catch {
                 print("⚠️ スキャンエラー: \(error)")
                 errorMessage = error.localizedDescription
-                // エラー時も result に遷移して、エラーを見せる
                 phase = .result
             }
         }
     }
 
-    /// カメラフェーズに戻す
     func retry() {
         cutoutImage = nil
         errorMessage = nil

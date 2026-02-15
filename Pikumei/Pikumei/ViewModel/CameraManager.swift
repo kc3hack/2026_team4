@@ -8,18 +8,16 @@ import Combine
 import UIKit
 
 /// AVCaptureSession を管理し、写真撮影を行うマネージャ
-/// AVCaptureSession は MainActor 外で操作する必要があるため nonisolated(unsafe) を使用
 class CameraManager: NSObject, ObservableObject {
-    nonisolated(unsafe) let session = AVCaptureSession()
-    nonisolated(unsafe) private let photoOutput = AVCapturePhotoOutput()
+    let session = AVCaptureSession()
+    private let photoOutput = AVCapturePhotoOutput()
     private var photoContinuation: CheckedContinuation<UIImage, Error>?
 
     /// カメラのセットアップ（背面カメラ、.photo プリセット）
-    nonisolated func configure() {
+    func configure() {
         session.beginConfiguration()
         session.sessionPreset = .photo
 
-        // 背面カメラを取得
         guard let device = AVCaptureDevice.default(.builtInWideAngleCamera, for: .video, position: .back),
               let input = try? AVCaptureDeviceInput(device: device) else {
             session.commitConfiguration()
@@ -36,14 +34,12 @@ class CameraManager: NSObject, ObservableObject {
         session.commitConfiguration()
     }
 
-    /// セッション開始
-    nonisolated func startSession() {
+    func startSession() {
         guard !session.isRunning else { return }
         session.startRunning()
     }
 
-    /// セッション停止
-    nonisolated func stopSession() {
+    func stopSession() {
         guard session.isRunning else { return }
         session.stopRunning()
     }
@@ -60,6 +56,7 @@ class CameraManager: NSObject, ObservableObject {
 
 // MARK: - AVCapturePhotoCaptureDelegate
 extension CameraManager: AVCapturePhotoCaptureDelegate {
+    // AVFoundation がバックグラウンドスレッドから呼ぶため nonisolated が必要
     nonisolated func photoOutput(
         _ output: AVCapturePhotoOutput,
         didFinishProcessingPhoto photo: AVCapturePhoto,

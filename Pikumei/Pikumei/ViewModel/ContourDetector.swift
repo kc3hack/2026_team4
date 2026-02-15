@@ -12,7 +12,7 @@ import CoreImage.CIFilterBuiltins
 enum ContourDetector {
 
     /// 元画像から輪郭を検出し、切り抜いた画像を返す
-    nonisolated static func detectAndCutout(from image: UIImage) async throws -> UIImage {
+    static func detectAndCutout(from image: UIImage) async throws -> UIImage {
         guard let ciImage = CIImage(image: image) else {
             throw ContourError.invalidImage
         }
@@ -63,8 +63,7 @@ enum ContourDetector {
 
     // MARK: - Private
 
-    /// Vision で輪郭を検出
-    private nonisolated static func detectContours(in cgImage: CGImage) throws -> [VNContour] {
+    private static func detectContours(in cgImage: CGImage) throws -> [VNContour] {
         let request = VNDetectContoursRequest()
         request.contrastAdjustment = 1.0
         request.detectsDarkOnLight = true
@@ -79,14 +78,11 @@ enum ContourDetector {
         return result.topLevelContours
     }
 
-    /// 最も大きい輪郭を選択（点の数が最も多い輪郭）
-    private nonisolated static func findLargestContour(from contours: [VNContour]) -> VNContour? {
+    private static func findLargestContour(from contours: [VNContour]) -> VNContour? {
         contours.max(by: { $0.pointCount < $1.pointCount })
     }
 
-    /// VNContour の normalizedPath からマスク画像を生成
-    private nonisolated static func renderMask(contour: VNContour, size: CGSize) -> UIImage {
-        // scale = 1.0 で元画像と同じピクセルサイズにする（デバイススケールを使わない）
+    private static func renderMask(contour: VNContour, size: CGSize) -> UIImage {
         let format = UIGraphicsImageRendererFormat()
         format.scale = 1.0
 
@@ -98,13 +94,11 @@ enum ContourDetector {
             cgContext.setFillColor(UIColor.black.cgColor)
             cgContext.fill(CGRect(origin: .zero, size: size))
 
-            // Vision の normalizedPath は左下原点・0〜1 の正規化座標
-            // UIGraphicsImageRenderer の CGContext は左上原点なので Y を反転
+            // Vision の normalizedPath は左下原点なので Y を反転
             cgContext.saveGState()
             cgContext.translateBy(x: 0, y: size.height)
             cgContext.scaleBy(x: size.width, y: -size.height)
 
-            // マスク部分を白で塗りつぶし
             cgContext.setFillColor(UIColor.white.cgColor)
             cgContext.addPath(contour.normalizedPath)
             cgContext.fillPath()
