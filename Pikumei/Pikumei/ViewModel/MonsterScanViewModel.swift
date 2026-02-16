@@ -4,6 +4,7 @@
 //
 
 import Combine
+import SwiftData
 import SwiftUI
 
 /// モンスタースキャン画面の状態管理と処理オーケストレーション
@@ -12,6 +13,7 @@ class MonsterScanViewModel: ObservableObject {
     @Published var phase: ScanPhase = .camera
     @Published var cutoutImage: UIImage?
     @Published var errorMessage: String?
+    @Published var showPreview = false
 
     let cameraManager = CameraManager()
     private var isConfigured = false
@@ -28,8 +30,8 @@ class MonsterScanViewModel: ObservableObject {
         cameraManager.stopSession()
     }
 
-    /// 撮影 → 前景検出 → 切り抜き
-    func captureAndProcess() {
+    /// 撮影 → 前景検出 → 切り抜き → SwiftData に保存
+    func captureAndProcess(modelContext: ModelContext) {
         Task {
             phase = .processing
             errorMessage = nil
@@ -37,8 +39,13 @@ class MonsterScanViewModel: ObservableObject {
             do {
                 let photo = try await cameraManager.capturePhoto()
                 let cutout = try await SubjectDetector.detectAndCutout(from: photo)
+
+                // スキャン成功時に即保存
+                let store = MonsterStore(modelContext: modelContext)
+                try store.save(image: cutout)
+
                 cutoutImage = cutout
-                phase = .result
+                showPreview = true
             } catch {
                 print("⚠️ スキャンエラー: \(error)")
                 errorMessage = error.localizedDescription
@@ -48,6 +55,7 @@ class MonsterScanViewModel: ObservableObject {
     }
 
     func retry() {
+        showPreview = false
         cutoutImage = nil
         errorMessage = nil
         phase = .camera

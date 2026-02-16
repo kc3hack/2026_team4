@@ -5,6 +5,7 @@
 //  Created by Sakurai Erika on 2026/02/15.
 //
 
+import SwiftData
 import SwiftUI
 
 @main
@@ -13,5 +14,6 @@ struct PikumeiApp: App {
         WindowGroup {
             RootView()
         }
+        .modelContainer(for: Monster.self)
     }
 }

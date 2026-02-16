@@ -33,43 +33,9 @@
 		3B1E68FF2F41F52C000F1DC9 /* Exceptions for "Pikumei" folder in "Pikumei" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
-				Library/Assets.xcassets,
-				Model/AppPhase.swift,
-				Model/ScanPhase.swift,
-				PikumeiApp.swift,
-				View/BattleView.swift,
-				View/CameraPreviewView.swift,
-				View/LaunchingView.swift,
-				View/MainView.swift,
-				View/MonsterListView.swift,
-				View/MonsterScanView.swift,
-				View/RootView.swift,
-				ViewModel/CameraManager.swift,
-				ViewModel/MonsterScanViewModel.swift,
-				ViewModel/SubjectDetector.swift,
+				Info.plist,
 			);
 			target = 3B1E68C22F41F508000F1DC9 /* Pikumei */;
-		};
-		3B1E69002F41F52C000F1DC9 /* Exceptions for "Pikumei" folder in "PikumeiTests" target */ = {
-			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
-			membershipExceptions = (
-				Info.plist,
-				Library/Assets.xcassets,
-				Model/AppPhase.swift,
-				Model/ScanPhase.swift,
-				PikumeiApp.swift,
-				View/BattleView.swift,
-				View/CameraPreviewView.swift,
-				View/LaunchingView.swift,
-				View/MainView.swift,
-				View/MonsterListView.swift,
-				View/MonsterScanView.swift,
-				View/RootView.swift,
-				ViewModel/CameraManager.swift,
-				ViewModel/MonsterScanViewModel.swift,
-				ViewModel/SubjectDetector.swift,
-			);
-			target = 3B1E68CF2F41F509000F1DC9 /* PikumeiTests */;
 		};
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
@@ -88,7 +54,6 @@
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
 				3B1E68FF2F41F52C000F1DC9 /* Exceptions for "Pikumei" folder in "Pikumei" target */,
-				3B1E69002F41F52C000F1DC9 /* Exceptions for "Pikumei" folder in "PikumeiTests" target */,
 			);
 			path = Pikumei;
 			sourceTree = "<group>";
@@ -155,6 +120,9 @@
 			);
 			dependencies = (
 			);
+			fileSystemSynchronizedGroups = (
+				3B1E68FB2F41F52C000F1DC9 /* Pikumei */,
+			);
 			name = Pikumei;
 			packageProductDependencies = (
 			);
@@ -177,7 +145,6 @@
 			);
 			fileSystemSynchronizedGroups = (
 				3B1E68D32F41F509000F1DC9 /* PikumeiTests */,
-				3B1E68FB2F41F52C000F1DC9 /* Pikumei */,
 			);
 			name = PikumeiTests;
 			packageProductDependencies = (
