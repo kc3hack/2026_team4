@@ -8,6 +8,7 @@ import SwiftUI
 /// モンスタースキャン画面（カメラ → 輪郭検出 → 切り抜き結果）
 struct MonsterScanView: View {
     @StateObject private var viewModel = MonsterScanViewModel()
+    @Environment(\.modelContext) private var modelContext
 
     var body: some View {
         ZStack {
@@ -26,11 +27,11 @@ struct MonsterScanView: View {
         .onDisappear {
             viewModel.stopCamera()
         }
-        .fullScreenCover(isPresented: $viewModel.showPreview) {
+        .fullScreenCover(isPresented: $viewModel.showPreview, onDismiss: {
+            viewModel.retry()
+        }) {
             if let image = viewModel.cutoutImage {
-                MonsterResultView(image: image) {
-                    viewModel.retry()
-                }
+                MonsterResultView(image: image)
             }
         }
     }
@@ -47,7 +48,7 @@ struct MonsterScanView: View {
 
                 // 撮影ボタン
                 Button(action: {
-                    viewModel.captureAndProcess()
+                    viewModel.captureAndProcess(modelContext: modelContext)
                 }) {
                     Circle()
                         .fill(.white)

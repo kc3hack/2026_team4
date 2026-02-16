@@ -8,7 +8,7 @@ import SwiftUI
 /// 切り抜き結果のプレビュー画面
 struct MonsterResultView: View {
     let image: UIImage
-    let onRetry: () -> Void
+    @Environment(\.dismiss) private var dismiss
 
     var body: some View {
         VStack(spacing: 24) {
@@ -18,8 +18,8 @@ struct MonsterResultView: View {
 
             Spacer()
 
-            Button("もう一度スキャン") {
-                onRetry()
+            Button("閉じる") {
+                dismiss()
             }
             .buttonStyle(.borderedProminent)
             .padding(.bottom, 32)
@@ -29,7 +29,6 @@ struct MonsterResultView: View {
 
 #Preview {
     MonsterResultView(
-        image: UIImage(systemName: "photo")!,
-        onRetry: {}
+        image: UIImage(systemName: "photo")!
     )
 }
