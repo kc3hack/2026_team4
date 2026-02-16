@@ -35,13 +35,18 @@
 			membershipExceptions = (
 				Library/Assets.xcassets,
 				Model/AppPhase.swift,
+				Model/ScanPhase.swift,
 				PikumeiApp.swift,
 				View/BattleView.swift,
+				View/CameraPreviewView.swift,
 				View/LaunchingView.swift,
 				View/MainView.swift,
 				View/MonsterListView.swift,
 				View/MonsterScanView.swift,
 				View/RootView.swift,
+				ViewModel/CameraManager.swift,
+				ViewModel/MonsterScanViewModel.swift,
+				ViewModel/SubjectDetector.swift,
 			);
 			target = 3B1E68C22F41F508000F1DC9 /* Pikumei */;
 		};
@@ -51,13 +56,18 @@
 				Info.plist,
 				Library/Assets.xcassets,
 				Model/AppPhase.swift,
+				Model/ScanPhase.swift,
 				PikumeiApp.swift,
 				View/BattleView.swift,
+				View/CameraPreviewView.swift,
 				View/LaunchingView.swift,
 				View/MainView.swift,
 				View/MonsterListView.swift,
 				View/MonsterScanView.swift,
 				View/RootView.swift,
+				ViewModel/CameraManager.swift,
+				ViewModel/MonsterScanViewModel.swift,
+				ViewModel/SubjectDetector.swift,
 			);
 			target = 3B1E68CF2F41F509000F1DC9 /* PikumeiTests */;
 		};
