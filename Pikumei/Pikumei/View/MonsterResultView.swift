@@ -8,13 +8,14 @@ import SwiftUI
 /// 切り抜き結果のプレビュー画面
 struct MonsterResultView: View {
     let image: UIImage
+    var stats: MonsterStats?
     @Environment(\.dismiss) private var dismiss
 
     var body: some View {
         VStack(spacing: 24) {
             Spacer()
 
-            RotatingCardComponent(frontImage: Image(uiImage: image))
+            RotatingCardComponent(frontImage: Image(uiImage: image), stats: stats)
 
             Spacer()
 

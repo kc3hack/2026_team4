@@ -7,6 +7,7 @@ import SwiftUI
 
 struct RotatingCardComponent: View {
     let frontImage: Image
+    var stats: MonsterStats?
     @State private var rotationDegrees: Double = -720
     @State private var isFlipped = false
     @State private var isInitialAnimationDone = false
@@ -76,17 +77,68 @@ struct RotatingCardComponent: View {
                 endPoint: .bottomTrailing
             )
 
-            VStack(spacing: 16) {
-                Text("???")
-                    .font(.system(size: 48, weight: .bold))
-                Text("モンスター情報")
-                    .font(.title3)
-                    .fontWeight(.semibold)
-                Text("タップして表へ戻す")
-                    .font(.caption)
-                    .foregroundStyle(.white.opacity(0.7))
+            if let stats {
+                VStack(spacing: 12) {
+                    Text(stats.typeName)
+                        .font(.title2)
+                        .fontWeight(.bold)
+
+                    Divider()
+                        .background(.white.opacity(0.5))
+                        .padding(.horizontal, 24)
+
+                    VStack(spacing: 8) {
+                        statsRow(label: "HP", value: stats.hp, max: 100)
+                        statsRow(label: "ATK", value: stats.attack, max: 70)
+                        statsRow(label: "DEF", value: stats.defense, max: 70)
+                        statsRow(label: "SPD", value: stats.speed, max: 70)
+                    }
+                    .padding(.horizontal, 24)
+
+                    Spacer().frame(height: 4)
+
+                    Text("タップして表へ戻す")
+                        .font(.caption)
+                        .foregroundStyle(.white.opacity(0.7))
+                }
+                .foregroundStyle(.white)
+                .padding(.vertical, 24)
+            } else {
+                VStack(spacing: 16) {
+                    Text("???")
+                        .font(.system(size: 48, weight: .bold))
+                    Text("モンスター情報")
+                        .font(.title3)
+                        .fontWeight(.semibold)
+                    Text("タップして表へ戻す")
+                        .font(.caption)
+                        .foregroundStyle(.white.opacity(0.7))
+                }
+                .foregroundStyle(.white)
             }
-            .foregroundStyle(.white)
+        }
+    }
+
+    private func statsRow(label: String, value: Int, max: Int) -> some View {
+        HStack {
+            Text(label)
+                .font(.caption)
+                .fontWeight(.semibold)
+                .frame(width: 36, alignment: .leading)
+            Text("\(value)")
+                .font(.callout)
+                .fontWeight(.bold)
+                .frame(width: 32, alignment: .trailing)
+            GeometryReader { geo in
+                ZStack(alignment: .leading) {
+                    RoundedRectangle(cornerRadius: 4)
+                        .fill(.white.opacity(0.2))
+                    RoundedRectangle(cornerRadius: 4)
+                        .fill(.white.opacity(0.8))
+                        .frame(width: geo.size.width * CGFloat(value) / CGFloat(max))
+                }
+            }
+            .frame(height: 8)
         }
     }
 }

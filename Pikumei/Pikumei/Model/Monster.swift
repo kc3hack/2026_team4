@@ -18,12 +18,15 @@ final class Monster {
     var classificationConfidence: Double?
     /// 作成日時
     var createdAt: Date
+    /// Supabase にアップロード済みの場合、そのレコード ID
+    var supabaseId: UUID?
 
-    init(imageData: Data, classificationLabel: String? = nil, classificationConfidence: Double? = nil, createdAt: Date = .now) {
+    init(imageData: Data, classificationLabel: String? = nil, classificationConfidence: Double? = nil, createdAt: Date = .now, supabaseId: UUID? = nil) {
         self.imageData = imageData
         self.classificationLabel = classificationLabel
         self.classificationConfidence = classificationConfidence
         self.createdAt = createdAt
+        self.supabaseId = supabaseId
     }
 }
 
@@ -31,6 +34,12 @@ extension Monster {
     /// imageData → UIImage 変換
     var uiImage: UIImage? {
         UIImage(data: imageData)
+    }
+
+    /// ラベルから決定論的に計算されるステータス
+    var stats: MonsterStats? {
+        guard let label = classificationLabel else { return nil }
+        return MonsterStatsGenerator.generate(from: label)
     }
 
     /// UIImage から Monster を生成（PNG で透過保持）
