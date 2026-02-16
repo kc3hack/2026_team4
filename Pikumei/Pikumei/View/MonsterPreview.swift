@@ -14,10 +14,7 @@ struct MonsterPreview: View {
         VStack(spacing: 24) {
             Spacer()
 
-            Image(uiImage: image)
-                .resizable()
-                .scaledToFit()
-                .padding()
+            RotatingCardComponent(frontImage: Image(uiImage: image))
 
             Spacer()
 
