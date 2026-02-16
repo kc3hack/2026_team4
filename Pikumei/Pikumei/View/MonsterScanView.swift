@@ -28,7 +28,7 @@ struct MonsterScanView: View {
         }
         .fullScreenCover(isPresented: $viewModel.showPreview) {
             if let image = viewModel.cutoutImage {
-                MonsterPreview(image: image) {
+                MonsterResultView(image: image) {
                     viewModel.retry()
                 }
             }

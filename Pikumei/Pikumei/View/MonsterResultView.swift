@@ -1,12 +1,12 @@
 //
-//  MonsterPreview.swift
+//  MonsterResultView.swift
 //  Pikumei
 //
 
 import SwiftUI
 
 /// 切り抜き結果のプレビュー画面
-struct MonsterPreview: View {
+struct MonsterResultView: View {
     let image: UIImage
     let onRetry: () -> Void
 
@@ -28,7 +28,7 @@ struct MonsterPreview: View {
 }
 
 #Preview {
-    MonsterPreview(
+    MonsterResultView(
         image: UIImage(systemName: "photo")!,
         onRetry: {}
     )
