@@ -11,6 +11,7 @@ import UIKit
 class CameraManager: NSObject, ObservableObject {
     let session = AVCaptureSession()
     private let photoOutput = AVCapturePhotoOutput()
+    private let sessionQueue = DispatchQueue(label: "com.pikumei.camera.session")
     private var photoContinuation: CheckedContinuation<UIImage, Error>?
 
     /// カメラのセットアップ（背面カメラ、.photo プリセット）
@@ -35,13 +36,17 @@ class CameraManager: NSObject, ObservableObject {
     }
 
     func startSession() {
-        guard !session.isRunning else { return }
-        session.startRunning()
+        sessionQueue.async { [session] in
+            guard !session.isRunning else { return }
+            session.startRunning()
+        }
     }
 
     func stopSession() {
-        guard session.isRunning else { return }
-        session.stopRunning()
+        sessionQueue.async { [session] in
+            guard session.isRunning else { return }
+            session.stopRunning()
+        }
     }
 
     /// 写真を撮影して UIImage を返す（連打防止付き）
