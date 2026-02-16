@@ -26,6 +26,13 @@ struct MonsterScanView: View {
         .onDisappear {
             viewModel.stopCamera()
         }
+        .fullScreenCover(isPresented: $viewModel.showPreview) {
+            if let image = viewModel.cutoutImage {
+                MonsterPreview(image: image) {
+                    viewModel.retry()
+                }
+            }
+        }
     }
 
     // MARK: - カメラプレビュー + 撮影ボタン
@@ -82,14 +89,6 @@ struct MonsterScanView: View {
                         .multilineTextAlignment(.center)
                 }
                 .padding()
-            }
-
-            // 切り抜き画像があれば表示
-            if let image = viewModel.cutoutImage {
-                Image(uiImage: image)
-                    .resizable()
-                    .scaledToFit()
-                    .padding()
             }
 
             Button("もう一度スキャン") {

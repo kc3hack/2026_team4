@@ -12,6 +12,7 @@ class MonsterScanViewModel: ObservableObject {
     @Published var phase: ScanPhase = .camera
     @Published var cutoutImage: UIImage?
     @Published var errorMessage: String?
+    @Published var showPreview = false
 
     let cameraManager = CameraManager()
     private var isConfigured = false
@@ -38,7 +39,7 @@ class MonsterScanViewModel: ObservableObject {
                 let photo = try await cameraManager.capturePhoto()
                 let cutout = try await SubjectDetector.detectAndCutout(from: photo)
                 cutoutImage = cutout
-                phase = .result
+                showPreview = true
             } catch {
                 print("⚠️ スキャンエラー: \(error)")
                 errorMessage = error.localizedDescription
@@ -48,6 +49,7 @@ class MonsterScanViewModel: ObservableObject {
     }
 
     func retry() {
+        showPreview = false
         cutoutImage = nil
         errorMessage = nil
         phase = .camera
