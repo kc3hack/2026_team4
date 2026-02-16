@@ -8,7 +8,7 @@
 ## コーディング方針
 - SwiftUI は View にのみ書く
 - ViewModel は状態管理と処理呼び出しのみ
-- Model は struct / enum のみ
+- Model は struct / enum のみ（SwiftData `@Model class` は例外）
 - ロジック・CoreML・Camera は ViewModel 配下に実装する
 
 ## 実装ルール
