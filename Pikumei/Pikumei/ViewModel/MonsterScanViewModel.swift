@@ -14,9 +14,13 @@ class MonsterScanViewModel: ObservableObject {
     @Published var errorMessage: String?
 
     let cameraManager = CameraManager()
+    private var isConfigured = false
 
     func startCamera() {
-        cameraManager.configure()
+        if !isConfigured {
+            cameraManager.configure()
+            isConfigured = true
+        }
         cameraManager.startSession()
     }
 
