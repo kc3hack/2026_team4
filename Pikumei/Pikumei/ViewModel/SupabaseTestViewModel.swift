@@ -8,6 +8,7 @@
 import Foundation
 import Supabase
 import UIKit
+import Combine
 
 @MainActor
 class SupabaseTestViewModel: ObservableObject {
