@@ -24,6 +24,7 @@ class BattleMatchingViewModel: ObservableObject {
     private let client = SupabaseClientProvider.shared
     private var channel: RealtimeChannelV2?
     private var subscription: RealtimeSubscription?
+    private var subscribeTask: Task<Void, Never>?
 
     // MARK: - バトル作成（端末A用）
 
@@ -134,7 +135,7 @@ class BattleMatchingViewModel: ObservableObject {
             }
         }
 
-        Task {
+        subscribeTask = Task {
             do {
                 try await ch.subscribeWithError()
                 print("[Matching] Realtime 購読成功 channel status: \(ch.status)")
@@ -146,6 +147,8 @@ class BattleMatchingViewModel: ObservableObject {
 
     /// 購読解除
     func unsubscribe() {
+        subscribeTask?.cancel()
+        subscribeTask = nil
         subscription = nil
         if let channel {
             Task {
