@@ -8,7 +8,7 @@
 ## コーディング方針
 - SwiftUI は View にのみ書く
 - ViewModel は状態管理と処理呼び出しのみ
-- Model は struct / enum のみ
+- Model は struct / enum のみ（SwiftData `@Model class` は例外）
 - ロジック・CoreML・Camera は ViewModel 配下に実装する
 
 ## 実装ルール
@@ -16,6 +16,9 @@
 - 既存構成を勝手に変更しない
 - 不要な抽象化・レイヤー分割は行わない
 - 完成度より分かりやすさを優先する
+
+## 命名規則
+- `View/Component/` 配下のコンポーネントは `〇〇Component` と命名する
 
 ## コードスタイル
 - SwiftUI はシンプルに書く

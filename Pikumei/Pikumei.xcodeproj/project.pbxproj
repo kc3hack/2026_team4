@@ -6,6 +6,12 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		3B97C6292F435E5F00FA858A /* Auth in Frameworks */ = {isa = PBXBuildFile; productRef = 3B97C6282F435E5F00FA858A /* Auth */; };
+		3B97C62B2F435E6600FA858A /* Supabase in Frameworks */ = {isa = PBXBuildFile; productRef = 3B97C62A2F435E6600FA858A /* Supabase */; };
+		3B97C62D2F435E7100FA858A /* Storage in Frameworks */ = {isa = PBXBuildFile; productRef = 3B97C62C2F435E7100FA858A /* Storage */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXContainerItemProxy section */
 		3B1E68D12F41F509000F1DC9 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -33,33 +39,9 @@
 		3B1E68FF2F41F52C000F1DC9 /* Exceptions for "Pikumei" folder in "Pikumei" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
-				Library/Assets.xcassets,
-				Model/AppPhase.swift,
-				PikumeiApp.swift,
-				View/BattleView.swift,
-				View/LaunchingView.swift,
-				View/MainView.swift,
-				View/MonsterListView.swift,
-				View/MonsterScanView.swift,
-				View/RootView.swift,
+				Info.plist,
 			);
 			target = 3B1E68C22F41F508000F1DC9 /* Pikumei */;
-		};
-		3B1E69002F41F52C000F1DC9 /* Exceptions for "Pikumei" folder in "PikumeiTests" target */ = {
-			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
-			membershipExceptions = (
-				Info.plist,
-				Library/Assets.xcassets,
-				Model/AppPhase.swift,
-				PikumeiApp.swift,
-				View/BattleView.swift,
-				View/LaunchingView.swift,
-				View/MainView.swift,
-				View/MonsterListView.swift,
-				View/MonsterScanView.swift,
-				View/RootView.swift,
-			);
-			target = 3B1E68CF2F41F509000F1DC9 /* PikumeiTests */;
 		};
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
@@ -78,7 +60,6 @@
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
 				3B1E68FF2F41F52C000F1DC9 /* Exceptions for "Pikumei" folder in "Pikumei" target */,
-				3B1E69002F41F52C000F1DC9 /* Exceptions for "Pikumei" folder in "PikumeiTests" target */,
 			);
 			path = Pikumei;
 			sourceTree = "<group>";
@@ -90,6 +71,9 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				3B97C62D2F435E7100FA858A /* Storage in Frameworks */,
+				3B97C62B2F435E6600FA858A /* Supabase in Frameworks */,
+				3B97C6292F435E5F00FA858A /* Auth in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -116,6 +100,7 @@
 				3B1E68FB2F41F52C000F1DC9 /* Pikumei */,
 				3B1E68D32F41F509000F1DC9 /* PikumeiTests */,
 				3B1E68DD2F41F509000F1DC9 /* PikumeiUITests */,
+				3B97C6272F435E5F00FA858A /* Frameworks */,
 				3B1E68C42F41F508000F1DC9 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -128,6 +113,13 @@
 				3B1E68DA2F41F509000F1DC9 /* PikumeiUITests.xctest */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		3B97C6272F435E5F00FA858A /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = Frameworks;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -145,8 +137,14 @@
 			);
 			dependencies = (
 			);
+			fileSystemSynchronizedGroups = (
+				3B1E68FB2F41F52C000F1DC9 /* Pikumei */,
+			);
 			name = Pikumei;
 			packageProductDependencies = (
+				3B97C6282F435E5F00FA858A /* Auth */,
+				3B97C62A2F435E6600FA858A /* Supabase */,
+				3B97C62C2F435E7100FA858A /* Storage */,
 			);
 			productName = Pikumei;
 			productReference = 3B1E68C32F41F508000F1DC9 /* Pikumei.app */;
@@ -167,7 +165,6 @@
 			);
 			fileSystemSynchronizedGroups = (
 				3B1E68D32F41F509000F1DC9 /* PikumeiTests */,
-				3B1E68FB2F41F52C000F1DC9 /* Pikumei */,
 			);
 			name = PikumeiTests;
 			packageProductDependencies = (
@@ -231,6 +228,9 @@
 			);
 			mainGroup = 3B1E68BA2F41F508000F1DC9;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				3B97C6262F435E0D00FA858A /* XCRemoteSwiftPackageReference "supabase-swift" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 3B1E68C42F41F508000F1DC9 /* Products */;
 			projectDirPath = "";
@@ -659,6 +659,35 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		3B97C6262F435E0D00FA858A /* XCRemoteSwiftPackageReference "supabase-swift" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/supabase/supabase-swift";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 2.5.1;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		3B97C6282F435E5F00FA858A /* Auth */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 3B97C6262F435E0D00FA858A /* XCRemoteSwiftPackageReference "supabase-swift" */;
+			productName = Auth;
+		};
+		3B97C62A2F435E6600FA858A /* Supabase */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 3B97C6262F435E0D00FA858A /* XCRemoteSwiftPackageReference "supabase-swift" */;
+			productName = Supabase;
+		};
+		3B97C62C2F435E7100FA858A /* Storage */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 3B97C6262F435E0D00FA858A /* XCRemoteSwiftPackageReference "supabase-swift" */;
+			productName = Storage;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 3B1E68BB2F41F508000F1DC9 /* Project object */;
 }
