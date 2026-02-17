@@ -1,0 +1,223 @@
+//
+//  BattleMatchingViewModel.swift
+//  Pikumei
+//
+//  2端末間のマッチング通信テスト用
+//
+
+import Combine
+import Foundation
+import Supabase
+
+@MainActor
+class BattleMatchingViewModel: ObservableObject {
+    enum MatchingPhase {
+        case idle           // 初期状態
+        case waiting        // バトル作成済み、相手待ち
+        case matched        // マッチ成立
+        case error(String)  // エラー
+    }
+
+    @Published var phase: MatchingPhase = .idle
+    @Published var battleId: UUID?
+
+    private let client = SupabaseClientProvider.shared
+    private var channel: RealtimeChannelV2?
+    private var subscription: RealtimeSubscription?
+
+    // MARK: - バトル作成（端末A用）
+
+    /// 自分のモンスターをランダムに選んでバトルを作成し、相手を待つ
+    func createBattle() async {
+        do {
+            try await ensureAuthenticated()
+            let userId = try await client.auth.session.user.id
+            let monsterId = try await fetchRandomMonster()
+
+            let record = BattleInsert(
+                player1Id: userId,
+                player1MonsterId: monsterId
+            )
+
+            let inserted: BattleRow = try await client
+                .from("battles")
+                .insert(record, returning: .representation)
+                .select("id, status")
+                .single()
+                .execute()
+                .value
+
+            battleId = inserted.id
+            phase = .waiting
+
+            subscribeToMatch(battleId: inserted.id)
+        } catch {
+            phase = .error("バトル作成失敗: \(error.localizedDescription)")
+        }
+    }
+
+    // MARK: - バトル参加（端末B用）
+
+    /// 待機中のバトルを探して自分のモンスターで参加する
+    func joinBattle() async {
+        do {
+            try await ensureAuthenticated()
+            let userId = try await client.auth.session.user.id
+            let monsterId = try await fetchRandomMonster()
+
+            // 自分以外が作った waiting バトルを1件取得
+            let battles: [BattleRow] = try await client
+                .from("battles")
+                .select("id, status")
+                .eq("status", value: "waiting")
+                .neq("player1_id", value: userId.uuidString)
+                .order("created_at", ascending: true)
+                .limit(1)
+                .execute()
+                .value
+
+            guard let target = battles.first else {
+                phase = .error("待機中のバトルが見つかりません")
+                return
+            }
+
+            battleId = target.id
+
+            // player2 として参加し status を matched に更新
+            let update = BattleJoinUpdate(
+                player2Id: userId,
+                player2MonsterId: monsterId,
+                status: "matched"
+            )
+
+            try await client
+                .from("battles")
+                .update(update)
+                .eq("id", value: target.id.uuidString)
+                .execute()
+
+            phase = .matched
+        } catch {
+            phase = .error("参加失敗: \(error.localizedDescription)")
+        }
+    }
+
+    // MARK: - Realtime 購読
+
+    /// battles テーブルの UPDATE を監視し、status が matched になったら通知
+    func subscribeToMatch(battleId: UUID) {
+        let ch = client.channel("battle-\(battleId.uuidString)")
+        channel = ch
+
+        // onPostgresChange は subscribe() の前に登録する必要がある
+        subscription = ch.onPostgresChange(
+            UpdateAction.self,
+            table: "battles",
+            filter: "id=eq.\(battleId.uuidString)"
+        ) { [weak self] action in
+            if let status = action.record["status"]?.stringValue,
+               status == "matched" {
+                Task { @MainActor [weak self] in
+                    self?.phase = .matched
+                }
+            }
+        }
+
+        Task {
+            try? await ch.subscribeWithError()
+        }
+    }
+
+    /// 購読解除
+    func unsubscribe() {
+        subscription = nil
+        if let channel {
+            Task {
+                await channel.unsubscribe()
+                await client.removeChannel(channel)
+            }
+        }
+        channel = nil
+    }
+
+    /// 状態をリセット
+    func reset() {
+        unsubscribe()
+        phase = .idle
+        battleId = nil
+    }
+
+    // MARK: - Private
+
+    /// Supabase 上のモンスターからランダムに1体選ぶ
+    private func fetchRandomMonster() async throws -> UUID {
+        let monsters: [MonsterIdRow] = try await client
+            .from("monsters")
+            .select("id")
+            .limit(50)
+            .execute()
+            .value
+
+        guard let monster = monsters.randomElement() else {
+            throw MatchingError.noMonsters
+        }
+        return monster.id
+    }
+
+    private func ensureAuthenticated() async throws {
+        let session = try? await client.auth.session
+        if session == nil {
+            try await client.auth.signInAnonymously()
+        }
+    }
+}
+
+// MARK: - エラー
+
+enum MatchingError: LocalizedError {
+    case noMonsters
+
+    var errorDescription: String? {
+        switch self {
+        case .noMonsters:
+            return "モンスターがありません。先にスキャンしてアップロードしてください"
+        }
+    }
+}
+
+// MARK: - Supabase レコード型
+
+/// バトル作成用（INSERT）
+private struct BattleInsert: Codable {
+    let player1Id: UUID
+    let player1MonsterId: UUID
+
+    enum CodingKeys: String, CodingKey {
+        case player1Id = "player1_id"
+        case player1MonsterId = "player1_monster_id"
+    }
+}
+
+/// バトル参加用（UPDATE）
+private struct BattleJoinUpdate: Codable {
+    let player2Id: UUID
+    let player2MonsterId: UUID
+    let status: String
+
+    enum CodingKeys: String, CodingKey {
+        case player2Id = "player2_id"
+        case player2MonsterId = "player2_monster_id"
+        case status
+    }
+}
+
+/// バトル取得用（SELECT / レスポンス）
+struct BattleRow: Codable {
+    let id: UUID
+    let status: String
+}
+
+/// モンスター ID のみ取得用
+private struct MonsterIdRow: Codable {
+    let id: UUID
+}
