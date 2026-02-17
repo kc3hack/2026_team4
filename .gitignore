@@ -26,6 +26,7 @@ playground.xcworkspace
 # === Environment / Secrets ===
 .env
 .env.*
+Secrets.swift
 
 # === Temporary files ===
 *.tmp
