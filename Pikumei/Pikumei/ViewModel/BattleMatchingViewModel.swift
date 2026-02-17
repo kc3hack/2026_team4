@@ -71,7 +71,7 @@ class BattleMatchingViewModel: ObservableObject {
                 .select("id, status")
                 .eq("status", value: "waiting")
                 .neq("player1_id", value: userId.uuidString)
-                .order("created_at", ascending: true)
+                .order("created_at", ascending: false)
                 .limit(1)
                 .execute()
                 .value
