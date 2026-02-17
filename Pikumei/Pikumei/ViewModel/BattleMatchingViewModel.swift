@@ -32,7 +32,9 @@ class BattleMatchingViewModel: ObservableObject {
         do {
             try await ensureAuthenticated()
             let userId = try await client.auth.session.user.id
+            print("[Matching] userId: \(userId)")
             let monsterId = try await fetchRandomMonster()
+            print("[Matching] monsterId: \(monsterId)")
 
             let record = BattleInsert(
                 player1Id: userId,
@@ -47,11 +49,13 @@ class BattleMatchingViewModel: ObservableObject {
                 .execute()
                 .value
 
+            print("[Matching] INSERT 成功 battleId: \(inserted.id), status: \(inserted.status)")
             battleId = inserted.id
             phase = .waiting
 
             subscribeToMatch(battleId: inserted.id)
         } catch {
+            print("[Matching] createBattle エラー: \(error)")
             phase = .error("バトル作成失敗: \(error.localizedDescription)")
         }
     }
@@ -76,11 +80,13 @@ class BattleMatchingViewModel: ObservableObject {
                 .execute()
                 .value
 
+            print("[Matching] waiting バトル検索結果: \(battles.count) 件")
             guard let target = battles.first else {
                 phase = .error("待機中のバトルが見つかりません")
                 return
             }
 
+            print("[Matching] 参加対象 battleId: \(target.id)")
             battleId = target.id
 
             // player2 として参加し status を matched に更新
@@ -90,14 +96,16 @@ class BattleMatchingViewModel: ObservableObject {
                 status: "matched"
             )
 
-            try await client
+            let response = try await client
                 .from("battles")
                 .update(update)
                 .eq("id", value: target.id.uuidString)
                 .execute()
 
+            print("[Matching] UPDATE レスポンス status: \(response.status)")
             phase = .matched
         } catch {
+            print("[Matching] joinBattle エラー: \(error)")
             phase = .error("参加失敗: \(error.localizedDescription)")
         }
     }
@@ -106,6 +114,7 @@ class BattleMatchingViewModel: ObservableObject {
 
     /// battles テーブルの UPDATE を監視し、status が matched になったら通知
     func subscribeToMatch(battleId: UUID) {
+        print("[Matching] Realtime 購読開始 battleId: \(battleId)")
         let ch = client.channel("battle-\(battleId.uuidString)")
         channel = ch
 
@@ -115,8 +124,10 @@ class BattleMatchingViewModel: ObservableObject {
             table: "battles",
             filter: "id=eq.\(battleId.uuidString)"
         ) { [weak self] action in
+            print("[Matching] Realtime UPDATE 受信: \(action.record)")
             if let status = action.record["status"]?.stringValue,
                status == "matched" {
+                print("[Matching] status=matched 検出！")
                 Task { @MainActor [weak self] in
                     self?.phase = .matched
                 }
@@ -124,7 +135,12 @@ class BattleMatchingViewModel: ObservableObject {
         }
 
         Task {
-            try? await ch.subscribeWithError()
+            do {
+                try await ch.subscribeWithError()
+                print("[Matching] Realtime 購読成功 channel status: \(ch.status)")
+            } catch {
+                print("[Matching] Realtime 購読失敗: \(error)")
+            }
         }
     }
 
