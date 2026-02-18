@@ -192,16 +192,26 @@ class BattleViewModel: ObservableObject {
         }
     }
 
-    /// ready イベントを定期送信（相手の ready を受信するまで）
+    /// ready イベントを定期送信（相手の ready を受信するまで、10秒でタイムアウト）
     private func startReadyPing() {
         readyPingTask = Task {
-            while !opponentReady {
+            var elapsed = 0
+            while !opponentReady, elapsed < 10 {
                 do {
                     try await channel?.broadcast(event: "ready", message: ReadyMessage(type: "ready"))
-                    print("[Battle] ready 送信")
+                    print("[Battle] ready 送信 (\(elapsed + 1)/10)")
                     try await Task.sleep(for: .seconds(1))
+                    elapsed += 1
                 } catch {
                     break
+                }
+            }
+            // タイムアウト: 相手が応答しなかった
+            if !opponentReady {
+                print("[Battle] ready タイムアウト")
+                await MainActor.run {
+                    battleLog.append("対戦相手が見つかりませんでした")
+                    phase = .lost
                 }
             }
         }
