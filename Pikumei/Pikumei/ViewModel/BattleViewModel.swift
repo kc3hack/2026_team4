@@ -65,7 +65,8 @@ class BattleViewModel: ObservableObject {
             }
 
             guard let battle, let player2MonsterId = battle.player2MonsterId else {
-                battleLog.append("エラー: 対戦相手の情報を取得できませんでした")
+                battleLog.append("対戦相手の情報を取得できませんでした")
+                phase = .lost
                 return
             }
 
@@ -110,6 +111,7 @@ class BattleViewModel: ObservableObject {
         } catch {
             print("[Battle] prepare エラー: \(error)")
             battleLog.append("エラー: \(error.localizedDescription)")
+            phase = .lost
         }
     }
 
@@ -124,22 +126,17 @@ class BattleViewModel: ObservableObject {
         opponentHp -= myStats.attack
         battleLog.append("\(myLabel) の攻撃！ \(myStats.attack) ダメージ！")
 
-        // Broadcast で相手に通知
+        // Broadcast 送信完了後に勝利判定（送信前に cleanup されるのを防ぐ）
         Task {
-            do {
-                try await channel?.broadcast(event: "attack", message: AttackMessage(type: "attack"))
-                print("[Battle] attack 送信")
-            } catch {
-                print("[Battle] attack 送信エラー: \(error)")
-            }
-        }
+            try? await channel?.broadcast(event: "attack", message: AttackMessage(type: "attack"))
+            print("[Battle] attack 送信")
 
-        // 勝利判定
-        if opponentHp <= 0 {
-            opponentHp = 0
-            phase = .won
-            battleLog.append("勝利！")
-            finishBattle(winnerId: userId)
+            if opponentHp <= 0 {
+                opponentHp = 0
+                phase = .won
+                battleLog.append("勝利！")
+                finishBattle(winnerId: userId)
+            }
         }
     }
 
@@ -212,7 +209,7 @@ class BattleViewModel: ObservableObject {
 
     /// 相手の ready を受信
     private func handleOpponentReady() {
-        guard !opponentReady else { return }
+        guard phase == .battling, !opponentReady else { return }
         opponentReady = true
         readyPingTask?.cancel()
         readyPingTask = nil
@@ -229,7 +226,7 @@ class BattleViewModel: ObservableObject {
 
     /// 相手の攻撃を受信した時の処理
     private func handleOpponentAttack() {
-        guard let opponentStats else { return }
+        guard phase == .battling, let opponentStats else { return }
 
         myHp -= opponentStats.attack
         battleLog.append("\(opponentLabel) の攻撃！ \(opponentStats.attack) ダメージ！")
