@@ -1,0 +1,322 @@
+//
+//  BattleViewModel.swift
+//  Pikumei
+//
+//  バトルロジック + Realtime Broadcast 同期
+//
+
+import Foundation
+import Supabase
+import Combine
+
+@MainActor
+class BattleViewModel: ObservableObject {
+    @Published var phase: BattlePhase = .preparing
+    @Published var myStats: BattleStats?
+    @Published var opponentStats: BattleStats?
+    @Published var myHp: Int = 0
+    @Published var opponentHp: Int = 0
+    @Published var isMyTurn: Bool = false
+    @Published var myLabel: MonsterType?
+    @Published var opponentLabel: MonsterType?
+    @Published var battleLog: [String] = []
+    @Published var myAttacks: [BattleAttack] = []
+    @Published var attackPP: [Int?] = []  // nil = 無制限, 数値 = 残り回数
+
+    let battleId: UUID
+    private var isPlayer1 = false
+    private var userId: UUID?
+    private let client = SupabaseClientProvider.shared
+    private var channel: RealtimeChannelV2?
+    private var subscription: RealtimeSubscription?
+    private var readySubscription: RealtimeSubscription?
+    private var subscribeTask: Task<Void, Never>?
+    private var readyPingTask: Task<Void, Never>?
+    private var opponentReady = false
+
+    init(battleId: UUID) {
+        self.battleId = battleId
+    }
+
+    // MARK: - 準備
+
+    /// バトル情報を取得してステータスを算出し、Broadcast チャネルに接続する
+    func prepare() async {
+        do {
+            let userId = try await client.auth.session.user.id
+            self.userId = userId
+
+            // battles テーブルからバトル詳細を取得（player2 未設定時はリトライ）
+            var battle: BattleFullRow?
+            for attempt in 0..<5 {
+                let row: BattleFullRow = try await client
+                    .from("battles")
+                    .select("id, status, player1_id, player1_monster_id, player2_id, player2_monster_id")
+                    .eq("id", value: battleId.uuidString)
+                    .single()
+                    .execute()
+                    .value
+
+                if row.player2MonsterId != nil {
+                    battle = row
+                    break
+                }
+
+                try await Task.sleep(for: .seconds(1))
+            }
+
+            guard let battle, let player2MonsterId = battle.player2MonsterId else {
+                battleLog.append("対戦相手の情報を取得できませんでした")
+                phase = .lost
+                return
+            }
+
+            isPlayer1 = battle.player1Id == userId
+
+            // 両方のモンスターの label を取得
+            let myMonsterId = isPlayer1 ? battle.player1MonsterId : player2MonsterId
+            let oppMonsterId = isPlayer1 ? player2MonsterId : battle.player1MonsterId
+
+            let myMonster: MonsterLabelRow = try await client
+                .from("monsters")
+                .select("id, classification_label")
+                .eq("id", value: myMonsterId.uuidString)
+                .single()
+                .execute()
+                .value
+
+            let oppMonster: MonsterLabelRow = try await client
+                .from("monsters")
+                .select("id, classification_label")
+                .eq("id", value: oppMonsterId.uuidString)
+                .single()
+                .execute()
+                .value
+
+            // BattleStats を算出（confidence は DB にないため固定値）
+            let my = BattleStatsGenerator.generate(label: myMonster.classificationLabel, confidence: 0.85)
+            let opp = BattleStatsGenerator.generate(label: oppMonster.classificationLabel, confidence: 0.85)
+
+            myStats = my
+            opponentStats = opp
+            myHp = my.hp
+            opponentHp = opp.hp
+            myLabel = myMonster.classificationLabel
+            opponentLabel = oppMonster.classificationLabel
+            myAttacks = myMonster.classificationLabel.attacks
+
+            // ばつぐん技のみ PP 2、それ以外は無制限
+            attackPP = myAttacks.map { atk in
+                let eff = atk.type.effectiveness(against: oppMonster.classificationLabel)
+                return eff > 1.0 ? 2 : nil
+            }
+
+            // Broadcast チャネルを購読（ready ハンドシェイク後にターン開始）
+            subscribeToBattle()
+
+            phase = .battling
+        } catch {
+            battleLog.append("エラー: \(error.localizedDescription)")
+            phase = .lost
+        }
+    }
+
+    // MARK: - 攻撃
+
+    /// 選択した攻撃を送信し、相手の HP を減らす
+    func attack(index: Int) {
+        guard isMyTurn, let myStats, let opponentLabel else { return }
+        guard index < myAttacks.count else { return }
+        // PP チェック
+        if let pp = attackPP[index], pp <= 0 { return }
+        isMyTurn = false
+
+        let chosen = myAttacks[index]
+        let multiplier = chosen.type.effectiveness(against: opponentLabel)
+
+        // PP 消費
+        if attackPP[index] != nil { attackPP[index]! -= 1 }
+
+        // 命中判定
+        let accuracy: Double = multiplier > 1.0 ? 0.7 : (multiplier < 1.0 ? 1.0 : 0.9)
+        let hit = Double.random(in: 0..<1) < accuracy
+
+        if hit {
+            let damage = max(Int(Double(myStats.attack) * chosen.powerRate * multiplier), 1)
+            opponentHp -= damage
+            battleLog.append("\(chosen.name)攻撃！ \(damage) ダメージ！")
+            if multiplier > 1.0 { battleLog.append("こうかはばつぐんだ！") }
+            else if multiplier < 1.0 { battleLog.append("こうかはいまひとつ...") }
+        } else {
+            battleLog.append("\(chosen.name)攻撃！ ...しかし外れた！")
+        }
+
+        // Broadcast 送信完了後に勝利判定（送信前に cleanup されるのを防ぐ）
+        Task {
+            try? await channel?.broadcast(
+                event: "attack",
+                message: AttackMessage(type: "attack", attackType: chosen.type.rawValue, hit: hit)
+            )
+
+            if hit, opponentHp <= 0, self.phase == .battling {
+                opponentHp = 0
+                phase = .won
+                battleLog.append("勝利！")
+                finishBattle(winnerId: userId)
+            }
+        }
+    }
+
+    // MARK: - クリーンアップ
+
+    func cleanup() {
+        readyPingTask?.cancel()
+        readyPingTask = nil
+        subscribeTask?.cancel()
+        subscribeTask = nil
+        subscription = nil
+        readySubscription = nil
+        if let channel {
+            Task {
+                await channel.unsubscribe()
+                await client.removeChannel(channel)
+            }
+        }
+        channel = nil
+    }
+
+    // MARK: - Private
+
+    /// Broadcast チャネルを購読して攻撃・ready イベントを受信する
+    private func subscribeToBattle() {
+        let ch = client.channel("battle-game-\(battleId.uuidString)")
+        channel = ch
+
+        // onBroadcast は subscribe() の前に登録する
+        subscription = ch.onBroadcast(event: "attack") { [weak self] payload in
+            // SDK は message を payload["payload"] の下にネストする
+            let inner = payload["payload"]?.objectValue
+            let attackTypeRaw = inner?["attackType"]?.stringValue
+            let hit = inner?["hit"]?.boolValue ?? true
+            Task { @MainActor [weak self] in
+                self?.handleOpponentAttack(attackTypeRaw: attackTypeRaw, hit: hit)
+            }
+        }
+
+        readySubscription = ch.onBroadcast(event: "ready") { [weak self] _ in
+            Task { @MainActor [weak self] in
+                self?.handleOpponentReady()
+            }
+        }
+
+        subscribeTask = Task {
+            do {
+                try await ch.subscribeWithError()
+                // ready の定期送信を開始
+                await MainActor.run {
+                    self.startReadyPing()
+                }
+            } catch {
+            }
+        }
+    }
+
+    /// ready イベントを定期送信（相手の ready を受信するまで、10秒でタイムアウト）
+    private func startReadyPing() {
+        readyPingTask = Task {
+            var elapsed = 0
+            while !opponentReady, elapsed < 10 {
+                do {
+                    try await channel?.broadcast(event: "ready", message: ReadyMessage(type: "ready"))
+                    try await Task.sleep(for: .seconds(1))
+                    elapsed += 1
+                } catch {
+                    break
+                }
+            }
+            // タイムアウト: 相手が応答しなかった
+            if !opponentReady {
+                await MainActor.run {
+                    battleLog.append("対戦相手が見つかりませんでした")
+                    phase = .lost
+                }
+            }
+        }
+    }
+
+    /// 相手の ready を受信
+    private func handleOpponentReady() {
+        guard phase == .battling, !opponentReady else { return }
+        opponentReady = true
+        readyPingTask?.cancel()
+        readyPingTask = nil
+
+        // 相手に ready を返す（相手がまだ受信していない可能性があるため）
+        Task {
+            try? await channel?.broadcast(event: "ready", message: ReadyMessage(type: "ready"))
+        }
+
+        isMyTurn = isPlayer1
+        battleLog.append("バトル開始！")
+    }
+
+    /// 相手の攻撃を受信した時の処理
+    private func handleOpponentAttack(attackTypeRaw: String?, hit: Bool) {
+        guard phase == .battling, let opponentStats, let opponentLabel, let myLabel else { return }
+
+        let attackType = MonsterType(rawValue: attackTypeRaw ?? "") ?? opponentLabel
+        let attackName = opponentLabel.attacks.first { $0.type == attackType }?.name ?? "???"
+
+        if hit {
+            let powerRate = opponentLabel.attacks.first { $0.type == attackType }?.powerRate ?? 1.0
+            let multiplier = attackType.effectiveness(against: myLabel)
+            let damage = max(Int(Double(opponentStats.attack) * powerRate * multiplier), 1)
+            myHp -= damage
+
+            battleLog.append("\(attackName)攻撃！ \(damage) ダメージ！")
+            if multiplier > 1.0 { battleLog.append("こうかはばつぐんだ！") }
+            else if multiplier < 1.0 { battleLog.append("こうかはいまひとつ...") }
+        } else {
+            battleLog.append("\(attackName)攻撃！ ...しかし外れた！")
+        }
+
+        if myHp <= 0 {
+            myHp = 0
+            phase = .lost
+            battleLog.append("敗北...")
+        } else {
+            isMyTurn = true
+        }
+    }
+
+    /// バトル終了を DB に記録する
+    private func finishBattle(winnerId: UUID?) {
+        guard let winnerId else { return }
+        Task {
+            do {
+                let update = BattleFinishUpdate(winnerId: winnerId, status: "finished")
+                try await client
+                    .from("battles")
+                    .update(update)
+                    .eq("id", value: battleId.uuidString)
+                    .execute()
+            } catch {
+            }
+        }
+    }
+
+}
+
+// MARK: - Broadcast メッセージ
+
+/// 攻撃イベント用（Codable で broadcast に渡す）
+private struct AttackMessage: Codable {
+    let type: String
+    let attackType: String
+    let hit: Bool
+}
+
+/// 準備完了イベント用
+private struct ReadyMessage: Codable {
+    let type: String
+}
