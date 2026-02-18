@@ -56,7 +56,7 @@ struct BattleGameView: View {
                 Text("あいて")
                     .font(.caption)
                     .foregroundStyle(.secondary)
-                Text(viewModel.opponentLabel)
+                Text(viewModel.opponentLabel?.rawValue ?? "")
                     .font(.title3)
                     .bold()
                 hpBar(
@@ -74,7 +74,7 @@ struct BattleGameView: View {
                 Text("じぶん")
                     .font(.caption)
                     .foregroundStyle(.secondary)
-                Text(viewModel.myLabel)
+                Text(viewModel.myLabel?.rawValue ?? "")
                     .font(.title3)
                     .bold()
                 hpBar(
@@ -86,17 +86,50 @@ struct BattleGameView: View {
             .frame(maxWidth: .infinity, alignment: .leading)
 
             // 攻撃ボタン
-            Button {
-                viewModel.attack()
-            } label: {
-                Text("こうげき")
-                    .font(.title3)
-                    .bold()
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 8)
+            HStack(spacing: 8) {
+                ForEach(viewModel.myAttacks.indices, id: \.self) { i in
+                    let atk = viewModel.myAttacks[i]
+                    let pp = viewModel.attackPP.indices.contains(i) ? viewModel.attackPP[i] : nil
+                    let ppEmpty = pp != nil && pp! <= 0
+                    Button {
+                        viewModel.attack(index: i)
+                    } label: {
+                        VStack(spacing: 2) {
+                            Text(atk.name)
+                                .font(.caption)
+                                .bold()
+                            if let opp = viewModel.opponentLabel {
+                                let eff = atk.type.effectiveness(against: opp)
+                                // 相性表示
+                                if eff > 1.0 {
+                                    Text("▲有利")
+                                        .font(.caption2)
+                                        .foregroundStyle(.green)
+                                } else if eff < 1.0 {
+                                    Text("▼不利")
+                                        .font(.caption2)
+                                        .foregroundStyle(.red)
+                                }
+                                // 命中率表示
+                                let acc = eff > 1.0 ? 70 : (eff < 1.0 ? 100 : 90)
+                                Text("\(acc)%")
+                                    .font(.caption2)
+                                    .foregroundStyle(.secondary)
+                            }
+                            // PP 表示
+                            if let pp {
+                                Text("\(pp)/2")
+                                    .font(.caption2)
+                                    .foregroundStyle(pp > 0 ? .orange : .gray)
+                            }
+                        }
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 8)
+                    }
+                    .buttonStyle(.bordered)
+                    .disabled(!viewModel.isMyTurn || ppEmpty)
+                }
             }
-            .buttonStyle(.borderedProminent)
-            .disabled(!viewModel.isMyTurn)
 
             if !viewModel.isMyTurn {
                 Text("あいてのターン...")
