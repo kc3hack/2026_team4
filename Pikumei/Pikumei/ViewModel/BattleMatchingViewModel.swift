@@ -164,8 +164,19 @@ class BattleMatchingViewModel: ObservableObject {
         channel = nil
     }
 
-    /// 状態をリセット
+    /// 状態をリセット（DB 上の waiting バトルもキャンセルする）
     func reset() {
+        if let battleId {
+            Task {
+                try? await client
+                    .from("battles")
+                    .update(["status": "cancelled"])
+                    .eq("id", value: battleId.uuidString)
+                    .eq("status", value: "waiting")
+                    .execute()
+                print("[Matching] バトル \(battleId) をキャンセル")
+            }
+        }
         unsubscribe()
         phase = .idle
         battleId = nil
