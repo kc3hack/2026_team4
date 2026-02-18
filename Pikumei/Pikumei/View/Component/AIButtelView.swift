@@ -73,7 +73,7 @@ private struct BattleSelectionSection: View {
             
             // --- 自分の選択エリア ---
             VStack(spacing: 15) {
-                Text("自分")
+                Text("Player")
                     .font(.system(size: 28))
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .padding(.leading, 40)
@@ -86,7 +86,7 @@ private struct BattleSelectionSection: View {
             
             // --- 対戦相手の選択エリア ---
             VStack(spacing: 15) {
-                Text("対戦相手")
+                Text("AI")
                     .font(.system(size: 28))
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .padding(.leading, 40)
@@ -103,10 +103,10 @@ private struct BattleSelectionSection: View {
                 Button(action: onBattleStart) {
                     Text("Let's対戦")
                         .font(.system(size: 22, weight: .medium))
-                        .foregroundColor(.black)
+                        .foregroundColor(.white)
                         .frame(width: 220, height: 55)
                     // 画像のように薄い青（選択時は少し濃く）
-                        .background(isReady ? Color.blue.opacity(0.15) : Color.blue.opacity(0.05))
+                        .background(isReady ? Color.blue.opacity(0.75) : Color.blue.opacity(0.15))
                         .clipShape(Capsule())
                 }
                 .disabled(!isReady) // 条件を満たさないと押せない
@@ -131,9 +131,9 @@ private struct CharacterSearchButton: View {
         Button(action: action) {
             Text(selectedName ?? "キャラ探索")
                 .font(.system(size: 24))
-                .foregroundColor(.black)
+                .foregroundColor(.blue)
                 .frame(width: 300, height: 75)
-                .background(Color(white: 0.85)) // 画像のようなグレー
+                .background(Color(white: 0.95))
                 .clipShape(Capsule())
         }
     }
