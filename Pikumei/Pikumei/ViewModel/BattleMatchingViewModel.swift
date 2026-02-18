@@ -70,12 +70,16 @@ class BattleMatchingViewModel: ObservableObject {
             let userId = try await client.auth.session.user.id
             let monsterId = try await fetchRandomMonster()
 
-            // 自分以外が作った waiting バトルを1件取得
+            // 自分以外が作った直近5分以内の waiting バトルを1件取得
+            let fiveMinutesAgo = ISO8601DateFormatter().string(
+                from: Date().addingTimeInterval(-300)
+            )
             let battles: [BattleRow] = try await client
                 .from("battles")
                 .select("id, status")
                 .eq("status", value: "waiting")
                 .neq("player1_id", value: userId.uuidString)
+                .gte("created_at", value: fiveMinutesAgo)
                 .order("created_at", ascending: false)
                 .limit(1)
                 .execute()
@@ -104,7 +108,6 @@ class BattleMatchingViewModel: ObservableObject {
                 .execute()
 
             print("[Matching] UPDATE レスポンス status: \(response.status)")
-            unsubscribe()
             phase = .battling
         } catch {
             print("[Matching] joinBattle エラー: \(error)")

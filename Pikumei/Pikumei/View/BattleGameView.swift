@@ -170,7 +170,6 @@ struct BattleGameView: View {
             logSection
 
             Button("戻る") {
-                // BattleView 側で .battling → .matched に戻すために cleanup する
                 viewModel.cleanup()
             }
             .buttonStyle(.bordered)
