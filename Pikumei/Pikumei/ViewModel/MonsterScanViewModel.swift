@@ -14,6 +14,7 @@ class MonsterScanViewModel: ObservableObject {
     @Published var cutoutImage: UIImage?
     @Published var errorMessage: String?
     @Published var showPreview = false
+    @Published var lastSavedMonster: Monster?
     
     let cameraManager = CameraManager()
     private var isConfigured = false
@@ -54,6 +55,7 @@ class MonsterScanViewModel: ObservableObject {
                 // ローカル保存したモンスターを取得して Supabase にアップロード
                 let monsters = try store.fetchAll()
                 if let latest = monsters.first {
+                    lastSavedMonster = latest
                     let syncService = MonsterSyncService()
                     try await syncService.upload(monster: latest)
                 }
@@ -71,6 +73,7 @@ class MonsterScanViewModel: ObservableObject {
     func retry() {
         showPreview = false
         cutoutImage = nil
+        lastSavedMonster = nil
         errorMessage = nil
         phase = .camera
     }

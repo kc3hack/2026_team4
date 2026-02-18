@@ -34,6 +34,12 @@ class MonsterStore {
         return try modelContext.fetch(descriptor)
     }
 
+    /// モンスターの名前を更新する
+    func updateName(monster: Monster, name: String) throws {
+        monster.name = name
+        try modelContext.save()
+    }
+
     /// モンスターを削除する
     func delete(_ monster: Monster) throws {
         modelContext.delete(monster)

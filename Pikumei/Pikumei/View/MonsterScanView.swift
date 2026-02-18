@@ -31,7 +31,13 @@ struct MonsterScanView: View {
             viewModel.retry()
         }) {
             if let image = viewModel.cutoutImage {
-                MonsterResultView(image: image)
+                MonsterResultView(image: image) { name in
+                    // SwiftData にモンスター名を保存
+                    if let monster = viewModel.lastSavedMonster {
+                        let store = MonsterStore(modelContext: modelContext)
+                        try? store.updateName(monster: monster, name: name)
+                    }
+                }
             }
         }
     }
