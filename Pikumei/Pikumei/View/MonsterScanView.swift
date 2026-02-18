@@ -32,10 +32,15 @@ struct MonsterScanView: View {
         }) {
             if let image = viewModel.cutoutImage {
                 MonsterResultView(image: image) { name in
-                    // SwiftData にモンスター名を保存
                     if let monster = viewModel.lastSavedMonster {
+                        // SwiftData にモンスター名を保存
                         let store = MonsterStore(modelContext: modelContext)
                         try? store.updateName(monster: monster, name: name)
+                        // Supabase にも名前を反映
+                        Task {
+                            let syncService = MonsterSyncService()
+                            try? await syncService.updateName(monster: monster, name: name)
+                        }
                     }
                 }
             }

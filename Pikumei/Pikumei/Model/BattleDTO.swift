@@ -76,25 +76,10 @@ struct MonsterLabelRow: Codable {
         case thumbnail
     }
 
-    /// hex 文字列（\x...）を Data に変換する
+    /// BYTEA hex 文字列を Data に変換（二段階デコード）
     var thumbnailData: Data? {
         guard let thumbnail else { return nil }
-        // "\x" プレフィックスを除去
-        var hex = thumbnail
-        if hex.hasPrefix("\\x") {
-            hex = String(hex.dropFirst(2))
-        }
-        // hex → Data
-        var data = Data()
-        var index = hex.startIndex
-        while index < hex.endIndex {
-            let nextIndex = hex.index(index, offsetBy: 2, limitedBy: hex.endIndex) ?? hex.endIndex
-            if let byte = UInt8(hex[index..<nextIndex], radix: 16) {
-                data.append(byte)
-            }
-            index = nextIndex
-        }
-        return data.isEmpty ? nil : data
+        return Data(byteaHex: thumbnail)
     }
 }
 

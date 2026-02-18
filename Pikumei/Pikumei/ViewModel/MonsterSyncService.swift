@@ -50,6 +50,18 @@ class MonsterSyncService {
         monster.supabaseId = inserted.id
     }
 
+    /// Supabase 上のモンスター名を更新する
+    func updateName(monster: Monster, name: String) async throws {
+        guard let supabaseId = monster.supabaseId else { return }
+        try await ensureAuthenticated()
+
+        try await client
+            .from("monsters")
+            .update(["name": name])
+            .eq("id", value: supabaseId.uuidString)
+            .execute()
+    }
+
     // MARK: - Private
 
     /// PNG データから JPEG 200x200 サムネイルを生成
