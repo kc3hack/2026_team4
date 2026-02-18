@@ -14,10 +14,12 @@ class MonsterScanViewModel: ObservableObject {
     @Published var cutoutImage: UIImage?
     @Published var errorMessage: String?
     @Published var showPreview = false
-
+    
     let cameraManager = CameraManager()
     private var isConfigured = false
-
+    
+    let monsterClassifier = MonsterClassifier()
+    
     func startCamera() {
         if !isConfigured {
             cameraManager.configure()
@@ -25,25 +27,30 @@ class MonsterScanViewModel: ObservableObject {
         }
         cameraManager.startSession()
     }
-
+    
     func stopCamera() {
         cameraManager.stopSession()
     }
-
+    
     /// 撮影 → 前景検出 → 切り抜き → SwiftData に保存
     func captureAndProcess(modelContext: ModelContext) {
         Task {
             phase = .processing
             errorMessage = nil
-
+            
             do {
+                // 撮影
                 let photo = try await cameraManager.capturePhoto()
-                let cutout = try await SubjectDetector.detectAndCutout(from: photo)
-
+                
+                // タイプ分類
+                let (monsterType, confidence) = try monsterClassifier.classify(image: photo)
+                print("monsterType: \(monsterType), confidence: \(confidence * 100)%")
+                
                 // スキャン成功時に即保存
+                let cutout = try await SubjectDetector.detectAndCutout(from: photo)
                 let store = MonsterStore(modelContext: modelContext)
                 try store.save(image: cutout)
-
+                
                 cutoutImage = cutout
                 showPreview = true
             } catch {
@@ -53,7 +60,7 @@ class MonsterScanViewModel: ObservableObject {
             }
         }
     }
-
+    
     func retry() {
         showPreview = false
         cutoutImage = nil
