@@ -106,13 +106,22 @@ class BattleMatchingViewModel: ObservableObject {
                 status: "matched"
             )
 
-            let response = try await client
+            // status=waiting のバトルだけ更新（楽観的排他制御）
+            let updated: [BattleRow] = try await client
                 .from("battles")
-                .update(update)
+                .update(update, returning: .representation)
                 .eq("id", value: target.id.uuidString)
+                .eq("status", value: "waiting")
+                .select("id, status")
                 .execute()
+                .value
 
-            print("[Matching] UPDATE レスポンス status: \(response.status)")
+            guard !updated.isEmpty else {
+                phase = .error("他のプレイヤーが先に参加しました")
+                return
+            }
+
+            print("[Matching] UPDATE 成功")
             phase = .battling
         } catch {
             print("[Matching] joinBattle エラー: \(error)")
