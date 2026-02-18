@@ -9,9 +9,11 @@ import SwiftUI
 
 struct BattleGameView: View {
     @StateObject private var viewModel: BattleViewModel
+    var onFinish: () -> Void
 
-    init(battleId: UUID) {
+    init(battleId: UUID, onFinish: @escaping () -> Void) {
         _viewModel = StateObject(wrappedValue: BattleViewModel(battleId: battleId))
+        self.onFinish = onFinish
     }
 
     var body: some View {
@@ -171,6 +173,7 @@ struct BattleGameView: View {
 
             Button("戻る") {
                 viewModel.cleanup()
+                onFinish()
             }
             .buttonStyle(.bordered)
         }
