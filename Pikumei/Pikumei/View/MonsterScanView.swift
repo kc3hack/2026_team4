@@ -36,10 +36,10 @@ struct MonsterScanView: View {
                         // SwiftData にモンスター名を保存
                         let store = MonsterStore(modelContext: modelContext)
                         try? store.updateName(monster: monster, name: name)
-                        // Supabase にも名前を反映
+                        // 名前付きで Supabase にアップロード
                         Task {
                             let syncService = MonsterSyncService()
-                            try? await syncService.updateName(monster: monster, name: name)
+                            try? await syncService.upload(monster: monster)
                         }
                     }
                 }

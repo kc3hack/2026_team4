@@ -52,12 +52,10 @@ class MonsterScanViewModel: ObservableObject {
                 let store = MonsterStore(modelContext: modelContext)
                 try store.save(image: cutout, label: monsterType, confidence: confidence)
 
-                // ローカル保存したモンスターを取得して Supabase にアップロード
+                // ローカル保存したモンスターを取得（Supabase アップロードは名前入力後に行う）
                 let monsters = try store.fetchAll()
                 if let latest = monsters.first {
                     lastSavedMonster = latest
-                    let syncService = MonsterSyncService()
-                    try await syncService.upload(monster: latest)
                 }
 
                 cutoutImage = cutout
