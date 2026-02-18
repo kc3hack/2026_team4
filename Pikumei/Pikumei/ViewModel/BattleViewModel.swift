@@ -19,6 +19,10 @@ class BattleViewModel: ObservableObject {
     @Published var isMyTurn: Bool = false
     @Published var myLabel: MonsterType?
     @Published var opponentLabel: MonsterType?
+    @Published var myName: String?
+    @Published var opponentName: String?
+    @Published var myThumbnail: Data?
+    @Published var opponentThumbnail: Data?
     @Published var battleLog: [String] = []
     @Published var myAttacks: [BattleAttack] = []
     @Published var attackPP: [Int?] = []  // nil = 無制限, 数値 = 残り回数
@@ -79,7 +83,7 @@ class BattleViewModel: ObservableObject {
 
             let myMonster: MonsterLabelRow = try await client
                 .from("monsters")
-                .select("id, classification_label")
+                .select("id, classification_label, name, thumbnail")
                 .eq("id", value: myMonsterId.uuidString)
                 .single()
                 .execute()
@@ -87,7 +91,7 @@ class BattleViewModel: ObservableObject {
 
             let oppMonster: MonsterLabelRow = try await client
                 .from("monsters")
-                .select("id, classification_label")
+                .select("id, classification_label, name, thumbnail")
                 .eq("id", value: oppMonsterId.uuidString)
                 .single()
                 .execute()
@@ -103,6 +107,10 @@ class BattleViewModel: ObservableObject {
             opponentHp = opp.hp
             myLabel = myMonster.classificationLabel
             opponentLabel = oppMonster.classificationLabel
+            myName = myMonster.name
+            opponentName = oppMonster.name
+            myThumbnail = myMonster.thumbnailData
+            opponentThumbnail = oppMonster.thumbnailData
             myAttacks = myMonster.classificationLabel.attacks
 
             // ばつぐん技のみ PP 2、それ以外は無制限

@@ -52,36 +52,44 @@ struct BattleGameView: View {
     private var battlingView: some View {
         VStack(spacing: 20) {
             // 相手側
-            VStack(alignment: .leading, spacing: 8) {
-                Text("あいて")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                Text(viewModel.opponentLabel?.rawValue ?? "")
-                    .font(.title3)
-                    .bold()
-                hpBar(
-                    current: viewModel.opponentHp,
-                    maxHp: viewModel.opponentStats?.hp ?? 1,
-                    color: .red
-                )
+            HStack(spacing: 12) {
+                monsterThumbnail(data: viewModel.opponentThumbnail)
+
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("あいて")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                    Text(viewModel.opponentName ?? viewModel.opponentLabel?.rawValue ?? "")
+                        .font(.title3)
+                        .bold()
+                    hpBar(
+                        current: viewModel.opponentHp,
+                        maxHp: viewModel.opponentStats?.hp ?? 1,
+                        color: .red
+                    )
+                }
             }
             .frame(maxWidth: .infinity, alignment: .leading)
 
             Divider()
 
             // 自分側
-            VStack(alignment: .leading, spacing: 8) {
-                Text("じぶん")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                Text(viewModel.myLabel?.rawValue ?? "")
-                    .font(.title3)
-                    .bold()
-                hpBar(
-                    current: viewModel.myHp,
-                    maxHp: viewModel.myStats?.hp ?? 1,
-                    color: .green
-                )
+            HStack(spacing: 12) {
+                monsterThumbnail(data: viewModel.myThumbnail)
+
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("じぶん")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                    Text(viewModel.myName ?? viewModel.myLabel?.rawValue ?? "")
+                        .font(.title3)
+                        .bold()
+                    hpBar(
+                        current: viewModel.myHp,
+                        maxHp: viewModel.myStats?.hp ?? 1,
+                        color: .green
+                    )
+                }
             }
             .frame(maxWidth: .infinity, alignment: .leading)
 
@@ -167,6 +175,25 @@ struct BattleGameView: View {
                 .font(.caption)
                 .foregroundStyle(.secondary)
         }
+    }
+
+    // MARK: - モンスターサムネイル
+
+    private func monsterThumbnail(data: Data?) -> some View {
+        Group {
+            if let data, let uiImage = UIImage(data: data) {
+                Image(uiImage: uiImage)
+                    .resizable()
+                    .scaledToFill()
+            } else {
+                Image(systemName: "questionmark.circle")
+                    .resizable()
+                    .scaledToFit()
+                    .foregroundStyle(.secondary)
+            }
+        }
+        .frame(width: 60, height: 60)
+        .clipShape(RoundedRectangle(cornerRadius: 8))
     }
 
     // MARK: - ログ

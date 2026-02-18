@@ -61,14 +61,40 @@ struct BattleFullRow: Codable {
     }
 }
 
-/// モンスター label 取得用
+/// モンスター label 取得用（名前・サムネイル含む）
 struct MonsterLabelRow: Codable {
     let id: UUID
     let classificationLabel: MonsterType
+    let name: String?
+    /// Supabase BYTEA は hex 文字列で返るため String で受け取る
+    let thumbnail: String?
 
     enum CodingKeys: String, CodingKey {
         case id
         case classificationLabel = "classification_label"
+        case name
+        case thumbnail
+    }
+
+    /// hex 文字列（\x...）を Data に変換する
+    var thumbnailData: Data? {
+        guard let thumbnail else { return nil }
+        // "\x" プレフィックスを除去
+        var hex = thumbnail
+        if hex.hasPrefix("\\x") {
+            hex = String(hex.dropFirst(2))
+        }
+        // hex → Data
+        var data = Data()
+        var index = hex.startIndex
+        while index < hex.endIndex {
+            let nextIndex = hex.index(index, offsetBy: 2, limitedBy: hex.endIndex) ?? hex.endIndex
+            if let byte = UInt8(hex[index..<nextIndex], radix: 16) {
+                data.append(byte)
+            }
+            index = nextIndex
+        }
+        return data.isEmpty ? nil : data
     }
 }
 
