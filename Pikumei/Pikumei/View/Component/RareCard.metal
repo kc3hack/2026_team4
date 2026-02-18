@@ -18,11 +18,11 @@ half4 getRareBaseColor(float2 position, float2 size, half4 original, float time)
     float t = fmod(time * speed, 1.0);
     
     float glintPos = 1.0 - exp(-4.0 * t) * cos(5.0 * t);
-    constexpr float width = 0.3;
+    constexpr float width = 0.15;
     
     float intensity = smoothstep(glintPos - width, glintPos, diagCoord) * (1.0 - smoothstep(glintPos, glintPos + width, diagCoord));
     
-    half3 glinted = original.rgb + half3(1.0) * half(intensity) * 0.6;
+    half3 glinted = original.rgb + half3(1.0) * half(intensity) * 0.25;
     return half4(glinted, original.a);
 }
 
@@ -31,8 +31,8 @@ half4 getMotionLightEffectColor(float2 position, float2 size, half4 baseColor, f
     float2 uv = (position / size) * 2.0 - 1.0;
     uv.y = -uv.y;
     
-    half3 horizontalLight = uv.x * acceleration.x * -1;
-    half3 verticalLight = uv.y * acceleration.y * -1;
+    half3 horizontalLight = uv.x * acceleration.x * -1 * 0.4;
+    half3 verticalLight = uv.y * acceleration.y * -1 * 0.4;
     
     half3 finalRgb = max(horizontalLight + verticalLight + baseColor.rgb, baseColor.rgb);
     return half4(finalRgb, baseColor.a);
