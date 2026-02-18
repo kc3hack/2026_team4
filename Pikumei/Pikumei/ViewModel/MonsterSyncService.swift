@@ -32,7 +32,7 @@ class MonsterSyncService {
 
         let record = MonsterRecord(
             userId: userId,
-            classificationLabel: label,
+            classificationLabel: label.rawValue,
             thumbnail: thumbnail
         )
 

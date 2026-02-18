@@ -74,7 +74,7 @@ class SupabaseTestViewModel: ObservableObject {
 /// BYTEA は hex 文字列で返るため String で受けて Data+ByteaHex で変換する
 struct FetchedMonster: Codable, Identifiable {
     let id: UUID
-    let classificationLabel: String
+    let classificationLabel: MonsterType
     let thumbnailHex: String
 
     enum CodingKeys: String, CodingKey {

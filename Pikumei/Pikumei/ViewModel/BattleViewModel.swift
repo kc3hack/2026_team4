@@ -17,8 +17,8 @@ class BattleViewModel: ObservableObject {
     @Published var myHp: Int = 0
     @Published var opponentHp: Int = 0
     @Published var isMyTurn: Bool = false
-    @Published var myLabel: String = ""
-    @Published var opponentLabel: String = ""
+    @Published var myLabel: MonsterType?
+    @Published var opponentLabel: MonsterType?
     @Published var battleLog: [String] = []
 
     let battleId: UUID
@@ -60,7 +60,6 @@ class BattleViewModel: ObservableObject {
                     break
                 }
 
-                print("[Battle] player2 未設定、リトライ \(attempt + 1)/5")
                 try await Task.sleep(for: .seconds(1))
             }
 
@@ -107,9 +106,7 @@ class BattleViewModel: ObservableObject {
             subscribeToBattle()
 
             phase = .battling
-            print("[Battle] 準備完了 isPlayer1=\(isPlayer1) myHp=\(myHp) oppHp=\(opponentHp)")
         } catch {
-            print("[Battle] prepare エラー: \(error)")
             battleLog.append("エラー: \(error.localizedDescription)")
             phase = .lost
         }
@@ -124,12 +121,11 @@ class BattleViewModel: ObservableObject {
 
         // 相手の HP を減らす（自分側に即時反映）
         opponentHp -= myStats.attack
-        battleLog.append("\(myLabel) の攻撃！ \(myStats.attack) ダメージ！")
+        battleLog.append("\(myLabel?.rawValue ?? "???") の攻撃！ \(myStats.attack) ダメージ！")
 
         // Broadcast 送信完了後に勝利判定（送信前に cleanup されるのを防ぐ）
         Task {
             try? await channel?.broadcast(event: "attack", message: AttackMessage(type: "attack"))
-            print("[Battle] attack 送信")
 
             if opponentHp <= 0, self.phase == .battling {
                 opponentHp = 0
@@ -181,13 +177,11 @@ class BattleViewModel: ObservableObject {
         subscribeTask = Task {
             do {
                 try await ch.subscribeWithError()
-                print("[Battle] Broadcast 購読成功")
                 // ready の定期送信を開始
                 await MainActor.run {
                     self.startReadyPing()
                 }
             } catch {
-                print("[Battle] Broadcast 購読失敗: \(error)")
             }
         }
     }
@@ -199,7 +193,6 @@ class BattleViewModel: ObservableObject {
             while !opponentReady, elapsed < 10 {
                 do {
                     try await channel?.broadcast(event: "ready", message: ReadyMessage(type: "ready"))
-                    print("[Battle] ready 送信 (\(elapsed + 1)/10)")
                     try await Task.sleep(for: .seconds(1))
                     elapsed += 1
                 } catch {
@@ -208,7 +201,6 @@ class BattleViewModel: ObservableObject {
             }
             // タイムアウト: 相手が応答しなかった
             if !opponentReady {
-                print("[Battle] ready タイムアウト")
                 await MainActor.run {
                     battleLog.append("対戦相手が見つかりませんでした")
                     phase = .lost
@@ -223,7 +215,6 @@ class BattleViewModel: ObservableObject {
         opponentReady = true
         readyPingTask?.cancel()
         readyPingTask = nil
-        print("[Battle] 相手の ready 受信")
 
         // 相手に ready を返す（相手がまだ受信していない可能性があるため）
         Task {
@@ -239,7 +230,7 @@ class BattleViewModel: ObservableObject {
         guard phase == .battling, let opponentStats else { return }
 
         myHp -= opponentStats.attack
-        battleLog.append("\(opponentLabel) の攻撃！ \(opponentStats.attack) ダメージ！")
+        battleLog.append("\(opponentLabel?.rawValue ?? "???") の攻撃！ \(opponentStats.attack) ダメージ！")
 
         if myHp <= 0 {
             myHp = 0
@@ -261,9 +252,7 @@ class BattleViewModel: ObservableObject {
                     .update(update)
                     .eq("id", value: battleId.uuidString)
                     .execute()
-                print("[Battle] バトル終了 winner=\(winnerId)")
             } catch {
-                print("[Battle] バトル終了更新エラー: \(error)")
             }
         }
     }

@@ -64,7 +64,7 @@ struct BattleFullRow: Codable {
 /// モンスター label 取得用
 struct MonsterLabelRow: Codable {
     let id: UUID
-    let classificationLabel: String
+    let classificationLabel: MonsterType
 
     enum CodingKeys: String, CodingKey {
         case id

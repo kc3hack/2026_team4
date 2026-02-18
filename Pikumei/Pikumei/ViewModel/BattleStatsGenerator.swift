@@ -12,8 +12,19 @@ enum BattleStatsGenerator {
     private static let hpRange = 80...180
     private static let attackRange = 15...55
 
+    /// タイプごとの固定 seed（0.0〜1.0、バランス調整用）
+    private static let typeSeed: [MonsterType: Double] = [
+        .fire:  0.75,
+        .water: 0.55,
+        .leaf:  0.40,
+        .ghost: 0.90,
+        .human: 0.50,
+        .fish:  0.30,
+        .bird:  0.65,
+    ]
+
     /// label + confidence からステータスを生成（nil 時はランダム fallback）
-    static func generate(label: String?, confidence: Double?) -> BattleStats {
+    static func generate(label: MonsterType?, confidence: Double?) -> BattleStats {
         guard let label, let confidence else {
             // ML 未実装 or 分類失敗 → ランダム
             return BattleStats(
@@ -22,8 +33,7 @@ enum BattleStatsGenerator {
             )
         }
 
-        // label の hash で 0.0〜1.0 の決定的な値を作る（同じラベル → 同じ個性）
-        let seed = normalizedHash(label)
+        let seed = typeSeed[label] ?? 0.5
 
         // confidence が高いほど強くなるよう、base を confidence で底上げする
         let clampedConf = min(max(confidence, 0), 1)
@@ -36,15 +46,6 @@ enum BattleStatsGenerator {
     }
 
     // MARK: - Private
-
-    /// label 文字列を 0.0〜1.0 に写す決定的ハッシュ
-    private static func normalizedHash(_ label: String) -> Double {
-        var h: UInt64 = 5381
-        for byte in label.utf8 {
-            h = h &* 33 &+ UInt64(byte)
-        }
-        return Double(h % 10000) / 10000.0
-    }
 
     /// seed（個体差）と confidence（強さ係数）からステータス値を算出
     private static func stat(in range: ClosedRange<Int>, seed: Double, confidence: Double) -> Int {

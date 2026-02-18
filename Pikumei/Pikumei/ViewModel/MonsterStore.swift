@@ -18,7 +18,7 @@ class MonsterStore {
     }
 
     /// モンスターを保存する
-    func save(image: UIImage, label: String? = nil, confidence: Double? = nil) throws {
+    func save(image: UIImage, label: MonsterType? = nil, confidence: Double? = nil) throws {
         guard let monster = Monster(image: image, classificationLabel: label, classificationConfidence: confidence) else {
             throw MonsterStoreError.imageConversionFailed
         }
