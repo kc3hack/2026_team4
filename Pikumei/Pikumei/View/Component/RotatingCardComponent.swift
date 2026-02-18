@@ -66,6 +66,7 @@ struct RotatingCardComponent: View {
                 .frame(width: 260, height: 380)
                 .clipped()
         }
+        .rareCardEffect()
     }
 
     private var backFace: some View {
