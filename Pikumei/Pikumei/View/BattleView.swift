@@ -2,12 +2,11 @@
 //  BattleView.swift
 //  Pikumei
 //
-//  マッチング通信テスト画面
+//  バトル画面（マッチング → バトル）
 //
 
 import SwiftUI
 
-/// バトル画面 — マッチング通信テスト
 struct BattleView: View {
     @StateObject private var matchingVM = BattleMatchingViewModel()
 
@@ -16,32 +15,54 @@ struct BattleView: View {
             VStack(spacing: 24) {
                 switch matchingVM.phase {
                 case .idle:
-                    idleSection
+                    BattleIdleSection(
+                        onCreate: { Task { await matchingVM.createBattle() } },
+                        onJoin: { Task { await matchingVM.joinBattle() } }
+                    )
                 case .waiting:
-                    waitingSection
-                case .matched:
-                    matchedSection
+                    BattleWaitingSection(
+                        battleId: matchingVM.battleId,
+                        onCancel: { matchingVM.reset() }
+                    )
+                case .battling:
+                    if let battleId = matchingVM.battleId {
+                        BattleGameView(battleId: battleId) {
+                            matchingVM.reset()
+                        }
+                    }
                 case .error(let message):
-                    errorSection(message: message)
+                    BattleErrorSection(
+                        message: message,
+                        onBack: { matchingVM.reset() }
+                    )
                 }
             }
             .padding()
             .navigationTitle("バトル")
+            .toolbar(
+                matchingVM.phase.isBattling ? .hidden : .visible,
+                for: .tabBar
+            )
             .onDisappear {
                 matchingVM.unsubscribe()
             }
         }
     }
+}
 
-    // MARK: - 初期状態
+// MARK: - 初期状態
 
-    private var idleSection: some View {
+private struct BattleIdleSection: View {
+    var onCreate: () -> Void
+    var onJoin: () -> Void
+
+    var body: some View {
         VStack(spacing: 16) {
             Text("マッチング通信テスト")
                 .font(.headline)
 
             Button {
-                Task { await matchingVM.createBattle() }
+                onCreate()
             } label: {
                 Text("バトルを作成して待つ")
                     .frame(maxWidth: .infinity)
@@ -49,7 +70,7 @@ struct BattleView: View {
             .buttonStyle(.borderedProminent)
 
             Button {
-                Task { await matchingVM.joinBattle() }
+                onJoin()
             } label: {
                 Text("待機中バトルに参加")
                     .frame(maxWidth: .infinity)
@@ -57,56 +78,41 @@ struct BattleView: View {
             .buttonStyle(.bordered)
         }
     }
+}
 
-    // MARK: - 待機中
+// MARK: - 待機中
 
-    private var waitingSection: some View {
+private struct BattleWaitingSection: View {
+    let battleId: UUID?
+    var onCancel: () -> Void
+
+    var body: some View {
         VStack(spacing: 16) {
             ProgressView()
             Text("相手を待っています...")
                 .font(.headline)
 
-            if let id = matchingVM.battleId {
+            if let id = battleId {
                 Text("Battle ID: \(id.uuidString.prefix(8))...")
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
 
             Button("キャンセル") {
-                matchingVM.reset()
+                onCancel()
             }
             .buttonStyle(.bordered)
         }
     }
+}
 
-    // MARK: - マッチ成立
+// MARK: - エラー
 
-    private var matchedSection: some View {
-        VStack(spacing: 16) {
-            Image(systemName: "checkmark.circle.fill")
-                .font(.system(size: 48))
-                .foregroundStyle(.green)
+private struct BattleErrorSection: View {
+    let message: String
+    var onBack: () -> Void
 
-            Text("マッチ成立！")
-                .font(.title2)
-                .bold()
-
-            if let id = matchingVM.battleId {
-                Text("Battle ID: \(id.uuidString)")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-            }
-
-            Button("戻る") {
-                matchingVM.reset()
-            }
-            .buttonStyle(.bordered)
-        }
-    }
-
-    // MARK: - エラー
-
-    private func errorSection(message: String) -> some View {
+    var body: some View {
         VStack(spacing: 16) {
             Image(systemName: "exclamationmark.triangle.fill")
                 .font(.system(size: 48))
@@ -118,7 +124,7 @@ struct BattleView: View {
                 .multilineTextAlignment(.center)
 
             Button("戻る") {
-                matchingVM.reset()
+                onBack()
             }
             .buttonStyle(.bordered)
         }

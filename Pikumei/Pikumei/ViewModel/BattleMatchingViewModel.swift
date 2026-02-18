@@ -14,8 +14,13 @@ class BattleMatchingViewModel: ObservableObject {
     enum MatchingPhase {
         case idle           // 初期状態
         case waiting        // バトル作成済み、相手待ち
-        case matched        // マッチ成立
+        case battling       // マッチ成立 → バトル中
         case error(String)  // エラー
+
+        var isBattling: Bool {
+            if case .battling = self { return true }
+            return false
+        }
     }
 
     @Published var phase: MatchingPhase = .idle
@@ -70,12 +75,16 @@ class BattleMatchingViewModel: ObservableObject {
             let userId = try await client.auth.session.user.id
             let monsterId = try await fetchRandomMonster()
 
-            // 自分以外が作った waiting バトルを1件取得
+            // 自分以外が作った直近5分以内の waiting バトルを1件取得
+            let fiveMinutesAgo = ISO8601DateFormatter().string(
+                from: Date().addingTimeInterval(-300)
+            )
             let battles: [BattleRow] = try await client
                 .from("battles")
                 .select("id, status")
                 .eq("status", value: "waiting")
                 .neq("player1_id", value: userId.uuidString)
+                .gte("created_at", value: fiveMinutesAgo)
                 .order("created_at", ascending: false)
                 .limit(1)
                 .execute()
@@ -97,14 +106,23 @@ class BattleMatchingViewModel: ObservableObject {
                 status: "matched"
             )
 
-            let response = try await client
+            // status=waiting のバトルだけ更新（楽観的排他制御）
+            let updated: [BattleRow] = try await client
                 .from("battles")
-                .update(update)
+                .update(update, returning: .representation)
                 .eq("id", value: target.id.uuidString)
+                .eq("status", value: "waiting")
+                .select("id, status")
                 .execute()
+                .value
 
-            print("[Matching] UPDATE レスポンス status: \(response.status)")
-            phase = .matched
+            guard !updated.isEmpty else {
+                phase = .error("他のプレイヤーが先に参加しました")
+                return
+            }
+
+            print("[Matching] UPDATE 成功")
+            phase = .battling
         } catch {
             print("[Matching] joinBattle エラー: \(error)")
             phase = .error("参加失敗: \(error.localizedDescription)")
@@ -128,9 +146,10 @@ class BattleMatchingViewModel: ObservableObject {
             print("[Matching] Realtime UPDATE 受信: \(action.record)")
             if let status = action.record["status"]?.stringValue,
                status == "matched" {
-                print("[Matching] status=matched 検出！")
+                print("[Matching] status=matched 検出！→ バトル開始")
                 Task { @MainActor [weak self] in
-                    self?.phase = .matched
+                    self?.unsubscribe()
+                    self?.phase = .battling
                 }
             }
         }
@@ -139,6 +158,23 @@ class BattleMatchingViewModel: ObservableObject {
             do {
                 try await ch.subscribeWithError()
                 print("[Matching] Realtime 購読成功 channel status: \(ch.status)")
+
+                // 購読完了前に相手が参加していた場合のフォールバック
+                let current: BattleRow = try await client
+                    .from("battles")
+                    .select("id, status")
+                    .eq("id", value: battleId.uuidString)
+                    .single()
+                    .execute()
+                    .value
+
+                if current.status == "matched" {
+                    print("[Matching] 購読前にマッチ済み → バトル開始")
+                    await MainActor.run {
+                        self.unsubscribe()
+                        self.phase = .battling
+                    }
+                }
             } catch {
                 print("[Matching] Realtime 購読失敗: \(error)")
             }
@@ -159,8 +195,19 @@ class BattleMatchingViewModel: ObservableObject {
         channel = nil
     }
 
-    /// 状態をリセット
+    /// 状態をリセット（DB 上の waiting バトルもキャンセルする）
     func reset() {
+        if let battleId {
+            Task {
+                try? await client
+                    .from("battles")
+                    .update(["status": "cancelled"])
+                    .eq("id", value: battleId.uuidString)
+                    .eq("status", value: "waiting")
+                    .execute()
+                print("[Matching] バトル \(battleId) をキャンセル")
+            }
+        }
         unsubscribe()
         phase = .idle
         battleId = nil
