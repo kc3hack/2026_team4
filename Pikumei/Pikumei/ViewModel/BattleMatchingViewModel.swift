@@ -16,6 +16,11 @@ class BattleMatchingViewModel: ObservableObject {
         case waiting        // バトル作成済み、相手待ち
         case battling       // マッチ成立 → バトル中
         case error(String)  // エラー
+
+        var isBattling: Bool {
+            if case .battling = self { return true }
+            return false
+        }
     }
 
     @Published var phase: MatchingPhase = .idle
@@ -144,6 +149,23 @@ class BattleMatchingViewModel: ObservableObject {
             do {
                 try await ch.subscribeWithError()
                 print("[Matching] Realtime 購読成功 channel status: \(ch.status)")
+
+                // 購読完了前に相手が参加していた場合のフォールバック
+                let current: BattleRow = try await client
+                    .from("battles")
+                    .select("id, status")
+                    .eq("id", value: battleId.uuidString)
+                    .single()
+                    .execute()
+                    .value
+
+                if current.status == "matched" {
+                    print("[Matching] 購読前にマッチ済み → バトル開始")
+                    await MainActor.run {
+                        self.unsubscribe()
+                        self.phase = .battling
+                    }
+                }
             } catch {
                 print("[Matching] Realtime 購読失敗: \(error)")
             }
