@@ -23,6 +23,10 @@ struct MainView: View {
                 .tabItem {
                     Label("バトル", systemImage: "bolt.fill")
                 }
+            
+            aiBattleView()
+                .tabItem {
+                    Label("AIバトル", systemImage: "bolt.fill")
 
             MonsterListView()
                 .tabItem {
