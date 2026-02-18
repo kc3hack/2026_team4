@@ -33,6 +33,7 @@ class MonsterSyncService {
         let record = MonsterRecord(
             userId: userId,
             classificationLabel: label.rawValue,
+            classificationConfidence: monster.classificationConfidence,
             thumbnail: thumbnail
         )
 
@@ -83,11 +84,13 @@ class MonsterSyncService {
 struct MonsterRecord: Codable {
     var userId: UUID?
     let classificationLabel: String
+    let classificationConfidence: Double?
     let thumbnail: Data
 
     enum CodingKeys: String, CodingKey {
         case userId = "user_id"
         case classificationLabel = "classification_label"
+        case classificationConfidence = "classification_confidence"
         case thumbnail
     }
 }

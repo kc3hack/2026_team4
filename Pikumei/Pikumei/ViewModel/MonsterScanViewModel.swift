@@ -49,8 +49,15 @@ class MonsterScanViewModel: ObservableObject {
                 // スキャン成功時に即保存
                 let cutout = try await SubjectDetector.detectAndCutout(from: photo)
                 let store = MonsterStore(modelContext: modelContext)
-                try store.save(image: cutout)
-                
+                try store.save(image: cutout, label: monsterType, confidence: confidence)
+
+                // ローカル保存したモンスターを取得して Supabase にアップロード
+                let monsters = try store.fetchAll()
+                if let latest = monsters.first {
+                    let syncService = MonsterSyncService()
+                    try await syncService.upload(monster: latest)
+                }
+
                 cutoutImage = cutout
                 showPreview = true
             } catch {
