@@ -27,7 +27,10 @@ class BattleViewModel: ObservableObject {
     private let client = SupabaseClientProvider.shared
     private var channel: RealtimeChannelV2?
     private var subscription: RealtimeSubscription?
+    private var readySubscription: RealtimeSubscription?
     private var subscribeTask: Task<Void, Never>?
+    private var readyPingTask: Task<Void, Never>?
+    private var opponentReady = false
 
     init(battleId: UUID) {
         self.battleId = battleId
@@ -41,21 +44,32 @@ class BattleViewModel: ObservableObject {
             let userId = try await client.auth.session.user.id
             self.userId = userId
 
-            // battles テーブルからバトル詳細を取得
-            let battle: BattleFullRow = try await client
-                .from("battles")
-                .select("id, status, player1_id, player1_monster_id, player2_id, player2_monster_id")
-                .eq("id", value: battleId.uuidString)
-                .single()
-                .execute()
-                .value
+            // battles テーブルからバトル詳細を取得（player2 未設定時はリトライ）
+            var battle: BattleFullRow?
+            for attempt in 0..<5 {
+                let row: BattleFullRow = try await client
+                    .from("battles")
+                    .select("id, status, player1_id, player1_monster_id, player2_id, player2_monster_id")
+                    .eq("id", value: battleId.uuidString)
+                    .single()
+                    .execute()
+                    .value
 
-            isPlayer1 = battle.player1Id == userId
+                if row.player2MonsterId != nil {
+                    battle = row
+                    break
+                }
 
-            guard let player2MonsterId = battle.player2MonsterId else {
-                phase = .preparing
+                print("[Battle] player2 未設定、リトライ \(attempt + 1)/5")
+                try await Task.sleep(for: .seconds(1))
+            }
+
+            guard let battle, let player2MonsterId = battle.player2MonsterId else {
+                battleLog.append("エラー: 対戦相手の情報を取得できませんでした")
                 return
             }
+
+            isPlayer1 = battle.player1Id == userId
 
             // 両方のモンスターの label を取得
             let myMonsterId = isPlayer1 ? battle.player1MonsterId : player2MonsterId
@@ -88,11 +102,9 @@ class BattleViewModel: ObservableObject {
             myLabel = myMonster.classificationLabel
             opponentLabel = oppMonster.classificationLabel
 
-            // Broadcast チャネルを購読
+            // Broadcast チャネルを購読（ready ハンドシェイク後にターン開始）
             subscribeToBattle()
 
-            // Player1 が先攻
-            isMyTurn = isPlayer1
             phase = .battling
             print("[Battle] 準備完了 isPlayer1=\(isPlayer1) myHp=\(myHp) oppHp=\(opponentHp)")
         } catch {
@@ -134,9 +146,12 @@ class BattleViewModel: ObservableObject {
     // MARK: - クリーンアップ
 
     func cleanup() {
+        readyPingTask?.cancel()
+        readyPingTask = nil
         subscribeTask?.cancel()
         subscribeTask = nil
         subscription = nil
+        readySubscription = nil
         if let channel {
             Task {
                 await channel.unsubscribe()
@@ -148,7 +163,7 @@ class BattleViewModel: ObservableObject {
 
     // MARK: - Private
 
-    /// Broadcast チャネルを購読して攻撃イベントを受信する
+    /// Broadcast チャネルを購読して攻撃・ready イベントを受信する
     private func subscribeToBattle() {
         let ch = client.channel("battle-game-\(battleId.uuidString)")
         channel = ch
@@ -160,14 +175,56 @@ class BattleViewModel: ObservableObject {
             }
         }
 
+        readySubscription = ch.onBroadcast(event: "ready") { [weak self] _ in
+            Task { @MainActor [weak self] in
+                self?.handleOpponentReady()
+            }
+        }
+
         subscribeTask = Task {
             do {
                 try await ch.subscribeWithError()
                 print("[Battle] Broadcast 購読成功")
+                // ready の定期送信を開始
+                await MainActor.run {
+                    self.startReadyPing()
+                }
             } catch {
                 print("[Battle] Broadcast 購読失敗: \(error)")
             }
         }
+    }
+
+    /// ready イベントを定期送信（相手の ready を受信するまで）
+    private func startReadyPing() {
+        readyPingTask = Task {
+            while !opponentReady {
+                do {
+                    try await channel?.broadcast(event: "ready", message: ReadyMessage(type: "ready"))
+                    print("[Battle] ready 送信")
+                    try await Task.sleep(for: .seconds(1))
+                } catch {
+                    break
+                }
+            }
+        }
+    }
+
+    /// 相手の ready を受信
+    private func handleOpponentReady() {
+        guard !opponentReady else { return }
+        opponentReady = true
+        readyPingTask?.cancel()
+        readyPingTask = nil
+        print("[Battle] 相手の ready 受信")
+
+        // 相手に ready を返す（相手がまだ受信していない可能性があるため）
+        Task {
+            try? await channel?.broadcast(event: "ready", message: ReadyMessage(type: "ready"))
+        }
+
+        isMyTurn = isPlayer1
+        battleLog.append("バトル開始！")
     }
 
     /// 相手の攻撃を受信した時の処理
@@ -210,5 +267,10 @@ class BattleViewModel: ObservableObject {
 
 /// 攻撃イベント用（Codable で broadcast に渡す）
 private struct AttackMessage: Codable {
+    let type: String
+}
+
+/// 準備完了イベント用
+private struct ReadyMessage: Codable {
     let type: String
 }
