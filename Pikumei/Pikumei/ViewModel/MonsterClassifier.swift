@@ -9,18 +9,29 @@ import UIKit
 import CoreML
 import Vision
 
+
+let labelToMonsterType: [String: MonsterType] = [
+    "fire": .fire,
+    "water": .water,
+    "leaf": .leaf,
+    "ghost": .ghost,
+    "human": .human,
+    "fish": .fish,
+    "bird": .bird,
+]
+
 /// モンスターのタイプ分類を行う
 class MonsterClassifier {
-    var label: String
-    var confidence: Float
+    private var monsterType: MonsterType? = nil
+    private var confidence: Double? = nil
+    private var request: VNRequest? = nil
     
-    init(label: String, confidence: Float) {
-        self.label = label
-        self.confidence = confidence
+    init() {
+        self.request = try? self.setupRequest()
     }
     
-    /// 画像を分類器に入力し、モンスタータイプと信頼度を返す
-    func classify(from image: UIImage) throws -> (String, Float) {
+    /// モデルを読み込み、リクエストを作成する
+    private func setupRequest() throws -> VNRequest{
         // モデルをロード
         let pikumeiClassifier = try? PikumeiClassifier(configuration: MLModelConfiguration())
         guard let pikumeiClassifier else {
@@ -33,14 +44,27 @@ class MonsterClassifier {
         
         // リクエストを作成
         let request = VNCoreMLRequest(model: model, completionHandler: { (request, error) in
+            self.monsterType = nil
+            self.confidence = nil
             guard let results = request.results as? [VNClassificationObservation] else {return}
             guard let first = results.first else {return}
-            self.label = first.identifier
-            self.confidence = first.confidence
+            self.monsterType = labelToMonsterType[first.identifier]
+            self.confidence = Double(first.confidence)
         })
+        return request
+    }
+    
+    /// 画像を分類器に入力し、モンスタータイプと信頼度を返す
+    func classify(image: UIImage) throws -> (MonsterType, Double) {
+        guard let request else {
+            throw MonsterClassifierError.requestNotFound
+        }
         
         // ハンドラーを作成
-        let handler = VNImageRequestHandler(cgImage: image.cgImage!)
+        guard let cgImage = image.cgImage else {
+            throw MonsterClassifierError.invalidImage
+        }
+        let handler = VNImageRequestHandler(cgImage: cgImage)
         do {
             try handler.perform([request])
         } catch {
@@ -48,7 +72,10 @@ class MonsterClassifier {
         }
         
         // 出力
-        return (label, confidence)
+        guard let monsterType, let confidence else {
+            throw MonsterClassifierError.resultNotFound
+        }
+        return (monsterType, confidence)
     }
 }
 
@@ -56,7 +83,10 @@ class MonsterClassifier {
 enum MonsterClassifierError: LocalizedError {
     case modelNotAvailable
     case modelLoadingFailed
+    case requestNotFound
+    case invalidImage
     case requestFailed
+    case resultNotFound
     
     var errorDescription: String? {
         switch self {
@@ -64,8 +94,14 @@ enum MonsterClassifierError: LocalizedError {
             return "モデルが取得できませんでした"
         case .modelLoadingFailed:
             return "モデルのロードに失敗しました"
+        case .requestNotFound:
+            return "リクエストが見つかりませんでした"
+        case .invalidImage:
+            return "不正な画像です"
         case .requestFailed:
             return "リクエストに失敗しました"
+        case .resultNotFound:
+            return "結果が見つかりませんでした"
         }
     }
 }
