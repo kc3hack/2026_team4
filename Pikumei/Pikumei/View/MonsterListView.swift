@@ -2,68 +2,148 @@ import SwiftUI
 import SwiftData
 
 struct MonsterListView: View {
-    @Environment(\.modelContext) private var modelContext // 削除に必要
+    @Environment(\.modelContext) private var modelContext
     @Query(sort: \Monster.createdAt, order: .reverse) private var monsters: [Monster]
     
-    // 削除対象を保持するステート
     @State private var monsterToDelete: Monster?
     @State private var showingDeleteAlert = false
     
-    private let columns = [
-        GridItem(.flexible()),
-        GridItem(.flexible()),
-        GridItem(.flexible()),
-    ]
+    // 検索画面の表示管理
+    @State private var showingSearchSheet = false
     
     var body: some View {
-        if monsters.isEmpty {
-            ContentUnavailableView(
-                "モンスターがいません",
-                systemImage: "photo.on.rectangle.angled",
-                description: Text("スキャンしてモンスターを集めよう")
-            )
-        } else {
-            ScrollView {
-                LazyVGrid(columns: columns, spacing: 4) {
-                    ForEach(monsters) { monster in
-                        if let uiImage = monster.uiImage {
-                            Image(uiImage: uiImage)
-                                .resizable()
-                                .aspectRatio(1, contentMode: .fill)
-                                .frame(minWidth: 0, maxWidth: .infinity) // サイズ固定を推奨
-                                .clipped()
-                            // 長押しメニューの追加
-                                .contextMenu {
-                                    Button(role: .destructive) {
-                                        monsterToDelete = monster
-                                        showingDeleteAlert = true
-                                    } label: {
-                                        Label("削除する", systemImage: "trash")
-                                    }
-                                }
-                        }
+        NavigationStack {
+            VStack(spacing: 0) {
+                // --- 上部の検索ボタン ---
+                Button {
+                    showingSearchSheet = true
+                } label: {
+                    HStack {
+                        Image(systemName: "magnifyingglass")
+                        Text("検索")
+                        Spacer()
                     }
+                    .padding()
+                    .frame(maxWidth: .infinity)
+                    .background(Color.blue.opacity(0.1))
+                    .cornerRadius(25)
+                    .padding(.horizontal)
+                    .padding(.top, 10)
                 }
-                .padding(4)
+                .foregroundColor(.primary)
+                
+                if monsters.isEmpty {
+                    Spacer()
+                    ContentUnavailableView(
+                        "モンスターがいません",
+                        systemImage: "photo.on.rectangle.angled",
+                        description: Text("スキャンしてモンスターを集めよう")
+                    )
+                    Spacer()
+                } else {
+                    // --- 横スクロールの一覧 ---
+                    ScrollView(.horizontal, showsIndicators: false) {
+                        HStack(spacing: 30) {
+                            ForEach(monsters) { monster in
+                                monsterCard(monster)
+                            }
+                        }
+                        .padding(.horizontal, 50)
+                        .padding(.top, 40)
+                    }
+                    .scrollTargetBehavior(.viewAligned)
+                }
             }
-            // 削除確認アラート
+            .navigationTitle("一覧画面")
+            .navigationBarTitleDisplayMode(.inline)
+            // 削除アラート
             .alert("モンスターの削除", isPresented: $showingDeleteAlert) {
                 Button("キャンセル", role: .cancel) {}
                 Button("削除", role: .destructive) {
-                    if let monster = monsterToDelete {
-                        deleteMonster(monster)
-                    }
+                    if let monster = monsterToDelete { deleteMonster(monster) }
                 }
             } message: {
-                Text("このモンスターを逃がしますか？（元には戻せません）")
+                Text("このモンスターを逃がしますか？")
+            }
+            // --- 検索用ハーフシート ---
+            .sheet(isPresented: $showingSearchSheet) {
+                SearchFilterView()
+                    .presentationDetents([.medium, .large]) // 半分の高さと全画面を切り替え
+                    .presentationDragIndicator(.visible)
             }
         }
     }
     
-    /// 削除処理
+    // モンスターカードの表示
+    @ViewBuilder
+    private func monsterCard(_ monster: Monster) -> some View {
+        VStack(spacing: 15) {
+            if let uiImage = monster.uiImage {
+                Image(uiImage: uiImage)
+                    .resizable()
+                    .aspectRatio(contentMode: .fit)
+                    .frame(width: 250, height: 250)
+                    .background(Color.white)
+                    .cornerRadius(15)
+                    .overlay(RoundedRectangle(cornerRadius: 15).stroke(Color.orange, lineWidth: 3))
+                    .contextMenu {
+                        Button(role: .destructive) {
+                            monsterToDelete = monster
+                            showingDeleteAlert = true
+                        } label: {
+                            Label("削除", systemImage: "trash")
+                        }
+                    }
+            }
+            
+            VStack(spacing: 6) {
+                Text("名前").font(.headline)
+                Text("属性").font(.subheadline).foregroundColor(.secondary)
+                Text("誰からのぴくめい").font(.caption).foregroundColor(.gray)
+                Text(monster.createdAt, style: .date).font(.caption2).foregroundColor(.gray)
+            }
+        }
+        .scrollTargetLayout()
+    }
+    
     private func deleteMonster(_ monster: Monster) {
         modelContext.delete(monster)
-        // SwiftDataはContextを削除すれば自動で保存・UI反映されますが、
-        // 明示的に保存したい場合は try? modelContext.save() を入れます
+    }
+}
+
+// --- 検索設定画面 (別のViewとして定義) ---
+struct SearchFilterView: View {
+    @Environment(\.dismiss) var dismiss
+    
+    var body: some View {
+        NavigationStack {
+            List {
+                Section(header: Text("名前で探す").font(.headline)) {
+                    Text("なまえ一覧がここに出ます...")
+                }
+                
+                Section(header: Text("属性").font(.headline)) {
+                    Text("火属性")
+                    Text("水属性")
+                    Text("草属性")
+                }
+                
+                Section(header: Text("誰から？").font(.headline)) {
+                    Text("友達A")
+                    Text("家族")
+                    Text("不明")
+                }
+                
+                Section(header: Text("カレンダーで探す").font(.headline)) {
+                    
+                }
+            }
+            .navigationTitle("検索条件")
+            .toolbar {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button("閉じる") { dismiss() }
+                }
+            }
+        }
     }
 }
