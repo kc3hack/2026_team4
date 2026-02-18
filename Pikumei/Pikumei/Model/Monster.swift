@@ -13,7 +13,7 @@ final class Monster {
     /// 切り抜き画像の PNG データ（外部ストレージで大容量対応）
     @Attribute(.externalStorage) var imageData: Data
     /// ML 分類ラベル（未分類時は nil）
-    var classificationLabel: String?
+    var classificationLabel: MonsterType?
     /// ML 確信度（未分類時は nil）
     var classificationConfidence: Double?
     /// 作成日時
@@ -21,7 +21,7 @@ final class Monster {
     /// Supabase にアップロード済みの場合、そのレコード ID
     var supabaseId: UUID?
 
-    init(imageData: Data, classificationLabel: String? = nil, classificationConfidence: Double? = nil, createdAt: Date = .now, supabaseId: UUID? = nil) {
+    init(imageData: Data, classificationLabel: MonsterType? = nil, classificationConfidence: Double? = nil, createdAt: Date = .now, supabaseId: UUID? = nil) {
         self.imageData = imageData
         self.classificationLabel = classificationLabel
         self.classificationConfidence = classificationConfidence
@@ -37,7 +37,7 @@ extension Monster {
     }
 
     /// UIImage から Monster を生成（PNG で透過保持）
-    convenience init?(image: UIImage, classificationLabel: String? = nil, classificationConfidence: Double? = nil) {
+    convenience init?(image: UIImage, classificationLabel: MonsterType? = nil, classificationConfidence: Double? = nil) {
         guard let data = image.pngData() else { return nil }
         self.init(imageData: data, classificationLabel: classificationLabel, classificationConfidence: classificationConfidence)
     }
