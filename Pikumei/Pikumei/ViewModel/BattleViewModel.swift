@@ -20,6 +20,7 @@ class BattleViewModel: ObservableObject {
     @Published var myLabel: MonsterType?
     @Published var opponentLabel: MonsterType?
     @Published var battleLog: [String] = []
+    @Published var myAttacks: [BattleAttack] = []
 
     let battleId: UUID
     private var isPlayer1 = false
@@ -101,6 +102,7 @@ class BattleViewModel: ObservableObject {
             opponentHp = opp.hp
             myLabel = myMonster.classificationLabel
             opponentLabel = oppMonster.classificationLabel
+            myAttacks = myMonster.classificationLabel.attacks
 
             // Broadcast チャネルを購読（ready ハンドシェイク後にターン開始）
             subscribeToBattle()
@@ -114,18 +116,27 @@ class BattleViewModel: ObservableObject {
 
     // MARK: - 攻撃
 
-    /// 攻撃を送信し、相手の HP を減らす
-    func attack() {
-        guard isMyTurn, let myStats else { return }
+    /// 選択した攻撃を送信し、相手の HP を減らす
+    func attack(index: Int) {
+        guard isMyTurn, let myStats, let opponentLabel else { return }
+        guard index < myAttacks.count else { return }
         isMyTurn = false
 
-        // 相手の HP を減らす（自分側に即時反映）
-        opponentHp -= myStats.attack
-        battleLog.append("\(myLabel?.rawValue ?? "???") の攻撃！ \(myStats.attack) ダメージ！")
+        let chosen = myAttacks[index]
+        let multiplier = chosen.type.effectiveness(against: opponentLabel)
+        let damage = max(Int(Double(myStats.attack) * chosen.powerRate * multiplier), 1)
+        opponentHp -= damage
+
+        battleLog.append("\(chosen.name)攻撃！ \(damage) ダメージ！")
+        if multiplier > 1.0 { battleLog.append("こうかはばつぐんだ！") }
+        else if multiplier < 1.0 { battleLog.append("こうかはいまひとつ...") }
 
         // Broadcast 送信完了後に勝利判定（送信前に cleanup されるのを防ぐ）
         Task {
-            try? await channel?.broadcast(event: "attack", message: AttackMessage(type: "attack"))
+            try? await channel?.broadcast(
+                event: "attack",
+                message: AttackMessage(type: "attack", attackType: chosen.type.rawValue)
+            )
 
             if opponentHp <= 0, self.phase == .battling {
                 opponentHp = 0
@@ -162,9 +173,12 @@ class BattleViewModel: ObservableObject {
         channel = ch
 
         // onBroadcast は subscribe() の前に登録する
-        subscription = ch.onBroadcast(event: "attack") { [weak self] _ in
+        subscription = ch.onBroadcast(event: "attack") { [weak self] payload in
+            // SDK は message を payload["payload"] の下にネストする
+            let inner = payload["payload"]?.objectValue
+            let attackTypeRaw = inner?["attackType"]?.stringValue
             Task { @MainActor [weak self] in
-                self?.handleOpponentAttack()
+                self?.handleOpponentAttack(attackTypeRaw: attackTypeRaw)
             }
         }
 
@@ -226,11 +240,20 @@ class BattleViewModel: ObservableObject {
     }
 
     /// 相手の攻撃を受信した時の処理
-    private func handleOpponentAttack() {
-        guard phase == .battling, let opponentStats else { return }
+    private func handleOpponentAttack(attackTypeRaw: String?) {
+        guard phase == .battling, let opponentStats, let opponentLabel, let myLabel else { return }
 
-        myHp -= opponentStats.attack
-        battleLog.append("\(opponentLabel?.rawValue ?? "???") の攻撃！ \(opponentStats.attack) ダメージ！")
+        let attackType = MonsterType(rawValue: attackTypeRaw ?? "") ?? opponentLabel
+        let attackName = opponentLabel.attacks.first { $0.type == attackType }?.name ?? "???"
+        let powerRate = opponentLabel.attacks.first { $0.type == attackType }?.powerRate ?? 1.0
+
+        let multiplier = attackType.effectiveness(against: myLabel)
+        let damage = max(Int(Double(opponentStats.attack) * powerRate * multiplier), 1)
+        myHp -= damage
+
+        battleLog.append("\(attackName)攻撃！ \(damage) ダメージ！")
+        if multiplier > 1.0 { battleLog.append("こうかはばつぐんだ！") }
+        else if multiplier < 1.0 { battleLog.append("こうかはいまひとつ...") }
 
         if myHp <= 0 {
             myHp = 0
@@ -264,6 +287,7 @@ class BattleViewModel: ObservableObject {
 /// 攻撃イベント用（Codable で broadcast に渡す）
 private struct AttackMessage: Codable {
     let type: String
+    let attackType: String
 }
 
 /// 準備完了イベント用
