@@ -131,7 +131,7 @@ class BattleViewModel: ObservableObject {
             try? await channel?.broadcast(event: "attack", message: AttackMessage(type: "attack"))
             print("[Battle] attack 送信")
 
-            if opponentHp <= 0 {
+            if opponentHp <= 0, self.phase == .battling {
                 opponentHp = 0
                 phase = .won
                 battleLog.append("勝利！")
