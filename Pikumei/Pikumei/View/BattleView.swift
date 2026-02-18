@@ -19,8 +19,8 @@ struct BattleView: View {
                     idleSection
                 case .waiting:
                     waitingSection
-                case .matched:
-                    matchedSection
+                case .battling:
+                    battlingSection
                 case .error(let message):
                     errorSection(message: message)
                 }
@@ -79,28 +79,13 @@ struct BattleView: View {
         }
     }
 
-    // MARK: - マッチ成立
+    // MARK: - バトル中
 
-    private var matchedSection: some View {
-        VStack(spacing: 16) {
-            Image(systemName: "checkmark.circle.fill")
-                .font(.system(size: 48))
-                .foregroundStyle(.green)
-
-            Text("マッチ成立！")
-                .font(.title2)
-                .bold()
-
-            if let id = matchingVM.battleId {
-                Text("Battle ID: \(id.uuidString)")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
+    private var battlingSection: some View {
+        Group {
+            if let battleId = matchingVM.battleId {
+                BattleGameView(battleId: battleId)
             }
-
-            Button("戻る") {
-                matchingVM.reset()
-            }
-            .buttonStyle(.bordered)
         }
     }
 

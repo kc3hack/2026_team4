@@ -14,7 +14,7 @@ class BattleMatchingViewModel: ObservableObject {
     enum MatchingPhase {
         case idle           // 初期状態
         case waiting        // バトル作成済み、相手待ち
-        case matched        // マッチ成立
+        case battling       // マッチ成立 → バトル中
         case error(String)  // エラー
     }
 
@@ -104,7 +104,8 @@ class BattleMatchingViewModel: ObservableObject {
                 .execute()
 
             print("[Matching] UPDATE レスポンス status: \(response.status)")
-            phase = .matched
+            unsubscribe()
+            phase = .battling
         } catch {
             print("[Matching] joinBattle エラー: \(error)")
             phase = .error("参加失敗: \(error.localizedDescription)")
@@ -128,9 +129,10 @@ class BattleMatchingViewModel: ObservableObject {
             print("[Matching] Realtime UPDATE 受信: \(action.record)")
             if let status = action.record["status"]?.stringValue,
                status == "matched" {
-                print("[Matching] status=matched 検出！")
+                print("[Matching] status=matched 検出！→ バトル開始")
                 Task { @MainActor [weak self] in
-                    self?.phase = .matched
+                    self?.unsubscribe()
+                    self?.phase = .battling
                 }
             }
         }
