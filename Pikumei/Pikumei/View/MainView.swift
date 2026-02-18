@@ -27,7 +27,7 @@ struct MainView: View {
             aiBattleView()
                 .tabItem {
                     Label("AIバトル", systemImage: "bolt.fill")
-                    
+                }
                     MonsterListView()
                         .tabItem {
                             Label("一覧", systemImage: "list.bullet")
@@ -51,7 +51,6 @@ struct MainView: View {
             .background(Color.white) // 背景色が必要な場合はここで調整
         }
     }
-}
 #Preview {
     MainView()
 }
