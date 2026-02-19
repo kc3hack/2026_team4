@@ -30,6 +30,10 @@ struct BattleStatsGeneratorTests {
                         "\(type) conf=\(conf): HP \(stats.hp) out of range")
                 #expect((15...55).contains(stats.attack),
                         "\(type) conf=\(conf): Attack \(stats.attack) out of range")
+                #expect((15...55).contains(stats.specialAttack),
+                        "\(type) conf=\(conf): SpecialAttack \(stats.specialAttack) out of range")
+                #expect((10...40).contains(stats.specialDefense),
+                        "\(type) conf=\(conf): SpecialDefense \(stats.specialDefense) out of range")
             }
         }
     }
@@ -39,6 +43,8 @@ struct BattleStatsGeneratorTests {
         let b = BattleStatsGenerator.generate(label: .fire, confidence: 0.8)
         #expect(a.hp == b.hp)
         #expect(a.attack == b.attack)
+        #expect(a.specialAttack == b.specialAttack)
+        #expect(a.specialDefense == b.specialDefense)
     }
 
     @Test func nilInputProducesStatsWithinRange() {
@@ -47,6 +53,8 @@ struct BattleStatsGeneratorTests {
             let stats = BattleStatsGenerator.generate(label: nil, confidence: nil)
             #expect((80...180).contains(stats.hp), "nil HP \(stats.hp) out of range")
             #expect((15...55).contains(stats.attack), "nil Attack \(stats.attack) out of range")
+            #expect((15...55).contains(stats.specialAttack), "nil SpecialAttack \(stats.specialAttack) out of range")
+            #expect((10...40).contains(stats.specialDefense), "nil SpecialDefense \(stats.specialDefense) out of range")
         }
     }
 }

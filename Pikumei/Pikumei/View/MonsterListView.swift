@@ -13,29 +13,41 @@ struct MonsterListView: View {
     private let columns = [
         GridItem(.flexible()),
         GridItem(.flexible()),
-        GridItem(.flexible()),
     ]
 
     var body: some View {
-        if monsters.isEmpty {
-            ContentUnavailableView(
-                "モンスターがいません",
-                systemImage: "photo.on.rectangle.angled",
-                description: Text("スキャンしてモンスターを集めよう")
-            )
-        } else {
-            ScrollView {
-                LazyVGrid(columns: columns, spacing: 4) {
-                    ForEach(monsters) { monster in
-                        if let uiImage = monster.uiImage {
-                            Image(uiImage: uiImage)
-                                .resizable()
-                                .aspectRatio(1, contentMode: .fill)
-                                .clipped()
+        NavigationStack {
+            if monsters.isEmpty {
+                ContentUnavailableView(
+                    "モンスターがいません",
+                    systemImage: "photo.on.rectangle.angled",
+                    description: Text("スキャンしてモンスターを集めよう")
+                )
+                .navigationTitle("モンスター一覧")
+            } else {
+                ScrollView {
+                    LazyVGrid(columns: columns, spacing: 4) {
+                        ForEach(monsters) { monster in
+                            if let uiImage = monster.uiImage {
+                                NavigationLink(destination: MonsterDetailView(monster: monster)) {
+                                    VStack(spacing: 4) {
+                                        Image(uiImage: uiImage)
+                                            .resizable()
+                                            .aspectRatio(1, contentMode: .fill)
+                                            .clipped()
+
+                                        Text(monster.name ?? "名前なし")
+                                            .font(.caption)
+                                            .lineLimit(1)
+                                    }
+                                }
+                                .buttonStyle(.plain)
+                            }
                         }
                     }
+                    .padding(4)
                 }
-                .padding(4)
+                .navigationTitle("モンスター一覧")
             }
         }
     }
