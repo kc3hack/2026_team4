@@ -65,6 +65,7 @@ struct BattleFullRow: Codable {
 struct MonsterLabelRow: Codable {
     let id: UUID
     let classificationLabel: MonsterType
+    let classificationConfidence: Double?
     let name: String?
     /// Supabase BYTEA は hex 文字列で返るため String で受け取る
     let thumbnail: String?
@@ -72,6 +73,7 @@ struct MonsterLabelRow: Codable {
     enum CodingKeys: String, CodingKey {
         case id
         case classificationLabel = "classification_label"
+        case classificationConfidence = "classification_confidence"
         case name
         case thumbnail
     }

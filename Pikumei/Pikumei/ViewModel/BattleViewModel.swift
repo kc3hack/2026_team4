@@ -82,7 +82,7 @@ class BattleViewModel: ObservableObject {
 
             let myMonster: MonsterLabelRow = try await client
                 .from("monsters")
-                .select("id, classification_label, name, thumbnail")
+                .select("id, classification_label, classification_confidence, name, thumbnail")
                 .eq("id", value: myMonsterId.uuidString)
                 .single()
                 .execute()
@@ -90,15 +90,15 @@ class BattleViewModel: ObservableObject {
 
             let oppMonster: MonsterLabelRow = try await client
                 .from("monsters")
-                .select("id, classification_label, name, thumbnail")
+                .select("id, classification_label, classification_confidence, name, thumbnail")
                 .eq("id", value: oppMonsterId.uuidString)
                 .single()
                 .execute()
                 .value
 
-            // BattleStats を算出（confidence は DB にないため固定値）
-            let my = BattleStatsGenerator.generate(label: myMonster.classificationLabel, confidence: 0.85)
-            let opp = BattleStatsGenerator.generate(label: oppMonster.classificationLabel, confidence: 0.85)
+            // BattleStats を算出
+            let my = BattleStatsGenerator.generate(label: myMonster.classificationLabel, confidence: myMonster.classificationConfidence ?? 0.85)
+            let opp = BattleStatsGenerator.generate(label: oppMonster.classificationLabel, confidence: oppMonster.classificationConfidence ?? 0.85)
 
             myStats = my
             opponentStats = opp
