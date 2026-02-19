@@ -60,14 +60,50 @@ CREATE POLICY "Participants can update battles"
     USING (auth.uid() = player1_id OR auth.uid() = player2_id);
 
 -- ============================================================
--- 3. Realtime を有効化
+-- 3. exchanges テーブル
+-- ============================================================
+CREATE TABLE exchanges (
+    id                  UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    status              TEXT NOT NULL DEFAULT 'waiting',
+                        -- 'waiting' → 'matched' → 'completed'
+    player1_id          UUID NOT NULL REFERENCES auth.users(id),
+    player1_monster_id  UUID NOT NULL REFERENCES monsters(id),
+    player2_id          UUID REFERENCES auth.users(id),
+    player2_monster_id  UUID REFERENCES monsters(id),
+    created_at          TIMESTAMPTZ DEFAULT now()
+);
+
+-- RLS を有効化
+ALTER TABLE exchanges ENABLE ROW LEVEL SECURITY;
+
+-- 交換は誰でも閲覧可能
+CREATE POLICY "Anyone can view exchanges"
+    ON exchanges FOR SELECT
+    USING (true);
+
+-- 交換を作成できるのは自分だけ
+CREATE POLICY "Users can create exchanges"
+    ON exchanges FOR INSERT
+    WITH CHECK (auth.uid() = player1_id);
+
+-- waiting なら誰でも参加可能、それ以外は参加者のみ更新可能
+CREATE POLICY "Participants can update exchanges"
+    ON exchanges FOR UPDATE
+    USING (
+        status = 'waiting'
+        OR auth.uid() = player1_id
+        OR auth.uid() = player2_id
+    );
+
+-- ============================================================
+-- 4. Realtime を有効化
 -- ============================================================
 -- Supabase Dashboard > Database > Replication で
--- battles テーブルの Realtime を有効にしてください
+-- battles テーブルと exchanges テーブルの Realtime を有効にしてください
 -- （SQL ではなく GUI で設定）
 
 -- ============================================================
--- 4. Anonymous Auth を有効化
+-- 5. Anonymous Auth を有効化
 -- ============================================================
 -- Supabase Dashboard > Authentication > Providers で
 -- Anonymous Sign-Ins を有効にしてください
