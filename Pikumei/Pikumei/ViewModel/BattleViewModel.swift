@@ -317,6 +317,7 @@ class BattleViewModel: ObservableObject {
                     .eq("id", value: battleId.uuidString)
                     .execute()
             } catch {
+                print("⚠️ バトル結果の記録に失敗: \(error)")
             }
         }
     }
