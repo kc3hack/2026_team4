@@ -8,39 +8,65 @@ import SwiftUI
 /// 切り抜き結果のプレビュー画面
 struct MonsterResultView: View {
     let image: UIImage
+    /// 名前確定時に呼ばれるコールバック
+    var onNameConfirmed: ((String) -> Void)?
     @Environment(\.dismiss) private var dismiss
-    
+
     // 紙吹雪のトリガー
     @State private var showConfetti = false
-    
+    // 名前入力
+    @State private var monsterName: String = ""
+    @State private var showNameInput: Bool = false
+    @State private var nameConfirmed: Bool = false
+
     var body: some View {
         ZStack {
             // --- 紙吹雪エフェクト層（背景へ移動）---
             if showConfetti {
                 ConfettiEffect()
-                // .allowsHitTesting(false) // 背景に回ったので、これはなくてもボタンは押せますが一応残してもOK
-                    .zIndex(0) // 最背面へ
+                    .zIndex(0)
             }
-            
+
             // --- メインコンテンツ（前面へ移動）---
             VStack(spacing: 24) {
                 Spacer()
-                
+
                 // カードコンポーネント
-                RotatingCardComponent(frontImage: Image(uiImage: image))
-                
-                Spacer()
-                
-                Button("閉じる") {
-                    dismiss()
+                RotatingCardComponent(frontImage: Image(uiImage: image)) {
+                    showNameInput = true
                 }
-                .buttonStyle(.borderedProminent)
-                .padding(.bottom, 32)
+
+                Spacer()
+
+                // アニメーション完了後に名前入力を表示
+                if showNameInput && !nameConfirmed {
+                    VStack(spacing: 12) {
+                        TextField("モンスターの名前を入力", text: $monsterName)
+                            .textFieldStyle(.roundedBorder)
+                            .padding(.horizontal, 40)
+
+                        if !monsterName.isEmpty {
+                            Button("決定") {
+                                nameConfirmed = true
+                                onNameConfirmed?(monsterName)
+                            }
+                            .buttonStyle(.borderedProminent)
+                        }
+                    }
+                }
+
+                // 名前確定後のみ閉じるボタンを表示
+                if nameConfirmed {
+                    Button("閉じる") {
+                        dismiss()
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .padding(.bottom, 32)
+                }
             }
-            .zIndex(1) // 最前面へ
+            .zIndex(1)
         }
         .onAppear {
-            // 画面が表示されたら紙吹雪スタート
             showConfetti = true
         }
     }
@@ -120,6 +146,7 @@ struct ConfettiParticle: View {
 
 #Preview {
     MonsterResultView(
-        image: UIImage(systemName: "photo")!
+        image: UIImage(systemName: "photo")!,
+        onNameConfirmed: { name in print("Name: \(name)") }
     )
 }

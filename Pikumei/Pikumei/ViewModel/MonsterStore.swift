@@ -17,13 +17,15 @@ class MonsterStore {
         self.modelContext = modelContext
     }
 
-    /// モンスターを保存する
-    func save(image: UIImage, label: MonsterType? = nil, confidence: Double? = nil) throws {
+    /// モンスターを保存し、保存した Monster を返す
+    @discardableResult
+    func save(image: UIImage, label: MonsterType? = nil, confidence: Double? = nil) throws -> Monster {
         guard let monster = Monster(image: image, classificationLabel: label, classificationConfidence: confidence) else {
             throw MonsterStoreError.imageConversionFailed
         }
         modelContext.insert(monster)
         try modelContext.save()
+        return monster
     }
 
     /// すべてのモンスターを新しい順に取得する
@@ -32,6 +34,12 @@ class MonsterStore {
             sortBy: [SortDescriptor(\.createdAt, order: .reverse)]
         )
         return try modelContext.fetch(descriptor)
+    }
+
+    /// モンスターの名前を更新する
+    func updateName(monster: Monster, name: String) throws {
+        monster.name = name
+        try modelContext.save()
     }
 
     /// モンスターを削除する

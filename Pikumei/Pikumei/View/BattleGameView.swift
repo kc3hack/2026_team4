@@ -27,6 +27,8 @@ struct BattleGameView: View {
                 resultView(won: true)
             case .lost:
                 resultView(won: false)
+            case .connectionError:
+                connectionErrorView
             }
         }
         .task {
@@ -52,36 +54,44 @@ struct BattleGameView: View {
     private var battlingView: some View {
         VStack(spacing: 20) {
             // 相手側
-            VStack(alignment: .leading, spacing: 8) {
-                Text("あいて")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                Text(viewModel.opponentLabel?.rawValue ?? "")
-                    .font(.title3)
-                    .bold()
-                hpBar(
-                    current: viewModel.opponentHp,
-                    maxHp: viewModel.opponentStats?.hp ?? 1,
-                    color: .red
-                )
+            HStack(spacing: 12) {
+                monsterThumbnail(data: viewModel.opponentThumbnail)
+
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("あいて")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                    Text(viewModel.opponentName ?? viewModel.opponentLabel?.rawValue ?? "")
+                        .font(.title3)
+                        .bold()
+                    hpBar(
+                        current: viewModel.opponentHp,
+                        maxHp: viewModel.opponentStats?.hp ?? 1,
+                        color: .red
+                    )
+                }
             }
             .frame(maxWidth: .infinity, alignment: .leading)
 
             Divider()
 
             // 自分側
-            VStack(alignment: .leading, spacing: 8) {
-                Text("じぶん")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                Text(viewModel.myLabel?.rawValue ?? "")
-                    .font(.title3)
-                    .bold()
-                hpBar(
-                    current: viewModel.myHp,
-                    maxHp: viewModel.myStats?.hp ?? 1,
-                    color: .green
-                )
+            HStack(spacing: 12) {
+                monsterThumbnail(data: viewModel.myThumbnail)
+
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("じぶん")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                    Text(viewModel.myName ?? viewModel.myLabel?.rawValue ?? "")
+                        .font(.title3)
+                        .bold()
+                    hpBar(
+                        current: viewModel.myHp,
+                        maxHp: viewModel.myStats?.hp ?? 1,
+                        color: .green
+                    )
+                }
             }
             .frame(maxWidth: .infinity, alignment: .leading)
 
@@ -98,8 +108,7 @@ struct BattleGameView: View {
                             Text(atk.name)
                                 .font(.caption)
                                 .bold()
-                            if let opp = viewModel.opponentLabel {
-                                let eff = atk.type.effectiveness(against: opp)
+                            if let eff = viewModel.attackEffectiveness(at: i) {
                                 // 相性表示
                                 if eff > 1.0 {
                                     Text("▲有利")
@@ -111,10 +120,11 @@ struct BattleGameView: View {
                                         .foregroundStyle(.red)
                                 }
                                 // 命中率表示
-                                let acc = eff > 1.0 ? 70 : (eff < 1.0 ? 100 : 90)
-                                Text("\(acc)%")
-                                    .font(.caption2)
-                                    .foregroundStyle(.secondary)
+                                if let acc = viewModel.attackAccuracy(at: i) {
+                                    Text("\(acc)%")
+                                        .font(.caption2)
+                                        .foregroundStyle(.secondary)
+                                }
                             }
                             // PP 表示
                             if let pp {
@@ -169,6 +179,25 @@ struct BattleGameView: View {
         }
     }
 
+    // MARK: - モンスターサムネイル
+
+    private func monsterThumbnail(data: Data?) -> some View {
+        Group {
+            if let data, let uiImage = UIImage(data: data) {
+                Image(uiImage: uiImage)
+                    .resizable()
+                    .scaledToFill()
+            } else {
+                Image(systemName: "questionmark.circle")
+                    .resizable()
+                    .scaledToFit()
+                    .foregroundStyle(.secondary)
+            }
+        }
+        .frame(width: 60, height: 60)
+        .clipShape(RoundedRectangle(cornerRadius: 8))
+    }
+
     // MARK: - ログ
 
     private var logSection: some View {
@@ -187,6 +216,29 @@ struct BattleGameView: View {
             }
             .frame(maxHeight: 120)
         }
+    }
+
+    // MARK: - 通信エラー画面
+
+    private var connectionErrorView: some View {
+        VStack(spacing: 24) {
+            Image(systemName: "wifi.exclamationmark")
+                .font(.system(size: 64))
+                .foregroundStyle(.orange)
+
+            Text("通信エラー")
+                .font(.largeTitle)
+                .bold()
+
+            logSection
+
+            Button("戻る") {
+                viewModel.cleanup()
+                onFinish()
+            }
+            .buttonStyle(.bordered)
+        }
+        .padding()
     }
 
     // MARK: - 結果画面

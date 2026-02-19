@@ -29,7 +29,6 @@ class BattleMatchingViewModel: ObservableObject {
     private let client = SupabaseClientProvider.shared
     private var channel: RealtimeChannelV2?
     private var subscription: RealtimeSubscription?
-    private var subscribeTask: Task<Void, Never>?
 
     // MARK: - バトル作成（端末A用）
 
@@ -39,7 +38,7 @@ class BattleMatchingViewModel: ObservableObject {
             try await ensureAuthenticated()
             let userId = try await client.auth.session.user.id
             print("[Matching] userId: \(userId)")
-            let monsterId = try await fetchRandomMonster()
+            let monsterId = try await fetchRandomMonster(userId: userId)
             print("[Matching] monsterId: \(monsterId)")
 
             let record = BattleInsert(
@@ -59,7 +58,7 @@ class BattleMatchingViewModel: ObservableObject {
             battleId = inserted.id
             phase = .waiting
 
-            subscribeToMatch(battleId: inserted.id)
+            await subscribeToMatch(battleId: inserted.id)
         } catch {
             print("[Matching] createBattle エラー: \(error)")
             phase = .error("バトル作成失敗: \(error.localizedDescription)")
@@ -73,7 +72,7 @@ class BattleMatchingViewModel: ObservableObject {
         do {
             try await ensureAuthenticated()
             let userId = try await client.auth.session.user.id
-            let monsterId = try await fetchRandomMonster()
+            let monsterId = try await fetchRandomMonster(userId: userId)
 
             // 自分以外が作った直近5分以内の waiting バトルを1件取得
             let fiveMinutesAgo = ISO8601DateFormatter().string(
@@ -132,7 +131,7 @@ class BattleMatchingViewModel: ObservableObject {
     // MARK: - Realtime 購読
 
     /// battles テーブルの UPDATE を監視し、status が matched になったら通知
-    func subscribeToMatch(battleId: UUID) {
+    func subscribeToMatch(battleId: UUID) async {
         print("[Matching] Realtime 購読開始 battleId: \(battleId)")
         let ch = client.channel("battle-\(battleId.uuidString)")
         channel = ch
@@ -154,37 +153,31 @@ class BattleMatchingViewModel: ObservableObject {
             }
         }
 
-        subscribeTask = Task {
-            do {
-                try await ch.subscribeWithError()
-                print("[Matching] Realtime 購読成功 channel status: \(ch.status)")
+        do {
+            try await ch.subscribeWithError()
+            print("[Matching] Realtime 購読成功 channel status: \(ch.status)")
 
-                // 購読完了前に相手が参加していた場合のフォールバック
-                let current: BattleRow = try await client
-                    .from("battles")
-                    .select("id, status")
-                    .eq("id", value: battleId.uuidString)
-                    .single()
-                    .execute()
-                    .value
+            // 購読完了前に相手が参加していた場合のフォールバック
+            let current: BattleRow = try await client
+                .from("battles")
+                .select("id, status")
+                .eq("id", value: battleId.uuidString)
+                .single()
+                .execute()
+                .value
 
-                if current.status == "matched" {
-                    print("[Matching] 購読前にマッチ済み → バトル開始")
-                    await MainActor.run {
-                        self.unsubscribe()
-                        self.phase = .battling
-                    }
-                }
-            } catch {
-                print("[Matching] Realtime 購読失敗: \(error)")
+            if current.status == "matched" {
+                print("[Matching] 購読前にマッチ済み → バトル開始")
+                unsubscribe()
+                phase = .battling
             }
+        } catch {
+            print("[Matching] Realtime 購読失敗: \(error)")
         }
     }
 
     /// 購読解除
     func unsubscribe() {
-        subscribeTask?.cancel()
-        subscribeTask = nil
         subscription = nil
         if let channel {
             Task {
@@ -215,11 +208,12 @@ class BattleMatchingViewModel: ObservableObject {
 
     // MARK: - Private
 
-    /// Supabase 上のモンスターからランダムに1体選ぶ
-    private func fetchRandomMonster() async throws -> UUID {
+    /// 自分のモンスターからランダムに1体選ぶ
+    private func fetchRandomMonster(userId: UUID) async throws -> UUID {
         let monsters: [MonsterIdRow] = try await client
             .from("monsters")
             .select("id")
+            .eq("user_id", value: userId.uuidString)
             .limit(50)
             .execute()
             .value

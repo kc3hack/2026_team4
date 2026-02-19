@@ -19,6 +19,10 @@ class BattleViewModel: ObservableObject {
     @Published var isMyTurn: Bool = false
     @Published var myLabel: MonsterType?
     @Published var opponentLabel: MonsterType?
+    @Published var myName: String?
+    @Published var opponentName: String?
+    @Published var myThumbnail: Data?
+    @Published var opponentThumbnail: Data?
     @Published var battleLog: [String] = []
     @Published var myAttacks: [BattleAttack] = []
     @Published var attackPP: [Int?] = []  // nil = 無制限, 数値 = 残り回数
@@ -30,7 +34,6 @@ class BattleViewModel: ObservableObject {
     private var channel: RealtimeChannelV2?
     private var subscription: RealtimeSubscription?
     private var readySubscription: RealtimeSubscription?
-    private var subscribeTask: Task<Void, Never>?
     private var readyPingTask: Task<Void, Never>?
     private var opponentReady = false
 
@@ -67,7 +70,7 @@ class BattleViewModel: ObservableObject {
 
             guard let battle, let player2MonsterId = battle.player2MonsterId else {
                 battleLog.append("対戦相手の情報を取得できませんでした")
-                phase = .lost
+                phase = .connectionError
                 return
             }
 
@@ -79,7 +82,7 @@ class BattleViewModel: ObservableObject {
 
             let myMonster: MonsterLabelRow = try await client
                 .from("monsters")
-                .select("id, classification_label")
+                .select("id, classification_label, classification_confidence, name, thumbnail")
                 .eq("id", value: myMonsterId.uuidString)
                 .single()
                 .execute()
@@ -87,15 +90,15 @@ class BattleViewModel: ObservableObject {
 
             let oppMonster: MonsterLabelRow = try await client
                 .from("monsters")
-                .select("id, classification_label")
+                .select("id, classification_label, classification_confidence, name, thumbnail")
                 .eq("id", value: oppMonsterId.uuidString)
                 .single()
                 .execute()
                 .value
 
-            // BattleStats を算出（confidence は DB にないため固定値）
-            let my = BattleStatsGenerator.generate(label: myMonster.classificationLabel, confidence: 0.85)
-            let opp = BattleStatsGenerator.generate(label: oppMonster.classificationLabel, confidence: 0.85)
+            // BattleStats を算出
+            let my = BattleStatsGenerator.generate(label: myMonster.classificationLabel, confidence: myMonster.classificationConfidence ?? 0.85)
+            let opp = BattleStatsGenerator.generate(label: oppMonster.classificationLabel, confidence: oppMonster.classificationConfidence ?? 0.85)
 
             myStats = my
             opponentStats = opp
@@ -103,6 +106,10 @@ class BattleViewModel: ObservableObject {
             opponentHp = opp.hp
             myLabel = myMonster.classificationLabel
             opponentLabel = oppMonster.classificationLabel
+            myName = myMonster.name
+            opponentName = oppMonster.name
+            myThumbnail = myMonster.thumbnailData
+            opponentThumbnail = oppMonster.thumbnailData
             myAttacks = myMonster.classificationLabel.attacks
 
             // ばつぐん技のみ PP 2、それ以外は無制限
@@ -112,13 +119,27 @@ class BattleViewModel: ObservableObject {
             }
 
             // Broadcast チャネルを購読（ready ハンドシェイク後にターン開始）
-            subscribeToBattle()
+            try await subscribeToBattle()
 
             phase = .battling
         } catch {
             battleLog.append("エラー: \(error.localizedDescription)")
-            phase = .lost
+            phase = .connectionError
         }
+    }
+
+    // MARK: - 攻撃表示用
+
+    /// 攻撃の相性倍率を返す
+    func attackEffectiveness(at index: Int) -> Double? {
+        guard index < myAttacks.count, let opponentLabel else { return nil }
+        return myAttacks[index].type.effectiveness(against: opponentLabel)
+    }
+
+    /// 攻撃の命中率（%）を返す
+    func attackAccuracy(at index: Int) -> Int? {
+        guard let eff = attackEffectiveness(at: index) else { return nil }
+        return eff > 1.0 ? 70 : (eff < 1.0 ? 100 : 90)
     }
 
     // MARK: - 攻撃
@@ -153,10 +174,14 @@ class BattleViewModel: ObservableObject {
 
         // Broadcast 送信完了後に勝利判定（送信前に cleanup されるのを防ぐ）
         Task {
-            try? await channel?.broadcast(
-                event: "attack",
-                message: AttackMessage(type: "attack", attackType: chosen.type.rawValue, hit: hit)
-            )
+            do {
+                try await channel?.broadcast(
+                    event: "attack",
+                    message: AttackMessage(type: "attack", attackType: chosen.type.rawValue, hit: hit)
+                )
+            } catch {
+                battleLog.append("攻撃の送信に失敗しました")
+            }
 
             if hit, opponentHp <= 0, self.phase == .battling {
                 opponentHp = 0
@@ -172,8 +197,6 @@ class BattleViewModel: ObservableObject {
     func cleanup() {
         readyPingTask?.cancel()
         readyPingTask = nil
-        subscribeTask?.cancel()
-        subscribeTask = nil
         subscription = nil
         readySubscription = nil
         if let channel {
@@ -188,7 +211,7 @@ class BattleViewModel: ObservableObject {
     // MARK: - Private
 
     /// Broadcast チャネルを購読して攻撃・ready イベントを受信する
-    private func subscribeToBattle() {
+    private func subscribeToBattle() async throws {
         let ch = client.channel("battle-game-\(battleId.uuidString)")
         channel = ch
 
@@ -209,16 +232,9 @@ class BattleViewModel: ObservableObject {
             }
         }
 
-        subscribeTask = Task {
-            do {
-                try await ch.subscribeWithError()
-                // ready の定期送信を開始
-                await MainActor.run {
-                    self.startReadyPing()
-                }
-            } catch {
-            }
-        }
+        // subscribe 完了を待ってから phase を遷移させる
+        try await ch.subscribeWithError()
+        startReadyPing()
     }
 
     /// ready イベントを定期送信（相手の ready を受信するまで、10秒でタイムアウト）
@@ -237,8 +253,8 @@ class BattleViewModel: ObservableObject {
             // タイムアウト: 相手が応答しなかった
             if !opponentReady {
                 await MainActor.run {
-                    battleLog.append("対戦相手が見つかりませんでした")
-                    phase = .lost
+                    battleLog.append("対戦相手との接続がタイムアウトしました")
+                    phase = .connectionError
                 }
             }
         }
@@ -301,6 +317,7 @@ class BattleViewModel: ObservableObject {
                     .eq("id", value: battleId.uuidString)
                     .execute()
             } catch {
+                print("⚠️ バトル結果の記録に失敗: \(error)")
             }
         }
     }
