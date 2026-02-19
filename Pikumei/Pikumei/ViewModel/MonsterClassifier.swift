@@ -9,6 +9,7 @@ import UIKit
 import CoreML
 import Vision
 
+let GHOST_CONFIDENCE_THRESHOLD: Double = 0.5
 
 let labelToMonsterType: [String: MonsterType] = [
     "fire": .fire,
@@ -22,8 +23,9 @@ let labelToMonsterType: [String: MonsterType] = [
 
 /// モンスターのタイプ分類を行う
 class MonsterClassifier {
-    private var monsterType: MonsterType? = nil
-    private var confidence: Double? = nil
+    private var resultFound: Bool = false
+    private var monsterType: MonsterType = .bird
+    private var confidence: Double = 0.0
     private var request: VNRequest? = nil
     
     init() {
@@ -44,14 +46,27 @@ class MonsterClassifier {
         
         // リクエストを作成
         let request = VNCoreMLRequest(model: model, completionHandler: { (request, error) in
-            self.monsterType = nil
-            self.confidence = nil
+            self.resultFound = false
             guard let results = request.results as? [VNClassificationObservation] else {return}
             guard let first = results.first else {return}
-            self.monsterType = labelToMonsterType[first.identifier]
+            self.monsterType = labelToMonsterType[first.identifier]!
             self.confidence = Double(first.confidence)
+            self.resultFound = true
         })
         return request
+    }
+    
+    /// ゴーストタイプ判定
+    private func isGhostType(confidence: Double) -> Bool {
+        // 信頼度が閾値よりも低かったら、ゴーストタイプとなる
+        return confidence <= GHOST_CONFIDENCE_THRESHOLD
+    }
+    
+    /// ゴーストタイプへ変換する
+    private func toGhostType(monsterType: MonsterType, confidence: Double) -> (MonsterType, Double) {
+        let newMonsterType = MonsterType.ghost
+        let newConfidence = 1.0 - confidence
+        return (newMonsterType, newConfidence)
     }
     
     /// 画像を分類器に入力し、モンスタータイプと信頼度を返す
@@ -72,11 +87,16 @@ class MonsterClassifier {
         }
         
         // 出力
-        guard let monsterType, let confidence else {
+        guard self.resultFound else {
             throw MonsterClassifierError.resultNotFound
         }
-        print("[1] monsterType: \(monsterType), confidence: \(confidence * 100)%")
-        return (monsterType, confidence)
+        print("[1] monsterType: \(self.monsterType), confidence: \(self.confidence * 100)%")
+        if isGhostType(confidence: self.confidence) {
+            (self.monsterType, self.confidence) = toGhostType(monsterType: self.monsterType, confidence: self.confidence)
+        }
+        print("[2] monsterType: \(self.monsterType), confidence: \(self.confidence * 100)%")
+        
+        return (self.monsterType, self.confidence)
     }
 }
 

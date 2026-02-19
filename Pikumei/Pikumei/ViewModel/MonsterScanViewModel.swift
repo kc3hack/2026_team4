@@ -45,12 +45,13 @@ class MonsterScanViewModel: ObservableObject {
                 // 撮影
                 let photo = try await cameraManager.capturePhoto()
                 
+                // 対象物切り抜き
+                let cutout = try await SubjectDetector.detectAndCutout(from: photo)
+
                 // タイプ分類
                 let (monsterType, confidence) = try monsterClassifier.classify(image: photo)
-                print("[2] monsterType: \(monsterType), confidence: \(confidence * 100)%")
                 
                 // スキャン成功時に即保存
-                let cutout = try await SubjectDetector.detectAndCutout(from: photo)
                 let store = MonsterStore(modelContext: modelContext)
                 let saved = try store.save(image: cutout, label: monsterType, confidence: confidence)
                 lastSavedMonster = saved
