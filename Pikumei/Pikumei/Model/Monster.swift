@@ -20,13 +20,16 @@ final class Monster {
     var createdAt: Date
     /// Supabase にアップロード済みの場合、そのレコード ID
     var supabaseId: UUID?
+    /// ユーザーが付けたモンスター名
+    var name: String?
 
-    init(imageData: Data, classificationLabel: MonsterType? = nil, classificationConfidence: Double? = nil, createdAt: Date = .now, supabaseId: UUID? = nil) {
+    init(imageData: Data, classificationLabel: MonsterType? = nil, classificationConfidence: Double? = nil, createdAt: Date = .now, supabaseId: UUID? = nil, name: String? = nil) {
         self.imageData = imageData
         self.classificationLabel = classificationLabel
         self.classificationConfidence = classificationConfidence
         self.createdAt = createdAt
         self.supabaseId = supabaseId
+        self.name = name
     }
 }
 
