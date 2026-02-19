@@ -31,6 +31,7 @@ class ExchangeViewModel: ObservableObject {
     private var channel: RealtimeChannelV2?
     private var subscription: RealtimeSubscription?
     private var modelContext: ModelContext?
+    private var isCompleting = false
 
     /// View から ModelContext を注入する
     func setModelContext(_ context: ModelContext) {
@@ -207,6 +208,10 @@ class ExchangeViewModel: ObservableObject {
 
     /// 相手のモンスターデータを取得し、ローカルに保存して渡したモンスターを削除する
     private func completeExchange(exchangeId: UUID) async {
+        // Realtime コールバックとフォールバックの両方から呼ばれうるため重複実行を防止
+        guard !isCompleting else { return }
+        isCompleting = true
+
         do {
             let userId = try await client.auth.session.user.id
 
@@ -319,6 +324,7 @@ class ExchangeViewModel: ObservableObject {
         phase = .selectMonster
         exchangeId = nil
         selectedMonster = nil
+        isCompleting = false
     }
 
     // MARK: - Private
