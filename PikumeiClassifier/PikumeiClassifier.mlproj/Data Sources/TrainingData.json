@@ -1,0 +1,248 @@
+{
+  "activityEntities" : [
+    "dataSourceMetrics",
+    [
+      {
+        "createdDate" : "2026-02-18T07:10:18Z",
+        "event" : "dataSourceMetrics",
+        "id" : "868EF75E-912B-4F7D-AB63-9AB45CF2AA04",
+        "subtitle" : "5 Classes, 40 Items",
+        "title" : "Data Summary"
+      },
+      {
+        "createdDate" : "2026-02-18T07:16:58Z",
+        "event" : "dataSourceMetrics",
+        "id" : "8352ADF9-841F-4379-819E-3C1295A9EA42",
+        "subtitle" : "5 Classes, 35 Items",
+        "title" : "Data Summary"
+      }
+    ],
+    "dataSourceCreated",
+    [
+      {
+        "createdDate" : "2026-02-18T07:09:31Z",
+        "event" : "dataSourceCreated",
+        "id" : "BD19F14B-4469-4173-A7AD-D05FDC16C098",
+        "subtitle" : "TrainingData",
+        "title" : "Data Source Created"
+      }
+    ],
+    "dataSourceTrainingStarted",
+    [
+      {
+        "createdDate" : "2026-02-18T07:10:18Z",
+        "event" : "dataSourceTrainingStarted",
+        "id" : "5FC6B557-6C6A-4F32-B51F-C4321092302D",
+        "subtitle" : "PikumeiClassifier 1",
+        "title" : "Used By"
+      },
+      {
+        "createdDate" : "2026-02-18T07:16:58Z",
+        "event" : "dataSourceTrainingStarted",
+        "id" : "B952E042-B87B-47E6-A55B-21085303224E",
+        "subtitle" : "PikumeiClassifier 2",
+        "title" : "Used By"
+      }
+    ]
+  ],
+  "createdDate" : "2026-02-18T07:09:31Z",
+  "dataPathRelativeToProjectURL" : "../TrainingData/",
+  "dataResult" : {
+    "classesCount" : 5,
+    "createdDate" : "2026-02-18T07:09:31Z",
+    "dataAnalysis" : {
+      "classifierAnalysis" : {
+        "details" : [
+          "file:///Users/daidai/Documents/Programs/Xcode/KC3Hack2026Team4/PikumeiClassifier/TrainingData/fire/%E3%82%B9%E3%82%AF%E3%83%AA%E3%83%BC%E3%83%B3%E3%82%B7%E3%83%A7%E3%83%83%E3%83%88%202026-02-18%2015.58.15.png",
+          [
+            "fire"
+          ],
+          "file:///Users/daidai/Documents/Programs/Xcode/KC3Hack2026Team4/PikumeiClassifier/TrainingData/fish/ab52cfbd386f2cf7bbb478a0276ce890_t.jpeg",
+          [
+            "fish"
+          ],
+          "file:///Users/daidai/Documents/Programs/Xcode/KC3Hack2026Team4/PikumeiClassifier/TrainingData/fire/%E3%82%B9%E3%82%AF%E3%83%AA%E3%83%BC%E3%83%B3%E3%82%B7%E3%83%A7%E3%83%83%E3%83%88%202026-02-18%2015.58.10.png",
+          [
+            "fire"
+          ],
+          "file:///Users/daidai/Documents/Programs/Xcode/KC3Hack2026Team4/PikumeiClassifier/TrainingData/bird/%E3%82%B9%E3%82%AF%E3%83%AA%E3%83%BC%E3%83%B3%E3%82%B7%E3%83%A7%E3%83%83%E3%83%88%202026-02-18%2015.54.39.png",
+          [
+            "bird"
+          ],
+          "file:///Users/daidai/Documents/Programs/Xcode/KC3Hack2026Team4/PikumeiClassifier/TrainingData/water/10868.png",
+          [
+            "water"
+          ],
+          "file:///Users/daidai/Documents/Programs/Xcode/KC3Hack2026Team4/PikumeiClassifier/TrainingData/fish/3446064_s-1-e1650791613728.jpg",
+          [
+            "fish"
+          ],
+          "file:///Users/daidai/Documents/Programs/Xcode/KC3Hack2026Team4/PikumeiClassifier/TrainingData/fish/pic_1-1-1.jpg",
+          [
+            "fish"
+          ],
+          "file:///Users/daidai/Documents/Programs/Xcode/KC3Hack2026Team4/PikumeiClassifier/TrainingData/water/D2-0f7VUkAUcDOL.jpg",
+          [
+            "water"
+          ],
+          "file:///Users/daidai/Documents/Programs/Xcode/KC3Hack2026Team4/PikumeiClassifier/TrainingData/fish/NationalGeographic_1084166_600x450.jpg",
+          [
+            "fish"
+          ],
+          "file:///Users/daidai/Documents/Programs/Xcode/KC3Hack2026Team4/PikumeiClassifier/TrainingData/leaf/%E3%82%B9%E3%82%AF%E3%83%AA%E3%83%BC%E3%83%B3%E3%82%B7%E3%83%A7%E3%83%83%E3%83%88%202026-02-18%2016.02.21.png",
+          [
+            "leaf"
+          ],
+          "file:///Users/daidai/Documents/Programs/Xcode/KC3Hack2026Team4/PikumeiClassifier/TrainingData/bird/%E3%82%B9%E3%82%AF%E3%83%AA%E3%83%BC%E3%83%B3%E3%82%B7%E3%83%A7%E3%83%83%E3%83%88%202026-02-18%2015.54.33.png",
+          [
+            "bird"
+          ],
+          "file:///Users/daidai/Documents/Programs/Xcode/KC3Hack2026Team4/PikumeiClassifier/TrainingData/leaf/%E3%82%B9%E3%82%AF%E3%83%AA%E3%83%BC%E3%83%B3%E3%82%B7%E3%83%A7%E3%83%83%E3%83%88%202026-02-18%2016.01.40.png",
+          [
+            "leaf"
+          ],
+          "file:///Users/daidai/Documents/Programs/Xcode/KC3Hack2026Team4/PikumeiClassifier/TrainingData/bird/%E3%82%B9%E3%82%AF%E3%83%AA%E3%83%BC%E3%83%B3%E3%82%B7%E3%83%A7%E3%83%83%E3%83%88%202026-02-18%2015.54.25.png",
+          [
+            "bird"
+          ],
+          "file:///Users/daidai/Documents/Programs/Xcode/KC3Hack2026Team4/PikumeiClassifier/TrainingData/bird/%E3%82%B9%E3%82%AF%E3%83%AA%E3%83%BC%E3%83%B3%E3%82%B7%E3%83%A7%E3%83%83%E3%83%88%202026-02-18%2015.55.02.png",
+          [
+            "bird"
+          ],
+          "file:///Users/daidai/Documents/Programs/Xcode/KC3Hack2026Team4/PikumeiClassifier/TrainingData/water/9b712c7da4345cce88f291239db57ac4.jpg",
+          [
+            "water"
+          ],
+          "file:///Users/daidai/Documents/Programs/Xcode/KC3Hack2026Team4/PikumeiClassifier/TrainingData/bird/%E3%82%B9%E3%82%AF%E3%83%AA%E3%83%BC%E3%83%B3%E3%82%B7%E3%83%A7%E3%83%83%E3%83%88%202026-02-18%2015.54.52.png",
+          [
+            "bird"
+          ],
+          "file:///Users/daidai/Documents/Programs/Xcode/KC3Hack2026Team4/PikumeiClassifier/TrainingData/water/14347.png",
+          [
+            "water"
+          ],
+          "file:///Users/daidai/Documents/Programs/Xcode/KC3Hack2026Team4/PikumeiClassifier/TrainingData/fish/e8b4ce3d3c019eee9172a0bbb87de1c9_t.jpeg",
+          [
+            "fish"
+          ],
+          "file:///Users/daidai/Documents/Programs/Xcode/KC3Hack2026Team4/PikumeiClassifier/TrainingData/water/782781.png",
+          [
+            "water"
+          ],
+          "file:///Users/daidai/Documents/Programs/Xcode/KC3Hack2026Team4/PikumeiClassifier/TrainingData/fish/shutterstock_1325275541-1-min.jpg",
+          [
+            "fish"
+          ],
+          "file:///Users/daidai/Documents/Programs/Xcode/KC3Hack2026Team4/PikumeiClassifier/TrainingData/leaf/%E3%82%B9%E3%82%AF%E3%83%AA%E3%83%BC%E3%83%B3%E3%82%B7%E3%83%A7%E3%83%83%E3%83%88%202026-02-18%2016.02.30.png",
+          [
+            "leaf"
+          ],
+          "file:///Users/daidai/Documents/Programs/Xcode/KC3Hack2026Team4/PikumeiClassifier/TrainingData/leaf/%E3%82%B9%E3%82%AF%E3%83%AA%E3%83%BC%E3%83%B3%E3%82%B7%E3%83%A7%E3%83%83%E3%83%88%202026-02-18%2016.01.32.png",
+          [
+            "leaf"
+          ],
+          "file:///Users/daidai/Documents/Programs/Xcode/KC3Hack2026Team4/PikumeiClassifier/TrainingData/fish/fish_03.png",
+          [
+            "fish"
+          ],
+          "file:///Users/daidai/Documents/Programs/Xcode/KC3Hack2026Team4/PikumeiClassifier/TrainingData/fish/ei2.jpg",
+          [
+            "fish"
+          ],
+          "file:///Users/daidai/Documents/Programs/Xcode/KC3Hack2026Team4/PikumeiClassifier/TrainingData/fish/images.jpeg",
+          [
+            "fish"
+          ],
+          "file:///Users/daidai/Documents/Programs/Xcode/KC3Hack2026Team4/PikumeiClassifier/TrainingData/fire/%E3%82%B9%E3%82%AF%E3%83%AA%E3%83%BC%E3%83%B3%E3%82%B7%E3%83%A7%E3%83%83%E3%83%88%202026-02-18%2015.56.53.png",
+          [
+            "fire"
+          ],
+          "file:///Users/daidai/Documents/Programs/Xcode/KC3Hack2026Team4/PikumeiClassifier/TrainingData/leaf/%E3%82%B9%E3%82%AF%E3%83%AA%E3%83%BC%E3%83%B3%E3%82%B7%E3%83%A7%E3%83%83%E3%83%88%202026-02-18%2016.01.02.png",
+          [
+            "leaf"
+          ],
+          "file:///Users/daidai/Documents/Programs/Xcode/KC3Hack2026Team4/PikumeiClassifier/TrainingData/fire/%E3%82%B9%E3%82%AF%E3%83%AA%E3%83%BC%E3%83%B3%E3%82%B7%E3%83%A7%E3%83%83%E3%83%88%202026-02-18%2015.58.18.png",
+          [
+            "fire"
+          ],
+          "file:///Users/daidai/Documents/Programs/Xcode/KC3Hack2026Team4/PikumeiClassifier/TrainingData/leaf/%E3%82%B9%E3%82%AF%E3%83%AA%E3%83%BC%E3%83%B3%E3%82%B7%E3%83%A7%E3%83%83%E3%83%88%202026-02-18%2016.02.25.png",
+          [
+            "leaf"
+          ],
+          "file:///Users/daidai/Documents/Programs/Xcode/KC3Hack2026Team4/PikumeiClassifier/TrainingData/fish/15128c2091fc62f39f4eb6a5fa89056c_t.jpeg",
+          [
+            "fish"
+          ],
+          "file:///Users/daidai/Documents/Programs/Xcode/KC3Hack2026Team4/PikumeiClassifier/TrainingData/leaf/%E3%82%B9%E3%82%AF%E3%83%AA%E3%83%BC%E3%83%B3%E3%82%B7%E3%83%A7%E3%83%83%E3%83%88%202026-02-18%2016.02.33.png",
+          [
+            "leaf"
+          ],
+          "file:///Users/daidai/Documents/Programs/Xcode/KC3Hack2026Team4/PikumeiClassifier/TrainingData/water/resize.jpeg",
+          [
+            "water"
+          ],
+          "file:///Users/daidai/Documents/Programs/Xcode/KC3Hack2026Team4/PikumeiClassifier/TrainingData/bird/%E3%82%B9%E3%82%AF%E3%83%AA%E3%83%BC%E3%83%B3%E3%82%B7%E3%83%A7%E3%83%83%E3%83%88%202026-02-18%2015.54.44.png",
+          [
+            "bird"
+          ],
+          "file:///Users/daidai/Documents/Programs/Xcode/KC3Hack2026Team4/PikumeiClassifier/TrainingData/fish/01.jpg",
+          [
+            "fish"
+          ],
+          "file:///Users/daidai/Documents/Programs/Xcode/KC3Hack2026Team4/PikumeiClassifier/TrainingData/fire/%E3%82%B9%E3%82%AF%E3%83%AA%E3%83%BC%E3%83%B3%E3%82%B7%E3%83%A7%E3%83%83%E3%83%88%202026-02-18%2015.58.22.png",
+          [
+            "fire"
+          ]
+        ],
+        "labelStats" : {
+          "bird" : 6,
+          "fire" : 5,
+          "fish" : 11,
+          "leaf" : 7,
+          "water" : 6
+        }
+      },
+      "issues" : [
+        {
+          "description" : "5 classes found, including fish, leaf, bird",
+          "severity" : "debug"
+        },
+        {
+          "description" : "Less than 50 total images found - add more to improve model validation",
+          "severity" : "warning"
+        },
+        {
+          "description" : "Smallest class is \"fire\" with 5 images",
+          "severity" : "debug"
+        },
+        {
+          "description" : "Largest class is \"fish\" with 11 images",
+          "severity" : "debug"
+        }
+      ],
+      "objectDetectorAnalysis" : {
+        "details" : {
+
+        }
+      },
+      "summary" : {
+        "canUseValidation" : 0,
+        "classCount" : 5,
+        "sampleCount" : 35
+      }
+    },
+    "dataSourceID" : "2CF896FE-B306-4F37-9B7A-36CD77B122BF",
+    "dataURL" : "file:///Users/daidai/Documents/Programs/Xcode/KC3Hack2026Team4/PikumeiClassifier/TrainingData/",
+    "itemsCount" : 35
+  },
+  "dataURL" : "file:///Users/daidai/Documents/Programs/Xcode/KC3Hack2026Team4/PikumeiClassifier/TrainingData/",
+  "experimentIDs" : [
+    "3F77F488-920D-43A4-8967-48A113B17711"
+  ],
+  "id" : "2CF896FE-B306-4F37-9B7A-36CD77B122BF",
+  "modifiedDate" : "2026-02-18T07:17:51Z",
+  "pathType" : 0,
+  "preferredFilename" : "TrainingData",
+  "title" : "TrainingData",
+  "version" : "1.0"
+}

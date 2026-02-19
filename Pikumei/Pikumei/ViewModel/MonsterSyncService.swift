@@ -33,7 +33,9 @@ class MonsterSyncService {
         let record = MonsterRecord(
             userId: userId,
             classificationLabel: label.rawValue,
-            thumbnail: thumbnail
+            classificationConfidence: monster.classificationConfidence,
+            thumbnail: thumbnail,
+            name: monster.name
         )
 
         // BYTEA のデコード問題を避けるため id のみ取得
@@ -83,12 +85,16 @@ class MonsterSyncService {
 struct MonsterRecord: Codable {
     var userId: UUID?
     let classificationLabel: String
+    let classificationConfidence: Double?
     let thumbnail: Data
+    let name: String?
 
     enum CodingKeys: String, CodingKey {
         case userId = "user_id"
         case classificationLabel = "classification_label"
+        case classificationConfidence = "classification_confidence"
         case thumbnail
+        case name
     }
 }
 

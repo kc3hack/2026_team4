@@ -31,7 +31,17 @@ struct MonsterScanView: View {
             viewModel.retry()
         }) {
             if let image = viewModel.cutoutImage {
-                MonsterResultView(image: image)
+                MonsterResultView(image: image) { name in
+                    viewModel.confirmName(name, modelContext: modelContext)
+                }
+                .alert("アップロードエラー", isPresented: Binding(
+                    get: { viewModel.uploadError != nil },
+                    set: { if !$0 { viewModel.uploadError = nil } }
+                )) {
+                    Button("OK") { viewModel.uploadError = nil }
+                } message: {
+                    Text(viewModel.uploadError ?? "")
+                }
             }
         }
     }

@@ -7,6 +7,7 @@ import SwiftUI
 
 struct RotatingCardComponent: View {
     let frontImage: Image
+    var onAnimationDone: (() -> Void)?
     @State private var rotationDegrees: Double = -720
     @State private var isFlipped = false
     @State private var isInitialAnimationDone = false
@@ -49,6 +50,7 @@ struct RotatingCardComponent: View {
             }
             DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
                 isInitialAnimationDone = true
+                onAnimationDone?()
             }
         }
     }
