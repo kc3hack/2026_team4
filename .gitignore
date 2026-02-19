@@ -31,3 +31,6 @@ Secrets.swift
 # === Temporary files ===
 *.tmp
 *.swp
+
+# === Learning Data ===
+LearningData/
