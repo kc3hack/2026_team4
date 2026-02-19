@@ -163,7 +163,11 @@ class BattleViewModel: ObservableObject {
         let hit = Double.random(in: 0..<1) < accuracy
 
         if hit {
-            let damage = max(Int(Double(myStats.attack) * chosen.powerRate * multiplier), 1)
+            // メイン技（powerRate 1.0）は特攻、サブ技は攻撃を使用
+            let attackStat = chosen.powerRate >= 1.0 ? myStats.specialAttack : myStats.attack
+            let defStat = opponentStats?.specialDefense ?? 0
+            let rawDamage = Double(attackStat) * chosen.powerRate * multiplier
+            let damage = max(Int(rawDamage * 100.0 / (100.0 + Double(defStat))), 1)
             opponentHp -= damage
             battleLog.append("\(chosen.name)攻撃！ \(damage) ダメージ！")
             if multiplier > 1.0 { battleLog.append("こうかはばつぐんだ！") }
@@ -286,7 +290,11 @@ class BattleViewModel: ObservableObject {
         if hit {
             let powerRate = opponentLabel.attacks.first { $0.type == attackType }?.powerRate ?? 1.0
             let multiplier = attackType.effectiveness(against: myLabel)
-            let damage = max(Int(Double(opponentStats.attack) * powerRate * multiplier), 1)
+            // メイン技（powerRate 1.0）は特攻、サブ技は攻撃を使用
+            let attackStat = powerRate >= 1.0 ? opponentStats.specialAttack : opponentStats.attack
+            let defStat = myStats?.specialDefense ?? 0
+            let rawDamage = Double(attackStat) * powerRate * multiplier
+            let damage = max(Int(rawDamage * 100.0 / (100.0 + Double(defStat))), 1)
             myHp -= damage
 
             battleLog.append("\(attackName)攻撃！ \(damage) ダメージ！")

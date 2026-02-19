@@ -10,4 +10,6 @@ import Foundation
 struct BattleStats {
     let hp: Int
     let attack: Int
+    let specialAttack: Int
+    let specialDefense: Int
 }
