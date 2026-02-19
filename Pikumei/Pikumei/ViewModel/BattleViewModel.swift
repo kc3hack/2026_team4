@@ -147,7 +147,7 @@ class BattleViewModel: ObservableObject {
     }
 
     /// 攻撃エフェクトを表示して再生完了後に消す
-    private let effectSpeed: Double = 3.0
+    private let effectSpeed: Double = 1.8
 
     func showAttackEffect(attack: BattleAttack) {
         let gifName = attack.effectGif
