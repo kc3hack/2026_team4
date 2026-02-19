@@ -1,0 +1,31 @@
+{
+  "activityEntities" : [
+    "dataSourceCreated",
+    [
+      {
+        "createdDate" : "2026-02-18T07:17:05Z",
+        "event" : "dataSourceCreated",
+        "id" : "CE9831F4-5686-4EAF-9740-ACF4520E956E",
+        "subtitle" : "TestingData",
+        "title" : "Data Source Created"
+      }
+    ]
+  ],
+  "createdDate" : "2026-02-18T07:17:05Z",
+  "dataPathRelativeToProjectURL" : "../TestingData/",
+  "dataResult" : {
+    "createdDate" : "2026-02-18T07:17:05Z",
+    "dataSourceID" : "3CF6AFD9-09DC-4C92-81AA-4524F6D1FEA7",
+    "dataURL" : "file:///Users/daidai/Documents/Programs/Xcode/KC3Hack2026Team4/PikumeiClassifier/TestingData/"
+  },
+  "dataURL" : "file:///Users/daidai/Documents/Programs/Xcode/KC3Hack2026Team4/PikumeiClassifier/TestingData/",
+  "experimentIDs" : [
+    "3F77F488-920D-43A4-8967-48A113B17711"
+  ],
+  "id" : "3CF6AFD9-09DC-4C92-81AA-4524F6D1FEA7",
+  "modifiedDate" : "2026-02-18T07:17:05Z",
+  "pathType" : 0,
+  "preferredFilename" : "TestingData",
+  "title" : "TestingData",
+  "version" : "1.0"
+}

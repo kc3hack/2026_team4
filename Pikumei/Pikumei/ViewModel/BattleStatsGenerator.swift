@@ -11,6 +11,8 @@ enum BattleStatsGenerator {
 
     private static let hpRange = 80...180
     private static let attackRange = 15...55
+    private static let specialAttackRange = 15...55
+    private static let specialDefenseRange = 10...40
 
     /// タイプごとの固定 seed（0.0〜1.0、バランス調整用）
     private static let typeSeed: [MonsterType: Double] = [
@@ -29,7 +31,9 @@ enum BattleStatsGenerator {
             // ML 未実装 or 分類失敗 → ランダム
             return BattleStats(
                 hp: Int.random(in: hpRange),
-                attack: Int.random(in: attackRange)
+                attack: Int.random(in: attackRange),
+                specialAttack: Int.random(in: specialAttackRange),
+                specialDefense: Int.random(in: specialDefenseRange)
             )
         }
 
@@ -41,8 +45,12 @@ enum BattleStatsGenerator {
         // seed で個体差、confidence で全体的な強さを決める
         let hp = stat(in: hpRange, seed: seed, confidence: clampedConf)
         let attack = stat(in: attackRange, seed: seed * 0.7 + 0.3, confidence: clampedConf)
+        // 特攻は攻撃と逆の傾向（攻撃が高いタイプは特攻が低め）
+        let specialAttack = stat(in: specialAttackRange, seed: (1.0 - seed) * 0.6 + 0.4, confidence: clampedConf)
+        // 特防はタイプ固有の耐久性を反映
+        let specialDefense = stat(in: specialDefenseRange, seed: seed * 0.5 + 0.25, confidence: clampedConf)
 
-        return BattleStats(hp: hp, attack: attack)
+        return BattleStats(hp: hp, attack: attack, specialAttack: specialAttack, specialDefense: specialDefense)
     }
 
     // MARK: - Private

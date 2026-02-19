@@ -14,10 +14,15 @@ class MonsterScanViewModel: ObservableObject {
     @Published var cutoutImage: UIImage?
     @Published var errorMessage: String?
     @Published var showPreview = false
-
+    @Published var lastSavedMonster: Monster?
+    @Published var uploadError: String?
+    
     let cameraManager = CameraManager()
     private var isConfigured = false
 
+    let monsterClassifier = MonsterClassifier()
+    private let syncService = MonsterSyncService()
+    
     func startCamera() {
         if !isConfigured {
             cameraManager.configure()
@@ -25,24 +30,30 @@ class MonsterScanViewModel: ObservableObject {
         }
         cameraManager.startSession()
     }
-
+    
     func stopCamera() {
         cameraManager.stopSession()
     }
-
+    
     /// 撮影 → 前景検出 → 切り抜き → SwiftData に保存
     func captureAndProcess(modelContext: ModelContext) {
         Task {
             phase = .processing
             errorMessage = nil
-
+            
             do {
+                // 撮影
                 let photo = try await cameraManager.capturePhoto()
-                let cutout = try await SubjectDetector.detectAndCutout(from: photo)
-
+                
+                // タイプ分類
+                let (monsterType, confidence) = try monsterClassifier.classify(image: photo)
+                print("monsterType: \(monsterType), confidence: \(confidence * 100)%")
+                
                 // スキャン成功時に即保存
+                let cutout = try await SubjectDetector.detectAndCutout(from: photo)
                 let store = MonsterStore(modelContext: modelContext)
-                try store.save(image: cutout)
+                let saved = try store.save(image: cutout, label: monsterType, confidence: confidence)
+                lastSavedMonster = saved
 
                 cutoutImage = cutout
                 showPreview = true
@@ -53,11 +64,38 @@ class MonsterScanViewModel: ObservableObject {
             }
         }
     }
+    
+    /// 名前確定後に Supabase にアップロードする
+    func uploadMonster(monster: Monster) {
+        Task {
+            do {
+                try await syncService.upload(monster: monster)
+            } catch {
+                print("⚠️ アップロードエラー: \(error)")
+                uploadError = "アップロードに失敗しました: \(error.localizedDescription)"
+            }
+        }
+    }
+
+    /// 名前確定時の処理（SwiftData 保存 + Supabase アップロード）
+    func confirmName(_ name: String, modelContext: ModelContext) {
+        guard let monster = lastSavedMonster else { return }
+        let store = MonsterStore(modelContext: modelContext)
+        do {
+            try store.updateName(monster: monster, name: name)
+        } catch {
+            uploadError = "名前の保存に失敗しました: \(error.localizedDescription)"
+            return
+        }
+        uploadMonster(monster: monster)
+    }
 
     func retry() {
         showPreview = false
         cutoutImage = nil
+        lastSavedMonster = nil
         errorMessage = nil
+        uploadError = nil
         phase = .camera
     }
 }

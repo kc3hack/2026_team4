@@ -1,0 +1,29 @@
+{
+  "activityEntities" : [
+    "projectCreated",
+    [
+      {
+        "createdDate" : "2026-02-18T07:00:18Z",
+        "event" : "projectCreated",
+        "id" : "4FA031D3-62CC-49B9-BB33-F3082E6352FC",
+        "subtitle" : "PikumeiClassifier",
+        "title" : "Project Created"
+      }
+    ]
+  ],
+  "authorName" : "Daichi Sakai",
+  "createdDate" : "2026-02-18T07:00:18Z",
+  "description" : "",
+  "id" : "9652B8D0-B0A8-4A5D-9166-75B6EE13D181",
+  "license" : "",
+  "location" : "",
+  "modifiedDate" : "2026-02-18T07:00:18Z",
+  "projectName" : "PikumeiClassifier",
+  "settingsEntity" : {
+    "snapshotOnExtendTraining" : true,
+    "snapshotOnResumeTraining" : false
+  },
+  "taskType" : "imageClassifier",
+  "title" : "Image Classification",
+  "version" : "1.1"
+}
