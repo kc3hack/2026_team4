@@ -9,10 +9,12 @@ import SwiftData
 /// モンスター詳細画面
 struct MonsterDetailView: View {
     let monster: Monster
+    /// バトル用ステータス（初期化時に一度だけ算出）
+    let stats: BattleStats
 
-    /// バトル用ステータス（label + confidence から算出）
-    private var stats: BattleStats {
-        BattleStatsGenerator.generate(
+    init(monster: Monster) {
+        self.monster = monster
+        self.stats = BattleStatsGenerator.generate(
             label: monster.classificationLabel,
             confidence: monster.classificationConfidence
         )
@@ -45,13 +47,13 @@ struct MonsterDetailView: View {
                         .foregroundStyle(.secondary)
                 }
 
-                // レーダーチャート
+                // レーダーチャート（pow(2) で差を強調、バーと同じスケール）
                 RadarChartComponent(
                     axes: [
-                        ("HP", Double(stats.hp) / 180.0),
-                        ("攻撃", Double(stats.attack) / 55.0),
-                        ("特攻", Double(stats.specialAttack) / 55.0),
-                        ("特防", Double(stats.specialDefense) / 40.0),
+                        ("HP", pow(Double(stats.hp) / 180.0, 2)),
+                        ("攻撃", pow(Double(stats.attack) / 55.0, 2)),
+                        ("特攻", pow(Double(stats.specialAttack) / 55.0, 2)),
+                        ("特防", pow(Double(stats.specialDefense) / 55.0, 2)),
                     ],
                     color: .blue
                 )
@@ -77,7 +79,7 @@ struct MonsterDetailView: View {
             statRow(label: "HP", value: stats.hp, maxValue: 180)
             statRow(label: "攻撃", value: stats.attack, maxValue: 55)
             statRow(label: "特攻", value: stats.specialAttack, maxValue: 55)
-            statRow(label: "特防", value: stats.specialDefense, maxValue: 40)
+            statRow(label: "特防", value: stats.specialDefense, maxValue: 55)
         }
         .padding(.horizontal)
     }
