@@ -19,8 +19,9 @@ class MonsterScanViewModel: ObservableObject {
     
     let cameraManager = CameraManager()
     private var isConfigured = false
-    
+
     let monsterClassifier = MonsterClassifier()
+    private let syncService = MonsterSyncService()
     
     func startCamera() {
         if !isConfigured {
@@ -51,13 +52,8 @@ class MonsterScanViewModel: ObservableObject {
                 // スキャン成功時に即保存
                 let cutout = try await SubjectDetector.detectAndCutout(from: photo)
                 let store = MonsterStore(modelContext: modelContext)
-                try store.save(image: cutout, label: monsterType, confidence: confidence)
-
-                // ローカル保存したモンスターを取得（Supabase アップロードは名前入力後に行う）
-                let monsters = try store.fetchAll()
-                if let latest = monsters.first {
-                    lastSavedMonster = latest
-                }
+                let saved = try store.save(image: cutout, label: monsterType, confidence: confidence)
+                lastSavedMonster = saved
 
                 cutoutImage = cutout
                 showPreview = true
@@ -73,7 +69,6 @@ class MonsterScanViewModel: ObservableObject {
     func uploadMonster(monster: Monster) {
         Task {
             do {
-                let syncService = MonsterSyncService()
                 try await syncService.upload(monster: monster)
             } catch {
                 print("⚠️ アップロードエラー: \(error)")
