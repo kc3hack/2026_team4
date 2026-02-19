@@ -12,9 +12,8 @@ struct HomeView: View {
                 .lineSpacing(8)
 
             // テスト用：GIFアニメーション
-            GifImageComponent(name: "flash-effect", repeatCount: 1)
-                .aspectRatio(1, contentMode: .fit)
-                .padding(.horizontal, 40)
+            GifImageComponent(name: "explosion", repeatCount: 1)
+                .frame(width: 200, height: 200)
 
             // テスト用：効果音ボタン
             Button("効果音テスト") {

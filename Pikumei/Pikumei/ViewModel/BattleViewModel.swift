@@ -26,6 +26,7 @@ class BattleViewModel: ObservableObject {
     @Published var battleLog: [String] = []
     @Published var myAttacks: [BattleAttack] = []
     @Published var attackPP: [Int?] = []  // nil = 無制限, 数値 = 残り回数
+    @Published var attackEffectGif: String?  // 攻撃エフェクトのGIF名
 
     let battleId: UUID
     private var isPlayer1 = false
@@ -118,6 +119,9 @@ class BattleViewModel: ObservableObject {
                 return eff > 1.0 ? 2 : nil
             }
 
+            // 攻撃エフェクトGIFを事前読み込み
+            GifCacheStore.shared.preload(myAttacks.map { $0.effectGif })
+
             // Broadcast チャネルを購読（ready ハンドシェイク後にターン開始）
             try await subscribeToBattle()
 
@@ -142,6 +146,21 @@ class BattleViewModel: ObservableObject {
         return eff > 1.0 ? 70 : (eff < 1.0 ? 100 : 90)
     }
 
+    /// 攻撃エフェクトを表示して再生完了後に消す
+    private let effectSpeed: Double = 3.0
+
+    func showAttackEffect(attack: BattleAttack) {
+        let gifName = attack.effectGif
+        attackEffectGif = gifName
+        // キャッシュから実際の再生時間を取得し、速度倍率で割った時間後に消す
+        let originalDuration = GifCacheStore.shared.frames(for: gifName)?.duration ?? 1.0
+        let displayDuration = originalDuration / effectSpeed
+        Task {
+            try? await Task.sleep(for: .seconds(displayDuration))
+            attackEffectGif = nil
+        }
+    }
+
     // MARK: - 攻撃
 
     /// 選択した攻撃を送信し、相手の HP を減らす
@@ -154,6 +173,7 @@ class BattleViewModel: ObservableObject {
 
         let chosen = myAttacks[index]
         SoundPlayerComponent.shared.play(chosen.sound)
+        showAttackEffect(attack: chosen)
         let multiplier = chosen.type.effectiveness(against: opponentLabel)
 
         // PP 消費
@@ -289,8 +309,11 @@ class BattleViewModel: ObservableObject {
         let opponentAttack = opponentLabel.attacks.first { $0.type == attackType }
         let attackName = opponentAttack?.name ?? "???"
 
-        // 相手の技の効果音を再生
+        // 相手の技の効果音・エフェクトを再生
         SoundPlayerComponent.shared.play(opponentAttack?.sound ?? .panch)
+        if let opponentAttack {
+            showAttackEffect(attack: opponentAttack)
+        }
 
         if hit {
             let powerRate = opponentLabel.attacks.first { $0.type == attackType }?.powerRate ?? 1.0

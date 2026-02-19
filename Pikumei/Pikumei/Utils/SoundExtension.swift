@@ -34,4 +34,18 @@ extension BattleAttack {
         default:          return .panch
         }
     }
+
+    /// 攻撃名に対応するエフェクトGIF名
+    var effectGif: String {
+        switch name {
+        case "ほのお":     return "explosion"
+        case "みずしぶき": return "drop-water"
+        case "リーフ":     return "lighting"
+        case "たたり":     return "lighting"
+        case "パンチ":     return "flash-effect"
+        case "しっぽ":     return "slashing-effect"
+        case "かぜきり":   return "slashing-effect"
+        default:          return "flash-effect"
+        }
+    }
 }

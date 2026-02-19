@@ -17,18 +17,27 @@ struct BattleGameView: View {
     }
 
     var body: some View {
-        Group {
-            switch viewModel.phase {
-            case .preparing:
-                preparingView
-            case .battling:
-                battlingView
-            case .won:
-                resultView(won: true)
-            case .lost:
-                resultView(won: false)
-            case .connectionError:
-                connectionErrorView
+        ZStack {
+            Group {
+                switch viewModel.phase {
+                case .preparing:
+                    preparingView
+                case .battling:
+                    battlingView
+                case .won:
+                    resultView(won: true)
+                case .lost:
+                    resultView(won: false)
+                case .connectionError:
+                    connectionErrorView
+                }
+            }
+
+            // 攻撃エフェクト
+            if let gif = viewModel.attackEffectGif {
+                GifImageComponent(name: gif, repeatCount: 1, speed: 3.0)
+                    .frame(width: 80, height: 80)
+                    .allowsHitTesting(false)
             }
         }
         .task {
