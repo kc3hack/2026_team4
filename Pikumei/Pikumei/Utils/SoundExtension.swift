@@ -12,7 +12,7 @@ enum Sound: String {
     case mizushibuki = "waza_mizusibuki"
     case leaf = "waza_leaf"
     case tatari = "waza_tatari"
-    case panch = "panch"
+    case panch = "waza_panch"
     case shippo = "waza_sippo"
     case kazekiri = "waza_kazekiri"
 

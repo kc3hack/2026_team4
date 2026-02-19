@@ -153,6 +153,7 @@ class BattleViewModel: ObservableObject {
         isMyTurn = false
 
         let chosen = myAttacks[index]
+        SoundPlayerComponent.shared.play(chosen.sound)
         let multiplier = chosen.type.effectiveness(against: opponentLabel)
 
         // PP 消費
@@ -285,7 +286,11 @@ class BattleViewModel: ObservableObject {
         guard phase == .battling, let myStats, let opponentStats, let opponentLabel, let myLabel else { return }
 
         let attackType = MonsterType(rawValue: attackTypeRaw ?? "") ?? opponentLabel
-        let attackName = opponentLabel.attacks.first { $0.type == attackType }?.name ?? "???"
+        let opponentAttack = opponentLabel.attacks.first { $0.type == attackType }
+        let attackName = opponentAttack?.name ?? "???"
+
+        // 相手の技の効果音を再生
+        SoundPlayerComponent.shared.play(opponentAttack?.sound ?? .panch)
 
         if hit {
             let powerRate = opponentLabel.attacks.first { $0.type == attackType }?.powerRate ?? 1.0
