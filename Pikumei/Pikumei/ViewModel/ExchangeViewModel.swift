@@ -211,6 +211,7 @@ class ExchangeViewModel: ObservableObject {
         // Realtime コールバックとフォールバックの両方から呼ばれうるため重複実行を防止
         guard !isCompleting else { return }
         isCompleting = true
+        defer { isCompleting = false }
 
         do {
             let userId = try await client.auth.session.user.id
@@ -311,13 +312,17 @@ class ExchangeViewModel: ObservableObject {
     func reset() {
         if let exchangeId {
             Task {
-                try? await client
-                    .from("exchanges")
-                    .update(["status": "cancelled"])
-                    .eq("id", value: exchangeId.uuidString)
-                    .eq("status", value: "waiting")
-                    .execute()
-                print("[Exchange] 交換 \(exchangeId) をキャンセル")
+                do {
+                    try await client
+                        .from("exchanges")
+                        .update(["status": "cancelled"])
+                        .eq("id", value: exchangeId.uuidString)
+                        .eq("status", value: "waiting")
+                        .execute()
+                    print("[Exchange] 交換 \(exchangeId) をキャンセル")
+                } catch {
+                    print("[Exchange] キャンセル失敗 \(exchangeId): \(error)")
+                }
             }
         }
         unsubscribe()
