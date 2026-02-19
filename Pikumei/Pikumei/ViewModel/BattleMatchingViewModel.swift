@@ -192,7 +192,7 @@ class BattleMatchingViewModel: ObservableObject {
     func reset() {
         if let battleId {
             Task {
-                try? await client
+                _ = try? await client
                     .from("battles")
                     .update(["status": "cancelled"])
                     .eq("id", value: battleId.uuidString)

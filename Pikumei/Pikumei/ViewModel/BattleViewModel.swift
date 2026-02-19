@@ -51,7 +51,7 @@ class BattleViewModel: ObservableObject {
 
             // battles テーブルからバトル詳細を取得（player2 未設定時はリトライ）
             var battle: BattleFullRow?
-            for attempt in 0..<5 {
+            for _ in 0..<5 {
                 let row: BattleFullRow = try await client
                     .from("battles")
                     .select("id, status, player1_id, player1_monster_id, player2_id, player2_monster_id")
