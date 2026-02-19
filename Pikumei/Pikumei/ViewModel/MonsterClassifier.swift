@@ -33,7 +33,7 @@ class MonsterClassifier {
     /// モデルを読み込み、リクエストを作成する
     private func setupRequest() throws -> VNRequest{
         // モデルをロード
-        let pikumeiClassifier = try? PikumeiClassifier(configuration: MLModelConfiguration())
+        let pikumeiClassifier = try? PikumeiClassifier2(configuration: MLModelConfiguration())
         guard let pikumeiClassifier else {
             throw MonsterClassifierError.modelNotAvailable
         }
@@ -75,6 +75,7 @@ class MonsterClassifier {
         guard let monsterType, let confidence else {
             throw MonsterClassifierError.resultNotFound
         }
+        print("[1] monsterType: \(monsterType), confidence: \(confidence * 100)%")
         return (monsterType, confidence)
     }
 }

@@ -47,7 +47,7 @@ class MonsterScanViewModel: ObservableObject {
                 
                 // タイプ分類
                 let (monsterType, confidence) = try monsterClassifier.classify(image: photo)
-                print("monsterType: \(monsterType), confidence: \(confidence * 100)%")
+                print("[2] monsterType: \(monsterType), confidence: \(confidence * 100)%")
                 
                 // スキャン成功時に即保存
                 let cutout = try await SubjectDetector.detectAndCutout(from: photo)
