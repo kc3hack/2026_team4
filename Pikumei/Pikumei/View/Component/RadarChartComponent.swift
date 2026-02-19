@@ -103,3 +103,17 @@ struct RadarChartComponent: View {
         )
     }
 }
+
+#Preview {
+    RadarChartComponent(
+        axes: [
+            ("HP", 0.1),
+            ("攻撃", 0.6),
+            ("特攻", 0.45),
+            ("特防", 0.7),
+        ],
+        color: .blue
+    )
+    .frame(width: 250, height: 250)
+    .padding()
+}
