@@ -1,4 +1,3 @@
-//
 //  BattleView.swift
 //  Pikumei
 //
@@ -38,7 +37,6 @@ struct BattleView: View {
                 }
             }
             .padding()
-            .navigationTitle("バトル")
             .toolbar(
                 matchingVM.phase.isBattling ? .hidden : .visible,
                 for: .tabBar
@@ -58,6 +56,13 @@ private struct BattleIdleSection: View {
 
     var body: some View {
         VStack(spacing: 16) {
+            Image("battle-logo")
+                .resizable()
+                //.scaledToFill()
+                .frame(width: UIScreen.main.bounds.width * 1.13, height: 400)
+                .rotationEffect(Angle(degrees: -8))
+                .padding(.bottom, 40)
+            
             Text("マッチング通信テスト")
                 .font(.headline)
 
