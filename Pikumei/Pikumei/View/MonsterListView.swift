@@ -47,6 +47,12 @@ struct MonsterListView: View {
                     }
                     .padding(4)
                 }
+                .background(
+                    Image("back_mokume")
+                        .resizable()
+                        .scaledToFill()
+                        .ignoresSafeArea()
+                )
                 .navigationTitle("モンスター一覧")
             }
         }

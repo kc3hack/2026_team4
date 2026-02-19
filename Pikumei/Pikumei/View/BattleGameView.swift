@@ -11,13 +11,29 @@ struct BattleGameView: View {
     @StateObject private var viewModel: BattleViewModel
     var onFinish: () -> Void
 
+    // バトル背景をランダムで選択（画面生成時に固定）
+    private let backgroundImage: String
+
+    private static let battleBackgrounds = [
+        "back_battle_mori",
+        "back_battle_sabaku",
+        "back_battle_sougen",
+    ]
+
     init(battleId: UUID, onFinish: @escaping () -> Void) {
         _viewModel = StateObject(wrappedValue: BattleViewModel(battleId: battleId))
         self.onFinish = onFinish
+        self.backgroundImage = Self.battleBackgrounds.randomElement()!
     }
 
     var body: some View {
         ZStack {
+            // バトル背景
+            Image(backgroundImage)
+                .resizable()
+                .scaledToFill()
+                .ignoresSafeArea()
+
             Group {
                 switch viewModel.phase {
                 case .preparing:
