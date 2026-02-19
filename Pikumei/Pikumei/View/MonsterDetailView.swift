@@ -34,7 +34,13 @@ struct MonsterDetailView: View {
                     .bold()
 
                 if let type = monster.classificationLabel {
-                    Text("タイプ: \(type.rawValue)")
+                    Text("タイプ: \(type.displayName)")
+                        .font(.body)
+                        .foregroundStyle(.secondary)
+                }
+
+                if let confidence = monster.classificationConfidence {
+                    Text("強さ: \(Int(confidence * 100))%")
                         .font(.body)
                         .foregroundStyle(.secondary)
                 }
