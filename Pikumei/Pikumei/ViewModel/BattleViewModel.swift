@@ -51,7 +51,7 @@ class BattleViewModel: ObservableObject {
 
             // battles テーブルからバトル詳細を取得（player2 未設定時はリトライ）
             var battle: BattleFullRow?
-            for attempt in 0..<5 {
+            for _ in 0..<5 {
                 let row: BattleFullRow = try await client
                     .from("battles")
                     .select("id, status, player1_id, player1_monster_id, player2_id, player2_monster_id")
@@ -146,7 +146,7 @@ class BattleViewModel: ObservableObject {
 
     /// 選択した攻撃を送信し、相手の HP を減らす
     func attack(index: Int) {
-        guard isMyTurn, let myStats, let opponentLabel else { return }
+        guard isMyTurn, let myStats, let opponentStats, let opponentLabel else { return }
         guard index < myAttacks.count else { return }
         // PP チェック
         if let pp = attackPP[index], pp <= 0 { return }
@@ -163,7 +163,11 @@ class BattleViewModel: ObservableObject {
         let hit = Double.random(in: 0..<1) < accuracy
 
         if hit {
-            let damage = max(Int(Double(myStats.attack) * chosen.powerRate * multiplier), 1)
+            // メイン技（powerRate 1.0）は特攻、サブ技は攻撃を使用
+            let attackStat = chosen.powerRate >= 1.0 ? myStats.specialAttack : myStats.attack
+            let defStat = opponentStats.specialDefense
+            let rawDamage = Double(attackStat) * chosen.powerRate * multiplier
+            let damage = max(Int(rawDamage * 100.0 / (100.0 + Double(defStat))), 1)
             opponentHp -= damage
             battleLog.append("\(chosen.name)攻撃！ \(damage) ダメージ！")
             if multiplier > 1.0 { battleLog.append("こうかはばつぐんだ！") }
@@ -278,7 +282,7 @@ class BattleViewModel: ObservableObject {
 
     /// 相手の攻撃を受信した時の処理
     private func handleOpponentAttack(attackTypeRaw: String?, hit: Bool) {
-        guard phase == .battling, let opponentStats, let opponentLabel, let myLabel else { return }
+        guard phase == .battling, let myStats, let opponentStats, let opponentLabel, let myLabel else { return }
 
         let attackType = MonsterType(rawValue: attackTypeRaw ?? "") ?? opponentLabel
         let attackName = opponentLabel.attacks.first { $0.type == attackType }?.name ?? "???"
@@ -286,7 +290,11 @@ class BattleViewModel: ObservableObject {
         if hit {
             let powerRate = opponentLabel.attacks.first { $0.type == attackType }?.powerRate ?? 1.0
             let multiplier = attackType.effectiveness(against: myLabel)
-            let damage = max(Int(Double(opponentStats.attack) * powerRate * multiplier), 1)
+            // メイン技（powerRate 1.0）は特攻、サブ技は攻撃を使用
+            let attackStat = powerRate >= 1.0 ? opponentStats.specialAttack : opponentStats.attack
+            let defStat = myStats.specialDefense
+            let rawDamage = Double(attackStat) * powerRate * multiplier
+            let damage = max(Int(rawDamage * 100.0 / (100.0 + Double(defStat))), 1)
             myHp -= damage
 
             battleLog.append("\(attackName)攻撃！ \(damage) ダメージ！")

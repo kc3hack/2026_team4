@@ -34,6 +34,9 @@ jobs:
           }
           EOF
 
+      - name: Download Metal Toolchain
+        run: xcodebuild -downloadComponent MetalToolchain
+
       - name: Run tests
         run: |
           set -o pipefail

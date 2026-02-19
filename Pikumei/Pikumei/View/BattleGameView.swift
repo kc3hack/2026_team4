@@ -61,7 +61,7 @@ struct BattleGameView: View {
                     Text("あいて")
                         .font(.caption)
                         .foregroundStyle(.secondary)
-                    Text(viewModel.opponentName ?? viewModel.opponentLabel?.rawValue ?? "")
+                    Text(viewModel.opponentName ?? viewModel.opponentLabel?.displayName ?? "")
                         .font(.title3)
                         .bold()
                     hpBar(
@@ -83,7 +83,7 @@ struct BattleGameView: View {
                     Text("じぶん")
                         .font(.caption)
                         .foregroundStyle(.secondary)
-                    Text(viewModel.myName ?? viewModel.myLabel?.rawValue ?? "")
+                    Text(viewModel.myName ?? viewModel.myLabel?.displayName ?? "")
                         .font(.title3)
                         .bold()
                     hpBar(
