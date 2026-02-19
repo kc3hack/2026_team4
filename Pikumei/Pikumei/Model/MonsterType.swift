@@ -16,6 +16,19 @@ enum MonsterType: String, Codable, CaseIterable {
 }
 
 extension MonsterType {
+    /// 日本語の表示名
+    var displayName: String {
+        switch self {
+        case .fire:  return "ほのお"
+        case .water: return "みず"
+        case .leaf:  return "くさ"
+        case .ghost: return "ゴースト"
+        case .human: return "ヒト"
+        case .fish:  return "さかな"
+        case .bird:  return "とり"
+        }
+    }
+
     /// このタイプのモンスターが使える攻撃一覧（メイン技1 + サブ技2）
     var attacks: [BattleAttack] {
         switch self {
