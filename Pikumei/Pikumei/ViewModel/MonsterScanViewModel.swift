@@ -82,6 +82,19 @@ class MonsterScanViewModel: ObservableObject {
         }
     }
 
+    /// 名前確定時の処理（SwiftData 保存 + Supabase アップロード）
+    func confirmName(_ name: String, modelContext: ModelContext) {
+        guard let monster = lastSavedMonster else { return }
+        let store = MonsterStore(modelContext: modelContext)
+        do {
+            try store.updateName(monster: monster, name: name)
+        } catch {
+            uploadError = "名前の保存に失敗しました: \(error.localizedDescription)"
+            return
+        }
+        uploadMonster(monster: monster)
+    }
+
     func retry() {
         showPreview = false
         cutoutImage = nil

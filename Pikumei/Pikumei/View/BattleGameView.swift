@@ -108,8 +108,7 @@ struct BattleGameView: View {
                             Text(atk.name)
                                 .font(.caption)
                                 .bold()
-                            if let opp = viewModel.opponentLabel {
-                                let eff = atk.type.effectiveness(against: opp)
+                            if let eff = viewModel.attackEffectiveness(at: i) {
                                 // 相性表示
                                 if eff > 1.0 {
                                     Text("▲有利")
@@ -121,10 +120,11 @@ struct BattleGameView: View {
                                         .foregroundStyle(.red)
                                 }
                                 // 命中率表示
-                                let acc = eff > 1.0 ? 70 : (eff < 1.0 ? 100 : 90)
-                                Text("\(acc)%")
-                                    .font(.caption2)
-                                    .foregroundStyle(.secondary)
+                                if let acc = viewModel.attackAccuracy(at: i) {
+                                    Text("\(acc)%")
+                                        .font(.caption2)
+                                        .foregroundStyle(.secondary)
+                                }
                             }
                             // PP 表示
                             if let pp {

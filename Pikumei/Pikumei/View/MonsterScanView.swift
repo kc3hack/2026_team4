@@ -32,13 +32,7 @@ struct MonsterScanView: View {
         }) {
             if let image = viewModel.cutoutImage {
                 MonsterResultView(image: image) { name in
-                    if let monster = viewModel.lastSavedMonster {
-                        // SwiftData にモンスター名を保存
-                        let store = MonsterStore(modelContext: modelContext)
-                        try? store.updateName(monster: monster, name: name)
-                        // 名前付きで Supabase にアップロード
-                        viewModel.uploadMonster(monster: monster)
-                    }
+                    viewModel.confirmName(name, modelContext: modelContext)
                 }
                 .alert("アップロードエラー", isPresented: Binding(
                     get: { viewModel.uploadError != nil },

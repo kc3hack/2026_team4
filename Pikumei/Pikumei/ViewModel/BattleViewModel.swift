@@ -128,6 +128,20 @@ class BattleViewModel: ObservableObject {
         }
     }
 
+    // MARK: - 攻撃表示用
+
+    /// 攻撃の相性倍率を返す
+    func attackEffectiveness(at index: Int) -> Double? {
+        guard index < myAttacks.count, let opponentLabel else { return nil }
+        return myAttacks[index].type.effectiveness(against: opponentLabel)
+    }
+
+    /// 攻撃の命中率（%）を返す
+    func attackAccuracy(at index: Int) -> Int? {
+        guard let eff = attackEffectiveness(at: index) else { return nil }
+        return eff > 1.0 ? 70 : (eff < 1.0 ? 100 : 90)
+    }
+
     // MARK: - 攻撃
 
     /// 選択した攻撃を送信し、相手の HP を減らす
