@@ -3,11 +3,9 @@ name: Unit Tests
 on:
   pull_request:
     branches: [main, develop]
-    types: [opened, synchronize, reopened, closed]
 
 jobs:
   test:
-    if: github.event.action != 'closed'
     runs-on: macos-15
     defaults:
       run:
@@ -38,23 +36,3 @@ jobs:
             -scheme Pikumei \
             -destination 'platform=iOS Simulator,name=iPhone 16' \
             2>&1 | tee build.log | tail -50
-
-  delete-branch:
-    if: github.event.pull_request.merged == true
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-    steps:
-      - name: Delete merged branch
-        uses: actions/github-script@v7
-        with:
-          script: |
-            const branch = context.payload.pull_request.head.ref;
-            const owner = context.repo.owner;
-            const repo = context.repo.repo;
-            try {
-              await github.rest.git.deleteRef({ owner, repo, ref: `heads/${branch}` });
-              console.log(`Deleted branch: ${branch}`);
-            } catch (e) {
-              console.log(`Branch already deleted or error: ${e.message}`);
-            }
