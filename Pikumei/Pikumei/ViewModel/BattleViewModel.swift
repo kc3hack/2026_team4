@@ -146,7 +146,7 @@ class BattleViewModel: ObservableObject {
 
     /// 選択した攻撃を送信し、相手の HP を減らす
     func attack(index: Int) {
-        guard isMyTurn, let myStats, let opponentLabel else { return }
+        guard isMyTurn, let myStats, let opponentStats, let opponentLabel else { return }
         guard index < myAttacks.count else { return }
         // PP チェック
         if let pp = attackPP[index], pp <= 0 { return }
@@ -165,7 +165,7 @@ class BattleViewModel: ObservableObject {
         if hit {
             // メイン技（powerRate 1.0）は特攻、サブ技は攻撃を使用
             let attackStat = chosen.powerRate >= 1.0 ? myStats.specialAttack : myStats.attack
-            let defStat = opponentStats?.specialDefense ?? 0
+            let defStat = opponentStats.specialDefense
             let rawDamage = Double(attackStat) * chosen.powerRate * multiplier
             let damage = max(Int(rawDamage * 100.0 / (100.0 + Double(defStat))), 1)
             opponentHp -= damage
@@ -282,7 +282,7 @@ class BattleViewModel: ObservableObject {
 
     /// 相手の攻撃を受信した時の処理
     private func handleOpponentAttack(attackTypeRaw: String?, hit: Bool) {
-        guard phase == .battling, let opponentStats, let opponentLabel, let myLabel else { return }
+        guard phase == .battling, let myStats, let opponentStats, let opponentLabel, let myLabel else { return }
 
         let attackType = MonsterType(rawValue: attackTypeRaw ?? "") ?? opponentLabel
         let attackName = opponentLabel.attacks.first { $0.type == attackType }?.name ?? "???"
@@ -292,7 +292,7 @@ class BattleViewModel: ObservableObject {
             let multiplier = attackType.effectiveness(against: myLabel)
             // メイン技（powerRate 1.0）は特攻、サブ技は攻撃を使用
             let attackStat = powerRate >= 1.0 ? opponentStats.specialAttack : opponentStats.attack
-            let defStat = myStats?.specialDefense ?? 0
+            let defStat = myStats.specialDefense
             let rawDamage = Double(attackStat) * powerRate * multiplier
             let damage = max(Int(rawDamage * 100.0 / (100.0 + Double(defStat))), 1)
             myHp -= damage
