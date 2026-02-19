@@ -27,6 +27,8 @@ struct BattleGameView: View {
                 resultView(won: true)
             case .lost:
                 resultView(won: false)
+            case .connectionError:
+                connectionErrorView
             }
         }
         .task {
@@ -214,6 +216,29 @@ struct BattleGameView: View {
             }
             .frame(maxHeight: 120)
         }
+    }
+
+    // MARK: - 通信エラー画面
+
+    private var connectionErrorView: some View {
+        VStack(spacing: 24) {
+            Image(systemName: "wifi.exclamationmark")
+                .font(.system(size: 64))
+                .foregroundStyle(.orange)
+
+            Text("通信エラー")
+                .font(.largeTitle)
+                .bold()
+
+            logSection
+
+            Button("戻る") {
+                viewModel.cleanup()
+                onFinish()
+            }
+            .buttonStyle(.bordered)
+        }
+        .padding()
     }
 
     // MARK: - 結果画面

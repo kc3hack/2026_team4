@@ -37,11 +37,16 @@ struct MonsterScanView: View {
                         let store = MonsterStore(modelContext: modelContext)
                         try? store.updateName(monster: monster, name: name)
                         // 名前付きで Supabase にアップロード
-                        Task {
-                            let syncService = MonsterSyncService()
-                            try? await syncService.upload(monster: monster)
-                        }
+                        viewModel.uploadMonster(monster: monster)
                     }
+                }
+                .alert("アップロードエラー", isPresented: Binding(
+                    get: { viewModel.uploadError != nil },
+                    set: { if !$0 { viewModel.uploadError = nil } }
+                )) {
+                    Button("OK") { viewModel.uploadError = nil }
+                } message: {
+                    Text(viewModel.uploadError ?? "")
                 }
             }
         }

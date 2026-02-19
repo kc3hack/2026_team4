@@ -34,7 +34,6 @@ class BattleViewModel: ObservableObject {
     private var channel: RealtimeChannelV2?
     private var subscription: RealtimeSubscription?
     private var readySubscription: RealtimeSubscription?
-    private var subscribeTask: Task<Void, Never>?
     private var readyPingTask: Task<Void, Never>?
     private var opponentReady = false
 
@@ -71,7 +70,7 @@ class BattleViewModel: ObservableObject {
 
             guard let battle, let player2MonsterId = battle.player2MonsterId else {
                 battleLog.append("対戦相手の情報を取得できませんでした")
-                phase = .lost
+                phase = .connectionError
                 return
             }
 
@@ -120,12 +119,12 @@ class BattleViewModel: ObservableObject {
             }
 
             // Broadcast チャネルを購読（ready ハンドシェイク後にターン開始）
-            subscribeToBattle()
+            try await subscribeToBattle()
 
             phase = .battling
         } catch {
             battleLog.append("エラー: \(error.localizedDescription)")
-            phase = .lost
+            phase = .connectionError
         }
     }
 
@@ -161,10 +160,14 @@ class BattleViewModel: ObservableObject {
 
         // Broadcast 送信完了後に勝利判定（送信前に cleanup されるのを防ぐ）
         Task {
-            try? await channel?.broadcast(
-                event: "attack",
-                message: AttackMessage(type: "attack", attackType: chosen.type.rawValue, hit: hit)
-            )
+            do {
+                try await channel?.broadcast(
+                    event: "attack",
+                    message: AttackMessage(type: "attack", attackType: chosen.type.rawValue, hit: hit)
+                )
+            } catch {
+                battleLog.append("攻撃の送信に失敗しました")
+            }
 
             if hit, opponentHp <= 0, self.phase == .battling {
                 opponentHp = 0
@@ -180,8 +183,6 @@ class BattleViewModel: ObservableObject {
     func cleanup() {
         readyPingTask?.cancel()
         readyPingTask = nil
-        subscribeTask?.cancel()
-        subscribeTask = nil
         subscription = nil
         readySubscription = nil
         if let channel {
@@ -196,7 +197,7 @@ class BattleViewModel: ObservableObject {
     // MARK: - Private
 
     /// Broadcast チャネルを購読して攻撃・ready イベントを受信する
-    private func subscribeToBattle() {
+    private func subscribeToBattle() async throws {
         let ch = client.channel("battle-game-\(battleId.uuidString)")
         channel = ch
 
@@ -217,16 +218,9 @@ class BattleViewModel: ObservableObject {
             }
         }
 
-        subscribeTask = Task {
-            do {
-                try await ch.subscribeWithError()
-                // ready の定期送信を開始
-                await MainActor.run {
-                    self.startReadyPing()
-                }
-            } catch {
-            }
-        }
+        // subscribe 完了を待ってから phase を遷移させる
+        try await ch.subscribeWithError()
+        startReadyPing()
     }
 
     /// ready イベントを定期送信（相手の ready を受信するまで、10秒でタイムアウト）
@@ -245,8 +239,8 @@ class BattleViewModel: ObservableObject {
             // タイムアウト: 相手が応答しなかった
             if !opponentReady {
                 await MainActor.run {
-                    battleLog.append("対戦相手が見つかりませんでした")
-                    phase = .lost
+                    battleLog.append("対戦相手との接続がタイムアウトしました")
+                    phase = .connectionError
                 }
             }
         }

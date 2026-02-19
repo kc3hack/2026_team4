@@ -15,6 +15,7 @@ class MonsterScanViewModel: ObservableObject {
     @Published var errorMessage: String?
     @Published var showPreview = false
     @Published var lastSavedMonster: Monster?
+    @Published var uploadError: String?
     
     let cameraManager = CameraManager()
     private var isConfigured = false
@@ -68,11 +69,25 @@ class MonsterScanViewModel: ObservableObject {
         }
     }
     
+    /// 名前確定後に Supabase にアップロードする
+    func uploadMonster(monster: Monster) {
+        Task {
+            do {
+                let syncService = MonsterSyncService()
+                try await syncService.upload(monster: monster)
+            } catch {
+                print("⚠️ アップロードエラー: \(error)")
+                uploadError = "アップロードに失敗しました: \(error.localizedDescription)"
+            }
+        }
+    }
+
     func retry() {
         showPreview = false
         cutoutImage = nil
         lastSavedMonster = nil
         errorMessage = nil
+        uploadError = nil
         phase = .camera
     }
 }
