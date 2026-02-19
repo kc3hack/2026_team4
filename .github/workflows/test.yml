@@ -5,6 +5,11 @@ on:
     branches: [main, develop]
 
 jobs:
+  gate:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "Branch is up to date"
+
   test:
     runs-on: macos-15
     defaults:
