@@ -9,20 +9,22 @@ import UIKit
 import CoreML
 import Vision
 
-let GHOST_CONFIDENCE_THRESHOLD: Double = 0.5
-
-let labelToMonsterType: [String: MonsterType] = [
-    "fire": .fire,
-    "water": .water,
-    "leaf": .leaf,
-    "ghost": .ghost,
-    "human": .human,
-    "fish": .fish,
-    "bird": .bird,
-]
-
 /// モンスターのタイプ分類を行う
 class MonsterClassifier {
+    /// ゴーストタイプに変換する信頼度の閾値
+    public static let GHOST_CONFIDENCE_THRESHOLD: Double = 0.5
+
+    /// モデル出力のラベルからMonsterType型への変換
+    private static let labelToMonsterType: [String: MonsterType] = [
+        "fire": .fire,
+        "water": .water,
+        "leaf": .leaf,
+        "ghost": .ghost,
+        "human": .human,
+        "fish": .fish,
+        "bird": .bird,
+    ]
+    
     private var resultFound: Bool = false
     private var monsterType: MonsterType = .bird
     private var confidence: Double = 0.0
@@ -49,7 +51,7 @@ class MonsterClassifier {
             self.resultFound = false
             guard let results = request.results as? [VNClassificationObservation] else {return}
             guard let first = results.first else {return}
-            guard let monsterType = labelToMonsterType[first.identifier] else {return}
+            guard let monsterType = MonsterClassifier.labelToMonsterType[first.identifier] else {return}
             self.monsterType = monsterType
             self.confidence = Double(first.confidence)
             self.resultFound = true
@@ -60,7 +62,7 @@ class MonsterClassifier {
     /// ゴーストタイプ判定
     private func isGhostType(confidence: Double) -> Bool {
         // 信頼度が閾値よりも低かったら、ゴーストタイプとなる
-        return confidence <= GHOST_CONFIDENCE_THRESHOLD
+        return confidence <= MonsterClassifier.GHOST_CONFIDENCE_THRESHOLD
     }
     
     /// ゴーストタイプへ変換する
@@ -71,7 +73,7 @@ class MonsterClassifier {
     }
     
     /// 画像を分類器に入力し、モンスタータイプと信頼度を返す
-    func classify(image: UIImage) throws -> (MonsterType, Double) {
+    public func classify(image: UIImage) throws -> (MonsterType, Double) {
         guard let request else {
             throw MonsterClassifierError.requestNotFound
         }
