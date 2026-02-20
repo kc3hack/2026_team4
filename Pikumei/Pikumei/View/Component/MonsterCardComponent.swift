@@ -21,7 +21,7 @@ struct MonsterCardComponent: View {
                 Image(uiImage: uiImage)
                     .resizable()
                     .scaledToFit()
-                    .frame(maxHeight: 100)
+                    .frame(maxHeight: 160)
                     .clipShape(RoundedRectangle(cornerRadius: 8))
             }
 

@@ -7,7 +7,8 @@ import SwiftUI
 
 /// 切り抜き結果のプレビュー画面
 struct MonsterResultView: View {
-    let image: UIImage
+    let monster: Monster
+    let stats: BattleStats
     /// 名前確定時に呼ばれるコールバック
     var onNameConfirmed: ((String) -> Void)?
     @Environment(\.dismiss) private var dismiss
@@ -21,6 +22,12 @@ struct MonsterResultView: View {
 
     var body: some View {
         ZStack {
+            // --- 背景画像 ---
+            Image("back_gray")
+                .resizable()
+                .scaledToFill()
+                .ignoresSafeArea()
+
             // --- 紙吹雪エフェクト層（背景へ移動）---
             if showConfetti {
                 ConfettiEffect()
@@ -29,16 +36,7 @@ struct MonsterResultView: View {
 
             // --- メインコンテンツ（前面へ移動）---
             VStack(spacing: 24) {
-                Spacer()
-
-                // カードコンポーネント
-                RotatingCardComponent(frontImage: Image(uiImage: image)) {
-                    showNameInput = true
-                }
-
-                Spacer()
-
-                // アニメーション完了後に名前入力を表示
+                // 紙吹雪後に名前入力をカードの上に表示
                 if showNameInput && !nameConfirmed {
                     VStack(spacing: 12) {
                         TextField("モンスターの名前を入力", text: $monsterName)
@@ -55,6 +53,11 @@ struct MonsterResultView: View {
                     }
                 }
 
+                // モンスターカード（キラキラエフェクト付き）
+                MonsterCardComponent(monster: monster, stats: stats)
+                    .rareCardEffect()
+                    .frame(width: 260)
+
                 // 名前確定後のみ閉じるボタンを表示
                 if nameConfirmed {
                     Button("閉じる") {
@@ -66,8 +69,11 @@ struct MonsterResultView: View {
             }
             .zIndex(1)
         }
-        .onAppear {
+        .task {
             showConfetti = true
+            // 紙吹雪が落ち着いた後に名前入力を表示
+            try? await Task.sleep(for: .seconds(1.5))
+            showNameInput = true
         }
     }
 }
@@ -145,8 +151,15 @@ struct ConfettiParticle: View {
 }
 
 #Preview {
+    let monster = Monster(
+        imageData: UIImage(systemName: "photo")!.pngData()!,
+        classificationLabel: .fire,
+        name: nil
+    )
+    let stats = BattleStatsGenerator.generate(label: .fire, confidence: 0.8)
     MonsterResultView(
-        image: UIImage(systemName: "photo")!,
+        monster: monster,
+        stats: stats,
         onNameConfirmed: { name in print("Name: \(name)") }
     )
 }

@@ -20,29 +20,39 @@ struct ExchangeView: View {
                 case .selectMonster:
                     ExchangeSelectSection(
                         monsters: monsters.filter { $0.supabaseId != nil },
+                        statsFor: { viewModel.stats(for: $0) },
                         onSelect: { viewModel.selectMonster($0) }
                     )
                 case .idle:
                     ExchangeIdleSection(
                         monster: viewModel.selectedMonster,
+                        stats: viewModel.selectedMonster.map { viewModel.stats(for: $0) },
                         onCreate: { Task { await viewModel.createExchange() } },
                         onJoin: { Task { await viewModel.joinExchange() } },
                         onBack: { viewModel.deselectMonster() }
                     )
                 case .waiting:
                     ExchangeWaitingSection(
+                        monster: viewModel.selectedMonster,
+                        stats: viewModel.selectedMonster.map { viewModel.stats(for: $0) },
                         exchangeId: viewModel.exchangeId,
                         onCancel: { viewModel.reset() }
                     )
                 case .exchanging:
-                    ExchangeProcessingSection()
+                    ExchangeProcessingSection(
+                        monster: viewModel.selectedMonster,
+                        stats: viewModel.selectedMonster.map { viewModel.stats(for: $0) }
+                    )
                 case .completed(let monster):
                     ExchangeCompletedSection(
                         monster: monster,
+                        stats: viewModel.stats(for: monster),
                         onClose: { viewModel.reset() }
                     )
                 case .error(let message):
                     ExchangeErrorSection(
+                        monster: viewModel.selectedMonster,
+                        stats: viewModel.selectedMonster.map { viewModel.stats(for: $0) },
                         message: message,
                         onBack: { viewModel.reset() }
                     )
@@ -70,10 +80,10 @@ struct ExchangeView: View {
 
 private struct ExchangeSelectSection: View {
     let monsters: [Monster]
+    var statsFor: (Monster) -> BattleStats
     var onSelect: (Monster) -> Void
 
     private let columns = [
-        GridItem(.flexible()),
         GridItem(.flexible()),
         GridItem(.flexible()),
     ]
@@ -91,23 +101,15 @@ private struct ExchangeSelectSection: View {
                     .font(.custom("DotGothic16-Regular", size: 17))
 
                 ScrollView {
-                    LazyVGrid(columns: columns, spacing: 8) {
+                    LazyVGrid(columns: columns, spacing: 12) {
                         ForEach(monsters) { monster in
                             Button {
                                 onSelect(monster)
                             } label: {
-                                VStack(spacing: 4) {
-                                    if let uiImage = monster.uiImage {
-                                        Image(uiImage: uiImage)
-                                            .resizable()
-                                            .aspectRatio(1, contentMode: .fill)
-                                            .clipped()
-                                            .cornerRadius(8)
-                                    }
-                                    Text(monster.name ?? "名前なし")
-                                        .font(.custom("DotGothic16-Regular", size: 12))
-                                        .lineLimit(1)
-                                }
+                                MonsterCardComponent(
+                                    monster: monster,
+                                    stats: statsFor(monster)
+                                )
                             }
                             .buttonStyle(.plain)
                         }
@@ -122,30 +124,18 @@ private struct ExchangeSelectSection: View {
 
 private struct ExchangeIdleSection: View {
     let monster: Monster?
+    let stats: BattleStats?
     var onCreate: () -> Void
     var onJoin: () -> Void
     var onBack: () -> Void
 
     var body: some View {
         VStack(spacing: 16) {
-            if let monster, let uiImage = monster.uiImage {
+            if let monster, let stats {
                 Text("交換に出すモンスター")
                     .font(.custom("DotGothic16-Regular", size: 17))
 
-                Image(uiImage: uiImage)
-                    .resizable()
-                    .aspectRatio(1, contentMode: .fit)
-                    .frame(maxWidth: 160)
-                    .cornerRadius(12)
-
-                Text(monster.name ?? "名前なし")
-                    .font(.custom("DotGothic16-Regular", size: 15))
-
-                if let label = monster.classificationLabel {
-                    Text(label.displayName)
-                        .font(.custom("DotGothic16-Regular", size: 12))
-                        .foregroundStyle(.secondary)
-                }
+                MonsterCardComponent(monster: monster, stats: stats)
             }
 
             Button {
@@ -175,11 +165,17 @@ private struct ExchangeIdleSection: View {
 // MARK: - 待機中
 
 private struct ExchangeWaitingSection: View {
+    let monster: Monster?
+    let stats: BattleStats?
     let exchangeId: UUID?
     var onCancel: () -> Void
 
     var body: some View {
         VStack(spacing: 16) {
+            if let monster, let stats {
+                MonsterCardComponent(monster: monster, stats: stats)
+            }
+
             ProgressView()
             Text("相手を待っています...")
                 .font(.custom("DotGothic16-Regular", size: 17))
@@ -201,8 +197,15 @@ private struct ExchangeWaitingSection: View {
 // MARK: - 交換処理中
 
 private struct ExchangeProcessingSection: View {
+    let monster: Monster?
+    let stats: BattleStats?
+
     var body: some View {
         VStack(spacing: 16) {
+            if let monster, let stats {
+                MonsterCardComponent(monster: monster, stats: stats)
+            }
+
             ProgressView()
             Text("交換しています...")
                 .font(.custom("DotGothic16-Regular", size: 17))
@@ -214,6 +217,7 @@ private struct ExchangeProcessingSection: View {
 
 private struct ExchangeCompletedSection: View {
     let monster: Monster
+    let stats: BattleStats
     var onClose: () -> Void
 
     var body: some View {
@@ -226,22 +230,7 @@ private struct ExchangeCompletedSection: View {
                 .font(.custom("RocknRollOne-Regular", size: 22))
                 .bold()
 
-            if let uiImage = monster.uiImage {
-                Image(uiImage: uiImage)
-                    .resizable()
-                    .aspectRatio(1, contentMode: .fit)
-                    .frame(maxWidth: 160)
-                    .cornerRadius(12)
-            }
-
-            Text(monster.name ?? "名前なし")
-                .font(.custom("DotGothic16-Regular", size: 17))
-
-            if let label = monster.classificationLabel {
-                Text(label.displayName)
-                    .font(.custom("DotGothic16-Regular", size: 15))
-                    .foregroundStyle(.secondary)
-            }
+            MonsterCardComponent(monster: monster, stats: stats)
 
             Text("新しいモンスターを手に入れた！")
                 .font(.custom("DotGothic16-Regular", size: 15))
@@ -257,6 +246,8 @@ private struct ExchangeCompletedSection: View {
 // MARK: - エラー
 
 private struct ExchangeErrorSection: View {
+    let monster: Monster?
+    let stats: BattleStats?
     let message: String
     var onBack: () -> Void
 
@@ -270,6 +261,10 @@ private struct ExchangeErrorSection: View {
                 .font(.custom("DotGothic16-Regular", size: 15))
                 .foregroundStyle(.red)
                 .multilineTextAlignment(.center)
+
+            if let monster, let stats {
+                MonsterCardComponent(monster: monster, stats: stats)
+            }
 
             Button("戻る") {
                 onBack()
