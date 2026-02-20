@@ -111,17 +111,29 @@ private struct ExchangeSelectSection: View {
                     .font(.custom("DotGothic16-Regular", size: 17))
 
                 ScrollView {
-                    LazyVGrid(columns: columns, spacing: 12) {
-                        ForEach(monsters) { monster in
-                            Button {
-                                onSelect(monster)
-                            } label: {
-                                MonsterCardComponent(
-                                    monster: monster,
-                                    stats: statsFor(monster)
-                                )
+                    VStack(spacing: 16) {
+                        ForEach(MonsterType.allCases, id: \.self) { type in
+                            let filtered = monsters.filter { $0.classificationLabel == type }
+                            if !filtered.isEmpty {
+                                Section {
+                                    LazyVGrid(columns: columns, spacing: 12) {
+                                        ForEach(filtered) { monster in
+                                            Button {
+                                                onSelect(monster)
+                                            } label: {
+                                                MonsterCardComponent(
+                                                    monster: monster,
+                                                    stats: statsFor(monster)
+                                                )
+                                            }
+                                            .buttonStyle(.plain)
+                                        }
+                                    }
+                                } header: {
+                                    TypeLabelComponent(type: type, text: "\(type.displayName)タイプ", iconSize: 22, fontSize: 16)
+                                        .frame(maxWidth: .infinity, alignment: .leading)
+                                }
                             }
-                            .buttonStyle(.plain)
                         }
                     }
                 }

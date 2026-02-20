@@ -34,15 +34,27 @@ struct MonsterListView: View {
                     }
                 } else {
                     ScrollView {
-                        LazyVGrid(columns: columns, spacing: 12) {
-                            ForEach(monsters) { monster in
-                                NavigationLink(destination: MonsterDetailView(monster: monster)) {
-                                    MonsterCardComponent(
-                                        monster: monster,
-                                        stats: viewModel.stats(for: monster)
-                                    )
+                        VStack(spacing: 16) {
+                            ForEach(MonsterType.allCases, id: \.self) { type in
+                                let filtered = monsters.filter { $0.classificationLabel == type }
+                                if !filtered.isEmpty {
+                                    Section {
+                                        LazyVGrid(columns: columns, spacing: 12) {
+                                            ForEach(filtered) { monster in
+                                                NavigationLink(destination: MonsterDetailView(monster: monster)) {
+                                                    MonsterCardComponent(
+                                                        monster: monster,
+                                                        stats: viewModel.stats(for: monster)
+                                                    )
+                                                }
+                                                .buttonStyle(.plain)
+                                            }
+                                        }
+                                    } header: {
+                                        TypeLabelComponent(type: type, text: "\(type.displayName)タイプ", iconSize: 22, fontSize: 16)
+                                            .frame(maxWidth: .infinity, alignment: .leading)
+                                    }
                                 }
-                                .buttonStyle(.plain)
                             }
                         }
                         .padding(8)
@@ -51,10 +63,13 @@ struct MonsterListView: View {
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .background {
-                Image("back_mokume")
-                    .resizable()
-                    .scaledToFill()
-                    .ignoresSafeArea()
+                ZStack {
+                    Image("back_mokume")
+                        .resizable()
+                        .scaledToFill()
+                    Color.white.opacity(0.3)
+                }
+                .ignoresSafeArea()
             }
             .toolbarBackground(.hidden, for: .navigationBar)
             .navigationTitle("モンスター一覧")
