@@ -9,6 +9,7 @@ import SwiftData
 /// モンスター一覧画面
 struct MonsterListView: View {
     @Query(sort: \Monster.createdAt, order: .reverse) private var monsters: [Monster]
+    private let viewModel = MonsterListViewModel()
 
     private let columns = [
         GridItem(.flexible()),
@@ -26,27 +27,18 @@ struct MonsterListView: View {
                 .navigationTitle("モンスター一覧")
             } else {
                 ScrollView {
-                    LazyVGrid(columns: columns, spacing: 4) {
+                    LazyVGrid(columns: columns, spacing: 12) {
                         ForEach(monsters) { monster in
-                            if let uiImage = monster.uiImage {
-                                NavigationLink(destination: MonsterDetailView(monster: monster)) {
-                                    VStack(spacing: 4) {
-                                        Image(uiImage: uiImage)
-                                            .renderingMode(.original)
-                                            .resizable()
-                                            .aspectRatio(1, contentMode: .fit)
-                                            .background(.clear)
-
-                                        Text(monster.name ?? "名前なし")
-                                            .font(.custom("DotGothic16-Regular", size: 12))
-                                            .lineLimit(1)
-                                    }
-                                }
-                                .buttonStyle(.plain)
+                            NavigationLink(destination: MonsterDetailView(monster: monster)) {
+                                MonsterCardComponent(
+                                    monster: monster,
+                                    stats: viewModel.stats(for: monster)
+                                )
                             }
+                            .buttonStyle(.plain)
                         }
                     }
-                    .padding(4)
+                    .padding(8)
                 }
                 .background(
                     Image("back_mokume")
