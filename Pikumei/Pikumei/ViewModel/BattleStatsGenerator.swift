@@ -50,11 +50,12 @@ enum BattleStatsGenerator {
         return BattleStats(hp: hp, attack: attack, specialAttack: specialAttack, specialDefense: specialDefense)
     }
     
-    private static func adjustConfidence(_ confidence: Double) -> Double {
-        let span = 1.0 - MonsterClassifier.GHOST_CONFIDENCE_THRESHOLD
-        let addition = span * confidence
-        let adjustedConf = MonsterClassifier.GHOST_CONFIDENCE_THRESHOLD + addition
-        return adjustedConf
+    /// confidenceの範囲を[0.0, 1.0] に正規化
+    private static func adjustConfidence(_ confidence: Double) -> Double
+    {
+        let threshold = MonsterClassifier.GHOST_CONFIDENCE_THRESHOLD
+        // [threshold, 1.0] → [0.0, 1.0] に正規化
+        return (confidence - threshold) / (1.0 - threshold)
     }
     
     /// scale(タイプごとのステータス倍率)とconfidence(個体ごとのステータス倍率)からステータス値を算出
