@@ -22,6 +22,7 @@ struct HomeView: View {
             .buttonStyle(.borderedProminent)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .ignoresSafeArea(edges: .bottom)
         .background(
             Image("back_butai")
                 .resizable()
