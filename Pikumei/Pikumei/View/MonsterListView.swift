@@ -9,6 +9,7 @@ import SwiftData
 /// モンスター一覧画面
 struct MonsterListView: View {
     @Query(sort: \Monster.createdAt, order: .reverse) private var monsters: [Monster]
+    private let viewModel = MonsterListViewModel()
 
     private let columns = [
         GridItem(.flexible()),
@@ -31,10 +32,7 @@ struct MonsterListView: View {
                             NavigationLink(destination: MonsterDetailView(monster: monster)) {
                                 MonsterCardComponent(
                                     monster: monster,
-                                    stats: BattleStatsGenerator.generate(
-                                        label: monster.classificationLabel,
-                                        confidence: monster.classificationConfidence
-                                    )
+                                    stats: viewModel.stats(for: monster)
                                 )
                             }
                             .buttonStyle(.plain)
