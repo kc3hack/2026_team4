@@ -26,6 +26,9 @@ class BattleViewModel: ObservableObject {
     @Published var battleLog: [String] = []
     @Published var myAttacks: [BattleAttack] = []
     @Published var attackPP: [Int?] = []  // nil = 無制限, 数値 = 残り回数
+    @Published var attackEffectGif: String?  // 攻撃エフェクトのGIF名
+    @Published var damageToOpponent: Int?  // 相手へのダメージ（0 = MISS）
+    @Published var damageToMe: Int?  // 自分へのダメージ（0 = MISS）
 
     let battleId: UUID
     private var isPlayer1 = false
@@ -118,6 +121,9 @@ class BattleViewModel: ObservableObject {
                 return eff > 1.0 ? 2 : nil
             }
 
+            // 攻撃エフェクトGIFを事前読み込み
+            GifCacheStore.shared.preload(myAttacks.map { $0.effectGif })
+
             // Broadcast チャネルを購読（ready ハンドシェイク後にターン開始）
             try await subscribeToBattle()
 
@@ -142,6 +148,21 @@ class BattleViewModel: ObservableObject {
         return eff > 1.0 ? 70 : (eff < 1.0 ? 100 : 90)
     }
 
+    /// 攻撃エフェクトを表示して再生完了後に消す
+    private let effectSpeed: Double = 1.8
+
+    func showAttackEffect(attack: BattleAttack) {
+        let gifName = attack.effectGif
+        attackEffectGif = gifName
+        // キャッシュから実際の再生時間を取得し、速度倍率で割った時間後に消す
+        let originalDuration = GifCacheStore.shared.frames(for: gifName)?.duration ?? 1.0
+        let displayDuration = originalDuration / effectSpeed
+        Task {
+            try? await Task.sleep(for: .seconds(displayDuration))
+            attackEffectGif = nil
+        }
+    }
+
     // MARK: - 攻撃
 
     /// 選択した攻撃を送信し、相手の HP を減らす
@@ -153,6 +174,8 @@ class BattleViewModel: ObservableObject {
         isMyTurn = false
 
         let chosen = myAttacks[index]
+        SoundPlayerComponent.shared.play(chosen.sound)
+        showAttackEffect(attack: chosen)
         let multiplier = chosen.type.effectiveness(against: opponentLabel)
 
         // PP 消費
@@ -169,11 +192,19 @@ class BattleViewModel: ObservableObject {
             let rawDamage = Double(attackStat) * chosen.powerRate * multiplier
             let damage = max(Int(rawDamage * 100.0 / (100.0 + Double(defStat))), 1)
             opponentHp -= damage
+            damageToOpponent = damage
             battleLog.append("\(chosen.name)攻撃！ \(damage) ダメージ！")
             if multiplier > 1.0 { battleLog.append("こうかはばつぐんだ！") }
             else if multiplier < 1.0 { battleLog.append("こうかはいまひとつ...") }
         } else {
+            damageToOpponent = 0  // 0 = MISS 表示用
             battleLog.append("\(chosen.name)攻撃！ ...しかし外れた！")
+        }
+
+        // ダメージ表示を1秒後に消す
+        Task {
+            try? await Task.sleep(for: .seconds(1.0))
+            damageToOpponent = nil
         }
 
         // Broadcast 送信完了後に勝利判定（送信前に cleanup されるのを防ぐ）
@@ -285,7 +316,14 @@ class BattleViewModel: ObservableObject {
         guard phase == .battling, let myStats, let opponentStats, let opponentLabel, let myLabel else { return }
 
         let attackType = MonsterType(rawValue: attackTypeRaw ?? "") ?? opponentLabel
-        let attackName = opponentLabel.attacks.first { $0.type == attackType }?.name ?? "???"
+        let opponentAttack = opponentLabel.attacks.first { $0.type == attackType }
+        let attackName = opponentAttack?.name ?? "???"
+
+        // 相手の技の効果音・エフェクトを再生
+        SoundPlayerComponent.shared.play(opponentAttack?.sound ?? .panch)
+        if let opponentAttack {
+            showAttackEffect(attack: opponentAttack)
+        }
 
         if hit {
             let powerRate = opponentLabel.attacks.first { $0.type == attackType }?.powerRate ?? 1.0
@@ -296,12 +334,20 @@ class BattleViewModel: ObservableObject {
             let rawDamage = Double(attackStat) * powerRate * multiplier
             let damage = max(Int(rawDamage * 100.0 / (100.0 + Double(defStat))), 1)
             myHp -= damage
+            damageToMe = damage
 
             battleLog.append("\(attackName)攻撃！ \(damage) ダメージ！")
             if multiplier > 1.0 { battleLog.append("こうかはばつぐんだ！") }
             else if multiplier < 1.0 { battleLog.append("こうかはいまひとつ...") }
         } else {
+            damageToMe = 0  // 0 = MISS 表示用
             battleLog.append("\(attackName)攻撃！ ...しかし外れた！")
+        }
+
+        // ダメージ表示を1秒後に消す
+        Task {
+            try? await Task.sleep(for: .seconds(1.0))
+            damageToMe = nil
         }
 
         if myHp <= 0 {

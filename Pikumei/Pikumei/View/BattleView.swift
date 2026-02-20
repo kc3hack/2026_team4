@@ -1,4 +1,3 @@
-//
 //  BattleView.swift
 //  Pikumei
 //
@@ -37,8 +36,16 @@ struct BattleView: View {
                     )
                 }
             }
-            .padding()
-            .navigationTitle("バトル")
+            .padding(matchingVM.phase.isBattling ? 0 : 16)
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .background(alignment: .top) {
+                if !matchingVM.phase.isBattling {
+                    Image("bg_fish")
+                        .resizable()
+                        .scaledToFill()
+                        .ignoresSafeArea()
+                }
+            }
             .toolbar(
                 matchingVM.phase.isBattling ? .hidden : .visible,
                 for: .tabBar
