@@ -89,6 +89,7 @@ struct BattleGameView: View {
                     type: viewModel.opponentLabel,
                     size: 80
                 )
+                .overlay { DamageLabelView(damage: viewModel.damageToOpponent) }
             }
 
             // 自分側 — 左寄せ・大きめ（手前）
@@ -101,6 +102,7 @@ struct BattleGameView: View {
                     type: viewModel.myLabel,
                     size: 110
                 )
+                .overlay { DamageLabelView(damage: viewModel.damageToMe) }
                 Spacer()
             }
 
@@ -125,9 +127,6 @@ struct BattleGameView: View {
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
-
-            // バトルログ
-            logSection
         }
         .padding()
     }
@@ -197,5 +196,26 @@ struct BattleGameView: View {
             .buttonStyle(.bordered)
         }
         .padding()
+    }
+}
+
+// MARK: - ダメージ表示
+
+/// HUD 上にフローティング表示するダメージラベル
+private struct DamageLabelView: View {
+    let damage: Int?
+
+    var body: some View {
+        Group {
+            if let damage {
+                Text(damage == 0 ? "MISS" : "-\(damage)")
+                    .font(.custom("DotGothic16-Regular", size: 28))
+                    .bold()
+                    .foregroundStyle(damage == 0 ? .white : .red)
+                    .shadow(color: .black, radius: 2, x: 1, y: 1)
+                    .transition(.move(edge: .bottom).combined(with: .opacity))
+            }
+        }
+        .animation(.easeOut(duration: 0.15), value: damage)
     }
 }

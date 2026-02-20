@@ -27,6 +27,8 @@ class BattleViewModel: ObservableObject {
     @Published var myAttacks: [BattleAttack] = []
     @Published var attackPP: [Int?] = []  // nil = 無制限, 数値 = 残り回数
     @Published var attackEffectGif: String?  // 攻撃エフェクトのGIF名
+    @Published var damageToOpponent: Int?  // 相手へのダメージ（0 = MISS）
+    @Published var damageToMe: Int?  // 自分へのダメージ（0 = MISS）
 
     let battleId: UUID
     private var isPlayer1 = false
@@ -190,11 +192,19 @@ class BattleViewModel: ObservableObject {
             let rawDamage = Double(attackStat) * chosen.powerRate * multiplier
             let damage = max(Int(rawDamage * 100.0 / (100.0 + Double(defStat))), 1)
             opponentHp -= damage
+            damageToOpponent = damage
             battleLog.append("\(chosen.name)攻撃！ \(damage) ダメージ！")
             if multiplier > 1.0 { battleLog.append("こうかはばつぐんだ！") }
             else if multiplier < 1.0 { battleLog.append("こうかはいまひとつ...") }
         } else {
+            damageToOpponent = 0  // 0 = MISS 表示用
             battleLog.append("\(chosen.name)攻撃！ ...しかし外れた！")
+        }
+
+        // ダメージ表示を1秒後に消す
+        Task {
+            try? await Task.sleep(for: .seconds(1.0))
+            damageToOpponent = nil
         }
 
         // Broadcast 送信完了後に勝利判定（送信前に cleanup されるのを防ぐ）
@@ -324,12 +334,20 @@ class BattleViewModel: ObservableObject {
             let rawDamage = Double(attackStat) * powerRate * multiplier
             let damage = max(Int(rawDamage * 100.0 / (100.0 + Double(defStat))), 1)
             myHp -= damage
+            damageToMe = damage
 
             battleLog.append("\(attackName)攻撃！ \(damage) ダメージ！")
             if multiplier > 1.0 { battleLog.append("こうかはばつぐんだ！") }
             else if multiplier < 1.0 { battleLog.append("こうかはいまひとつ...") }
         } else {
+            damageToMe = 0  // 0 = MISS 表示用
             battleLog.append("\(attackName)攻撃！ ...しかし外れた！")
+        }
+
+        // ダメージ表示を1秒後に消す
+        Task {
+            try? await Task.sleep(for: .seconds(1.0))
+            damageToMe = nil
         }
 
         if myHp <= 0 {
