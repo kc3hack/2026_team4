@@ -8,7 +8,7 @@ import SwiftUI
 
 struct BattleView: View {
     @StateObject private var matchingVM = BattleMatchingViewModel()
-
+    
     var body: some View {
         NavigationStack {
             VStack(spacing: 24) {
@@ -59,12 +59,16 @@ struct BattleView: View {
 
 // MARK: - 初期状態
 
+
 private struct BattleIdleSection: View {
     var onCreate: () -> Void
     var onJoin: () -> Void
-
+    
     var body: some View {
         VStack(spacing: 16) {
+            MonsterSelectionSection()
+            
+            
             Text("マッチング通信テスト")
                 .font(.custom("DotGothic16-Regular", size: 17))
             
@@ -80,24 +84,41 @@ private struct BattleIdleSection: View {
     }
 }
 
+/// モンスター選択セクション
+private struct MonsterSelectionSection: View {
+    @StateObject private var selector = BattleMonsterSelector()
+    
+    var body: some View {
+        VStack(spacing: 16) {
+            Text("モンスターを選んでください")
+                .font(.custom("DotGothic16-Regular", size: 17))
+            
+            Button(selector.name ?? "未選択") {
+                Task {await selector.setRandomMonster()}
+            }
+        }
+    }
+}
+
+
 // MARK: - 待機中
 
 private struct BattleWaitingSection: View {
     let battleId: UUID?
     var onCancel: () -> Void
-
+    
     var body: some View {
         VStack(spacing: 16) {
             ProgressView()
             Text("相手を待っています...")
                 .font(.custom("DotGothic16-Regular", size: 17))
-
+            
             if let id = battleId {
                 Text("Battle ID: \(id.uuidString.prefix(8))...")
                     .font(.custom("DotGothic16-Regular", size: 12))
                     .foregroundStyle(.secondary)
             }
-
+            
             Button("キャンセル") {
                 onCancel()
             }
@@ -111,18 +132,18 @@ private struct BattleWaitingSection: View {
 private struct BattleErrorSection: View {
     let message: String
     var onBack: () -> Void
-
+    
     var body: some View {
         VStack(spacing: 16) {
             Image(systemName: "exclamationmark.triangle.fill")
                 .font(.system(size: 48))
                 .foregroundStyle(.red)
-
+            
             Text(message)
                 .font(.custom("DotGothic16-Regular", size: 15))
                 .foregroundStyle(.red)
                 .multilineTextAlignment(.center)
-
+            
             Button("戻る") {
                 onBack()
             }
