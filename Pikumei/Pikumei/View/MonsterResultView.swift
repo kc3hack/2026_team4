@@ -21,6 +21,12 @@ struct MonsterResultView: View {
 
     var body: some View {
         ZStack {
+            // --- 背景画像 ---
+            Image("back_gray")
+                .resizable()
+                .scaledToFill()
+                .ignoresSafeArea()
+
             // --- 紙吹雪エフェクト層（背景へ移動）---
             if showConfetti {
                 ConfettiEffect()
@@ -29,16 +35,7 @@ struct MonsterResultView: View {
 
             // --- メインコンテンツ（前面へ移動）---
             VStack(spacing: 24) {
-                Spacer()
-
-                // カードコンポーネント
-                RotatingCardComponent(frontImage: Image(uiImage: image)) {
-                    showNameInput = true
-                }
-
-                Spacer()
-
-                // アニメーション完了後に名前入力を表示
+                // アニメーション完了後に名前入力をカードの上に表示
                 if showNameInput && !nameConfirmed {
                     VStack(spacing: 12) {
                         TextField("モンスターの名前を入力", text: $monsterName)
@@ -53,6 +50,11 @@ struct MonsterResultView: View {
                             .buttonStyle(.borderedProminent)
                         }
                     }
+                }
+
+                // カードコンポーネント
+                RotatingCardComponent(frontImage: Image(uiImage: image)) {
+                    showNameInput = true
                 }
 
                 // 名前確定後のみ閉じるボタンを表示
