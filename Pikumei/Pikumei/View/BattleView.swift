@@ -71,18 +71,23 @@ private struct BattleIdleSection: View {
             Button {
                 onCreate()
             } label: {
-                Text("バトルを作成して待つ")
-                    .frame(maxWidth: .infinity)
+                ZStack{
+                    BlueButtonComponent(title: "バトルを作成して待つ"){
+                        print("バトルを作成して待つが押されました")
+                    }
+                }
             }
-            .buttonStyle(.borderedProminent)
 
             Button {
                 onJoin()
             } label: {
-                Text("待機中バトルに参加")
-                    .frame(maxWidth: .infinity)
+                ZStack{
+                    BrownButtonComponent(title: "待機中バトルに参加"){
+                            print("待機中バトルに参加が押されました")
+                    }
+                }
+                    
             }
-            .buttonStyle(.bordered)
         }
     }
 }
