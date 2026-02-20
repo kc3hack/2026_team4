@@ -81,7 +81,7 @@ struct MonsterScanView: View {
             ProgressView()
                 .scaleEffect(1.5)
             Text("スキャン中...")
-                .font(.headline)
+                .font(.custom("DotGothic16-Regular", size: 17))
         }
     }
 
@@ -96,7 +96,7 @@ struct MonsterScanView: View {
                         .font(.largeTitle)
                         .foregroundStyle(.orange)
                     Text(error)
-                        .font(.headline)
+                        .font(.custom("DotGothic16-Regular", size: 17))
                         .multilineTextAlignment(.center)
                 }
                 .padding()

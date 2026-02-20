@@ -38,7 +38,7 @@ struct MonsterListView: View {
                                             .background(.clear)
 
                                         Text(monster.name ?? "名前なし")
-                                            .font(.caption)
+                                            .font(.custom("DotGothic16-Regular", size: 12))
                                             .lineLimit(1)
                                     }
                                 }

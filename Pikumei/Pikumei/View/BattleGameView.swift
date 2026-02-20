@@ -70,7 +70,7 @@ struct BattleGameView: View {
         VStack(spacing: 16) {
             ProgressView()
             Text("バトル準備中...")
-                .font(.headline)
+                .font(.custom("DotGothic16-Regular", size: 17))
         }
     }
 
@@ -124,7 +124,7 @@ struct BattleGameView: View {
 
             if !viewModel.isMyTurn {
                 Text("あいてのターン...")
-                    .font(.caption)
+                    .font(.custom("DotGothic16-Regular", size: 12))
                     .foregroundStyle(.secondary)
             }
         }
@@ -136,14 +136,14 @@ struct BattleGameView: View {
     private var logSection: some View {
         VStack(alignment: .leading, spacing: 4) {
             Text("ログ")
-                .font(.caption)
+                .font(.custom("DotGothic16-Regular", size: 12))
                 .foregroundStyle(.secondary)
 
             ScrollView {
                 LazyVStack(alignment: .leading, spacing: 2) {
                     ForEach(viewModel.battleLog.indices, id: \.self) { i in
                         Text(viewModel.battleLog[i])
-                            .font(.caption)
+                            .font(.custom("DotGothic16-Regular", size: 12))
                     }
                 }
             }
@@ -160,7 +160,7 @@ struct BattleGameView: View {
                 .foregroundStyle(.orange)
 
             Text("通信エラー")
-                .font(.largeTitle)
+                .font(.custom("RocknRollOne-Regular", size: 34))
                 .bold()
 
             logSection
@@ -183,7 +183,7 @@ struct BattleGameView: View {
                 .foregroundStyle(won ? .yellow : .red)
 
             Text(won ? "勝利！" : "敗北...")
-                .font(.largeTitle)
+                .font(.custom("RocknRollOne-Regular", size: 34))
                 .bold()
 
             // 最終ログ
