@@ -38,10 +38,9 @@ struct MonsterResultView: View {
             VStack(spacing: 24) {
                 // 紙吹雪後に名前入力をカードの上に表示
                 if showNameInput && !nameConfirmed {
-                    VStack(spacing: 12) {
+                    HStack(spacing: 8) {
                         TextField("モンスターの名前を入力", text: $monsterName)
                             .textFieldStyle(.roundedBorder)
-                            .padding(.horizontal, 40)
 
                         if !monsterName.isEmpty {
                             Button("決定") {
@@ -51,12 +50,14 @@ struct MonsterResultView: View {
                             .buttonStyle(.borderedProminent)
                         }
                     }
+                    .padding(.horizontal, 40)
                 }
 
                 // モンスターカード（キラキラエフェクト付き）
                 MonsterCardComponent(monster: monster, stats: stats)
-                    .rareCardEffect()
                     .frame(width: 260)
+                    .rareCardEffect()
+                    .clipShape(RoundedRectangle(cornerRadius: 14))
 
                 // 名前確定後のみ閉じるボタンを表示
                 if nameConfirmed {
