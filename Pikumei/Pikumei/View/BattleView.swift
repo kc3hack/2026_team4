@@ -67,22 +67,15 @@ private struct BattleIdleSection: View {
         VStack(spacing: 16) {
             Text("マッチング通信テスト")
                 .font(.custom("DotGothic16-Regular", size: 17))
-
-            Button {
+            
+            BlueButtonComponent(title: "バトルを作成して待つ") {
                 onCreate()
-            } label: {
-                Text("バトルを作成して待つ")
-                    .frame(maxWidth: .infinity)
             }
-            .buttonStyle(.borderedProminent)
-
-            Button {
+            
+            
+            BrownButtonComponent(title: "待機中バトルに参加"){
                 onJoin()
-            } label: {
-                Text("待機中バトルに参加")
-                    .frame(maxWidth: .infinity)
             }
-            .buttonStyle(.bordered)
         }
     }
 }
