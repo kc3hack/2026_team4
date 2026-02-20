@@ -23,10 +23,7 @@ struct BrownButtonComponent: View {
                     .resizable()
                     .frame(width:300, height: 30)
                 Text(title)
-                    .font(.title2)
                     .foregroundColor(.white)
-                    .font(.headline)
-                    .shadow(color: .black.opacity(0.5), radius: 2, x: 0, y: 2)
             }
         }
         // 押した時に少し沈み込むようなアニメーションをつける（お好みで）
