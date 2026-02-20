@@ -35,6 +35,14 @@ class MonsterScanViewModel: ObservableObject {
         cameraManager.stopSession()
     }
     
+    /// モンスターからバトルステータスを生成する
+    func stats(for monster: Monster) -> BattleStats {
+        BattleStatsGenerator.generate(
+            label: monster.classificationLabel,
+            confidence: monster.classificationConfidence
+        )
+    }
+
     /// 撮影 → 前景検出 → 切り抜き → SwiftData に保存
     func captureAndProcess(modelContext: ModelContext) {
         Task {
