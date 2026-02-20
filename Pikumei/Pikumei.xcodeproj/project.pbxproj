@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		3B7DB1CD2F48302D00A52D51 /* Lottie in Frameworks */ = {isa = PBXBuildFile; productRef = 3B7DB1CC2F48302D00A52D51 /* Lottie */; };
 		3B97C6292F435E5F00FA858A /* Auth in Frameworks */ = {isa = PBXBuildFile; productRef = 3B97C6282F435E5F00FA858A /* Auth */; };
 		3B97C62B2F435E6600FA858A /* Supabase in Frameworks */ = {isa = PBXBuildFile; productRef = 3B97C62A2F435E6600FA858A /* Supabase */; };
 		3B97C62D2F435E7100FA858A /* Storage in Frameworks */ = {isa = PBXBuildFile; productRef = 3B97C62C2F435E7100FA858A /* Storage */; };
@@ -74,6 +75,7 @@
 				3B97C62D2F435E7100FA858A /* Storage in Frameworks */,
 				3B97C62B2F435E6600FA858A /* Supabase in Frameworks */,
 				3B97C6292F435E5F00FA858A /* Auth in Frameworks */,
+				3B7DB1CD2F48302D00A52D51 /* Lottie in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -145,6 +147,7 @@
 				3B97C6282F435E5F00FA858A /* Auth */,
 				3B97C62A2F435E6600FA858A /* Supabase */,
 				3B97C62C2F435E7100FA858A /* Storage */,
+				3B7DB1CC2F48302D00A52D51 /* Lottie */,
 			);
 			productName = Pikumei;
 			productReference = 3B1E68C32F41F508000F1DC9 /* Pikumei.app */;
@@ -230,6 +233,7 @@
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
 				3B97C6262F435E0D00FA858A /* XCRemoteSwiftPackageReference "supabase-swift" */,
+				3B7DB1CB2F48302200A52D51 /* XCRemoteSwiftPackageReference "lottie-ios" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 3B1E68C42F41F508000F1DC9 /* Products */;
@@ -453,7 +457,7 @@
 				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = "@executable_path/../Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 26.2;
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = daidai.com.Pikumei;
+				PRODUCT_BUNDLE_IDENTIFIER = erika.com.Pikumei;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				REGISTER_APP_GROUPS = YES;
 				SDKROOT = auto;
@@ -502,7 +506,7 @@
 				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = "@executable_path/../Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 26.2;
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = daidai.com.Pikumei;
+				PRODUCT_BUNDLE_IDENTIFIER = erika.com.Pikumei;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				REGISTER_APP_GROUPS = YES;
 				SDKROOT = auto;
@@ -663,6 +667,14 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
+		3B7DB1CB2F48302200A52D51 /* XCRemoteSwiftPackageReference "lottie-ios" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/airbnb/lottie-ios.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 4.6.0;
+			};
+		};
 		3B97C6262F435E0D00FA858A /* XCRemoteSwiftPackageReference "supabase-swift" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/supabase/supabase-swift";
@@ -674,6 +686,11 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
+		3B7DB1CC2F48302D00A52D51 /* Lottie */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 3B7DB1CB2F48302200A52D51 /* XCRemoteSwiftPackageReference "lottie-ios" */;
+			productName = Lottie;
+		};
 		3B97C6282F435E5F00FA858A /* Auth */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = 3B97C6262F435E0D00FA858A /* XCRemoteSwiftPackageReference "supabase-swift" */;
