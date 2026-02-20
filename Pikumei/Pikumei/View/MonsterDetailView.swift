@@ -34,6 +34,7 @@ struct MonsterDetailView: View {
                         .resizable()
                         .scaledToFit()
                         .frame(maxWidth: 300)
+                        .background(Color.white)
                         .clipShape(RoundedRectangle(cornerRadius: 12))
                         .overlay(
                             RoundedRectangle(cornerRadius: 12)
