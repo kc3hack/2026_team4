@@ -32,9 +32,10 @@ struct MonsterListView: View {
                                 NavigationLink(destination: MonsterDetailView(monster: monster)) {
                                     VStack(spacing: 4) {
                                         Image(uiImage: uiImage)
+                                            .renderingMode(.original)
                                             .resizable()
-                                            .aspectRatio(1, contentMode: .fill)
-                                            .clipped()
+                                            .aspectRatio(1, contentMode: .fit)
+                                            .background(.clear)
 
                                         Text(monster.name ?? "名前なし")
                                             .font(.caption)
