@@ -38,6 +38,14 @@ class ExchangeViewModel: ObservableObject {
         modelContext = context
     }
 
+    /// モンスターからバトルステータスを生成する
+    func stats(for monster: Monster) -> BattleStats {
+        BattleStatsGenerator.generate(
+            label: monster.classificationLabel,
+            confidence: monster.classificationConfidence
+        )
+    }
+
     // MARK: - モンスター選択
 
     func selectMonster(_ monster: Monster) {
