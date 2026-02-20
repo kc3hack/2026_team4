@@ -13,27 +13,16 @@ import Supabase
 @MainActor
 class BattleMonsterSelector: ObservableObject {
     private let client = SupabaseClientProvider.shared
-    @Published public var name: String? = nil
-    @Published public var thumbnail: Data? = nil
+    @Published public var monsterId: UUID? = nil
+    @Published public var monster: Monster? = nil
+    @Published public var stats: BattleStats? = nil
     
-    /// 指定したIDのモンスターを選択する
-    public func setMonster(monsterId: UUID) async {
-        do {
-            let monster: MonsterLabelRow = try await client
-                .from("monsters")
-                .select("id, classification_label, classification_confidence, name, thumbnail")
-                .eq("id", value: monsterId.uuidString)
-                .single()
-                .execute()
-                .value
-            
-            self.name = monster.name
-            self.thumbnail = monster.thumbnailData
-            
-            print("[BattleMonsterSelector.setMonster] succeeded, monsterId: \(monsterId)")
-        } catch {
-            print("[BattleMonsterSelector.setMonster] \(error)")
-        }
+    
+    public func updateMonster() async {
+        guard let monster = try? await self.fetchMonster() else {return}
+        self.monster = monster
+        self.stats = BattleStatsGenerator.generate(label: monster.classificationLabel, confidence: monster.classificationConfidence)
+        print("[Monster Selection] updated")
     }
     
     /// 自分のモンスターからランダムに選択する
@@ -56,7 +45,28 @@ class BattleMonsterSelector: ObservableObject {
             throw BattleMonsterSelectorError.noMonsters
         }
         
-        await setMonster(monsterId: monster.id)
+        self.monsterId = monster.id
+        print("[Monster Selection] selected monster(id: \(self.monsterId!))")
+    }
+    
+    /// モンスター情報を取得
+    private func fetchMonster() async throws -> Monster? {
+        guard let id = self.monsterId else {return nil}
+        let monster: MonsterLabelRow = try await client
+            .from("monsters")
+            .select("id, classification_label, classification_confidence, name, thumbnail")
+            .eq("id", value: id.uuidString)
+            .single()
+            .execute()
+            .value
+        
+        guard let thumbnailData = monster.thumbnailData else {return nil}
+        return Monster(imageData: thumbnailData,
+                       classificationLabel: monster.classificationLabel,
+                       classificationConfidence: monster.classificationConfidence,
+                       supabaseId: id,
+                       name: monster.name,
+        )
     }
 }
 

@@ -32,13 +32,17 @@ class BattleMatchingViewModel: ObservableObject {
 
     // MARK: - バトル作成（端末A用）
 
-    /// 自分のモンスターをランダムに選んでバトルを作成し、相手を待つ
-    func createBattle() async {
+    /// バトルを作成し、相手を待つ
+    func createBattle(monsterId monsterIdWrapper: UUID?) async {
+        guard let monsterId = monsterIdWrapper else {
+            phase = .error("モンスターが選択されていません")
+            return
+        }
+        
         do {
             try await ensureAuthenticated()
             let userId = try await client.auth.session.user.id
             print("[Matching] userId: \(userId)")
-            let monsterId = try await fetchRandomMonster(userId: userId)
             print("[Matching] monsterId: \(monsterId)")
 
             let record = BattleInsert(
@@ -68,7 +72,12 @@ class BattleMatchingViewModel: ObservableObject {
     // MARK: - バトル参加（端末B用）
 
     /// 待機中のバトルを探して自分のモンスターで参加する
-    func joinBattle() async {
+    func joinBattle(monsterId monsterIdWrapper: UUID?) async {
+        guard let monsterId = monsterIdWrapper else {
+            phase = .error("モンスターが選択されていません")
+            return
+        }
+        
         do {
             try await ensureAuthenticated()
             let userId = try await client.auth.session.user.id
