@@ -9,7 +9,7 @@ import SwiftUI
 struct BattleView: View {
     @StateObject private var matchingVM = BattleMatchingViewModel()
     @StateObject private var selectionVM = BattleMonsterSelectionViewModel()
-
+    
     var body: some View {
         NavigationStack {
             VStack(spacing: 24) {
@@ -59,6 +59,7 @@ struct BattleView: View {
             .onDisappear {
                 matchingVM.unsubscribe()
             }
+            
         }
     }
 }
@@ -95,30 +96,28 @@ private struct BattleIdleSection: View {
 /// モンスター選択セクション
 private struct MonsterSelectionSection: View {
     @StateObject var selectionVM: BattleMonsterSelectionViewModel
-
+    
     var body: some View {
         VStack(spacing: 16) {
             Text("モンスター選択")
                 .font(.custom("DotGothic16-Regular", size: 17))
             
-            Button(action: {
-                Task {
-                    try await selectionVM.setRandomMonster()
-                    await selectionVM.updateMonster()
-                }
-            }) {
-                if let monster = selectionVM.monster, let stats = selectionVM.stats {
-                    Text(monster.name ?? "")
-                    Text(String(stats.attack))
-                } else {
-                    Text("タップして選択")
-                }
-            }.task {
-                await selectionVM.updateMonster()
-            }
             
-            NavigationLink(destination: BattleMonsterSelectionView()) {
-                Text("a")
+            NavigationLink{BattleMonsterSelectionView(selectionVM: selectionVM)
+            } label: {
+                VStack() {
+                    Text("タップして選択")
+                    if let monster = selectionVM.monster, let stats = selectionVM.stats {
+                        MonsterCardComponent(
+                            monster: monster,
+                            stats: stats
+                        )
+                        .padding(.horizontal, 50)
+                    }
+                }
+            }
+            .task {
+                await selectionVM.updateMonster()
             }
         }
     }

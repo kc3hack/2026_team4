@@ -13,10 +13,11 @@ import Supabase
 @MainActor
 class BattleMonsterSelectionViewModel: ObservableObject {
     private let client = SupabaseClientProvider.shared
-    @Published public var monsterId: UUID? = nil
-    @Published public var monster: Monster? = nil
-    @Published public var stats: BattleStats? = nil
+    @Published public var monsterId: UUID? = nil // 選択されたモンスターのモンスターID
+    @Published public var monster: Monster? = nil // 選択されたモンスター
+    @Published public var stats: BattleStats? = nil // 選択されたモンスターのステータス
     
+    @Published public var touched: UUID? = nil // タップされたモンスターのモンスターID
     
     public func updateMonster() async {
         guard let monster = try? await self.fetchMonster() else {return}
@@ -67,6 +68,18 @@ class BattleMonsterSelectionViewModel: ObservableObject {
                        supabaseId: id,
                        name: monster.name,
         )
+    }
+    
+    // タップされたモンスターをリセット
+    public func resetTouched() {
+        self.touched = self.monsterId
+    }
+    
+    /// モンスターを確定
+    public func confirmMonster() async {
+        self.monsterId = self.touched
+        await self.updateMonster()
+        
     }
 }
 
