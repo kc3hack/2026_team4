@@ -57,11 +57,11 @@ enum BattleStatsGenerator {
         return adjustedConf
     }
     
-    /// seed（個体差）と confidence（強さ係数）からステータス値を算出
+    /// scale(タイプごとのステータス倍率)とconfidence(個体ごとのステータス倍率)からステータス値を算出
     private static func stat(in range: ClosedRange<Int>, scale: Double, confidence: Double) -> Int {
         let span = Double(range.upperBound - range.lowerBound)
         let addition = Int(floor(span * scale * confidence))
         let stat = range.lowerBound + addition
-        return stat
+        return min(stat, range.upperBound)
     }
 }
