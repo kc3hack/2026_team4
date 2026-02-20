@@ -56,6 +56,7 @@ struct MonsterListView: View {
                     .scaledToFill()
                     .ignoresSafeArea()
             }
+            .toolbarBackground(.hidden, for: .navigationBar)
             .navigationTitle("モンスター一覧")
         }
     }
