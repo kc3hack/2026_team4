@@ -67,26 +67,14 @@ private struct BattleIdleSection: View {
         VStack(spacing: 16) {
             Text("マッチング通信テスト")
                 .font(.custom("DotGothic16-Regular", size: 17))
-
-            Button {
+            
+            BlueButtonComponent(title: "バトルを作成して待つ") {
                 onCreate()
-            } label: {
-                ZStack{
-                    BlueButtonComponent(title: "バトルを作成して待つ"){
-                        print("バトルを作成して待つが押されました")
-                    }
-                }
             }
-
-            Button {
+            
+            
+            BrownButtonComponent(title: "待機中バトルに参加"){
                 onJoin()
-            } label: {
-                ZStack{
-                    BrownButtonComponent(title: "待機中バトルに参加"){
-                            print("待機中バトルに参加が押されました")
-                    }
-                }
-                    
             }
         }
     }
