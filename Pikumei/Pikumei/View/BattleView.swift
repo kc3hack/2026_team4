@@ -8,7 +8,7 @@ import SwiftUI
 
 struct BattleView: View {
     @StateObject private var matchingVM = BattleMatchingViewModel()
-    @StateObject private var selector = BattleMonsterSelector()
+    @StateObject private var selectionVM = BattleMonsterSelectionViewModel()
 
     var body: some View {
         NavigationStack {
@@ -17,12 +17,12 @@ struct BattleView: View {
                 case .idle:
                     BattleIdleSection(
                         onCreate: { Task {
-                            await matchingVM.createBattle(monsterId: selector.monsterId)
+                            await matchingVM.createBattle(monsterId: selectionVM.monsterId)
                         } },
                         onJoin: { Task {
-                            await matchingVM.joinBattle(monsterId: selector.monsterId)
+                            await matchingVM.joinBattle(monsterId: selectionVM.monsterId)
                         } },
-                        selector: selector
+                        selectionVM: selectionVM
                     )
                 case .waiting:
                     BattleWaitingSection(
@@ -69,12 +69,12 @@ struct BattleView: View {
 private struct BattleIdleSection: View {
     var onCreate: () -> Void
     var onJoin: () -> Void
-    @StateObject var selector: BattleMonsterSelector
+    @StateObject var selectionVM: BattleMonsterSelectionViewModel
     
     var body: some View {
         VStack(spacing: 16) {
             MonsterSelectionSection(
-                selector: selector
+                selectionVM: selectionVM
             )
             
             Text("マッチング通信テスト")
@@ -94,7 +94,7 @@ private struct BattleIdleSection: View {
 
 /// モンスター選択セクション
 private struct MonsterSelectionSection: View {
-    @StateObject var selector: BattleMonsterSelector
+    @StateObject var selectionVM: BattleMonsterSelectionViewModel
 
     var body: some View {
         VStack(spacing: 16) {
@@ -103,18 +103,22 @@ private struct MonsterSelectionSection: View {
             
             Button(action: {
                 Task {
-                    try await selector.setRandomMonster()
-                    await selector.updateMonster()
+                    try await selectionVM.setRandomMonster()
+                    await selectionVM.updateMonster()
                 }
             }) {
-                if let monster = selector.monster, let stats = selector.stats {
+                if let monster = selectionVM.monster, let stats = selectionVM.stats {
                     Text(monster.name ?? "")
                     Text(String(stats.attack))
                 } else {
                     Text("タップして選択")
                 }
             }.task {
-                await selector.updateMonster()
+                await selectionVM.updateMonster()
+            }
+            
+            NavigationLink(destination: BattleMonsterSelectionView()) {
+                Text("a")
             }
         }
     }
