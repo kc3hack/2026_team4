@@ -2,11 +2,7 @@
 //  AppPhase.swift
 //  Pikumei
 //
+//  LaunchingView 削除に伴い未使用。将来フェーズ管理が必要になれば復活させる。
+//
 
 import Foundation
-
-/// アプリの画面フェーズを管理する enum
-enum AppPhase {
-    case launching  // 起動中（Loading画面）
-    case main       // メイン画面（TabView）
-}
