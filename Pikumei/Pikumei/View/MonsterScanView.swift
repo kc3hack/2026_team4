@@ -30,8 +30,8 @@ struct MonsterScanView: View {
         .fullScreenCover(isPresented: $viewModel.showPreview, onDismiss: {
             viewModel.retry()
         }) {
-            if let image = viewModel.cutoutImage {
-                MonsterResultView(image: image) { name in
+            if let monster = viewModel.lastSavedMonster {
+                MonsterResultView(monster: monster, stats: viewModel.stats(for: monster)) { name in
                     viewModel.confirmName(name, modelContext: modelContext)
                 }
                 .alert("アップロードエラー", isPresented: Binding(

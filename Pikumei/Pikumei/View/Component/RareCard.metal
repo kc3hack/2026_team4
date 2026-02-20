@@ -14,15 +14,20 @@ half4 getRareBaseColor(float2 position, float2 size, half4 original, float time)
     float2 uv = position / size;
     float diagCoord = (uv.x + uv.y) * 0.5;
     
-    constexpr float speed = 0.6;
-    float t = fmod(time * speed, 1.0);
-    
+    // 5秒周期のうち最初の1.5秒だけグリントを出し、残りは休止
+    constexpr float cycle = 5.0;
+    constexpr float activeTime = 1.5;
+    float phase = fmod(time, cycle);
+    float t = clamp(phase / activeTime, 0.0, 1.0);
+
     float glintPos = 1.0 - exp(-4.0 * t) * cos(5.0 * t);
     constexpr float width = 0.15;
+
+    // 休止期間中は強度を0にする
+    float active = step(phase, activeTime);
+    float intensity = smoothstep(glintPos - width, glintPos, diagCoord) * (1.0 - smoothstep(glintPos, glintPos + width, diagCoord)) * active;
     
-    float intensity = smoothstep(glintPos - width, glintPos, diagCoord) * (1.0 - smoothstep(glintPos, glintPos + width, diagCoord));
-    
-    half3 glinted = original.rgb + half3(1.0) * half(intensity) * 0.25;
+    half3 glinted = original.rgb + half3(1.0) * half(intensity) * 0.15;
     return half4(glinted, original.a);
 }
 
@@ -31,8 +36,8 @@ half4 getMotionLightEffectColor(float2 position, float2 size, half4 baseColor, f
     float2 uv = (position / size) * 2.0 - 1.0;
     uv.y = -uv.y;
     
-    half3 horizontalLight = uv.x * acceleration.x * -1 * 0.4;
-    half3 verticalLight = uv.y * acceleration.y * -1 * 0.4;
+    half3 horizontalLight = uv.x * acceleration.x * -1 * 0.2;
+    half3 verticalLight = uv.y * acceleration.y * -1 * 0.2;
     
     half3 finalRgb = max(horizontalLight + verticalLight + baseColor.rgb, baseColor.rgb);
     return half4(finalRgb, baseColor.a);

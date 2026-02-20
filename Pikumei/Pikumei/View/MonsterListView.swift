@@ -9,6 +9,7 @@ import SwiftData
 /// モンスター一覧画面
 struct MonsterListView: View {
     @Query(sort: \Monster.createdAt, order: .reverse) private var monsters: [Monster]
+    private let viewModel = MonsterListViewModel()
 
     private let columns = [
         GridItem(.flexible()),
@@ -16,45 +17,39 @@ struct MonsterListView: View {
     ]
 
     var body: some View {
-        NavigationStack {
-            if monsters.isEmpty {
-                ContentUnavailableView(
-                    "モンスターがいません",
-                    systemImage: "photo.on.rectangle.angled",
-                    description: Text("スキャンしてモンスターを集めよう")
-                )
-                .navigationTitle("モンスター一覧")
-            } else {
-                ScrollView {
-                    LazyVGrid(columns: columns, spacing: 4) {
-                        ForEach(monsters) { monster in
-                            if let uiImage = monster.uiImage {
-                                NavigationLink(destination: MonsterDetailView(monster: monster)) {
-                                    VStack(spacing: 4) {
-                                        Image(uiImage: uiImage)
-                                            .renderingMode(.original)
-                                            .resizable()
-                                            .aspectRatio(1, contentMode: .fit)
-                                            .background(.clear)
+        ZStack {
+            Image("back_mokume")
+                .resizable()
+                .scaledToFill()
+                .ignoresSafeArea()
 
-                                        Text(monster.name ?? "名前なし")
-                                            .font(.custom("DotGothic16-Regular", size: 12))
-                                            .lineLimit(1)
-                                    }
+            NavigationStack {
+                if monsters.isEmpty {
+                    ContentUnavailableView(
+                        "モンスターがいません",
+                        systemImage: "photo.on.rectangle.angled",
+                        description: Text("スキャンしてモンスターを集めよう")
+                    )
+                    .navigationTitle("モンスター一覧")
+                } else {
+                    ScrollView {
+                        LazyVGrid(columns: columns, spacing: 12) {
+                            ForEach(monsters) { monster in
+                                NavigationLink(destination: MonsterDetailView(monster: monster)) {
+                                    MonsterCardComponent(
+                                        monster: monster,
+                                        stats: viewModel.stats(for: monster)
+                                    )
                                 }
                                 .buttonStyle(.plain)
                             }
                         }
+                        .padding(8)
                     }
-                    .padding(4)
+                    .toolbarBackground(.hidden, for: .navigationBar)
+                    .toolbarBackground(.hidden, for: .tabBar)
+                    .navigationTitle("モンスター一覧")
                 }
-                .background(
-                    Image("back_mokume")
-                        .resizable()
-                        .scaledToFill()
-                        .ignoresSafeArea()
-                )
-                .navigationTitle("モンスター一覧")
             }
         }
     }
