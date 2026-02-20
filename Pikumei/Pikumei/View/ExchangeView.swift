@@ -15,56 +15,58 @@ struct ExchangeView: View {
 
     var body: some View {
         NavigationStack {
-            VStack(spacing: 24) {
-                switch viewModel.phase {
-                case .selectMonster:
-                    ExchangeSelectSection(
-                        monsters: monsters.filter { $0.supabaseId != nil },
-                        statsFor: { viewModel.stats(for: $0) },
-                        onSelect: { viewModel.selectMonster($0) }
-                    )
-                case .idle:
-                    ExchangeIdleSection(
-                        monster: viewModel.selectedMonster,
-                        stats: viewModel.selectedMonster.map { viewModel.stats(for: $0) },
-                        onCreate: { Task { await viewModel.createExchange() } },
-                        onJoin: { Task { await viewModel.joinExchange() } },
-                        onBack: { viewModel.deselectMonster() }
-                    )
-                case .waiting:
-                    ExchangeWaitingSection(
-                        monster: viewModel.selectedMonster,
-                        stats: viewModel.selectedMonster.map { viewModel.stats(for: $0) },
-                        exchangeId: viewModel.exchangeId,
-                        onCancel: { viewModel.reset() }
-                    )
-                case .exchanging:
-                    ExchangeProcessingSection(
-                        monster: viewModel.selectedMonster,
-                        stats: viewModel.selectedMonster.map { viewModel.stats(for: $0) }
-                    )
-                case .completed(let monster):
-                    ExchangeCompletedSection(
-                        monster: monster,
-                        stats: viewModel.stats(for: monster),
-                        onClose: { viewModel.reset() }
-                    )
-                case .error(let message):
-                    ExchangeErrorSection(
-                        monster: viewModel.selectedMonster,
-                        stats: viewModel.selectedMonster.map { viewModel.stats(for: $0) },
-                        message: message,
-                        onBack: { viewModel.reset() }
-                    )
-                }
-            }
-            .padding()
-            .background(
+            ZStack {
                 Image("back_gray")
                     .resizable()
                     .scaledToFill()
                     .ignoresSafeArea()
-            )
+
+                VStack(spacing: 24) {
+                    switch viewModel.phase {
+                    case .selectMonster:
+                        ExchangeSelectSection(
+                            monsters: monsters.filter { $0.supabaseId != nil },
+                            statsFor: { viewModel.stats(for: $0) },
+                            onSelect: { viewModel.selectMonster($0) }
+                        )
+                    case .idle:
+                        ExchangeIdleSection(
+                            monster: viewModel.selectedMonster,
+                            stats: viewModel.selectedMonster.map { viewModel.stats(for: $0) },
+                            onCreate: { Task { await viewModel.createExchange() } },
+                            onJoin: { Task { await viewModel.joinExchange() } },
+                            onBack: { viewModel.deselectMonster() }
+                        )
+                    case .waiting:
+                        ExchangeWaitingSection(
+                            monster: viewModel.selectedMonster,
+                            stats: viewModel.selectedMonster.map { viewModel.stats(for: $0) },
+                            exchangeId: viewModel.exchangeId,
+                            onCancel: { viewModel.reset() }
+                        )
+                    case .exchanging:
+                        ExchangeProcessingSection(
+                            monster: viewModel.selectedMonster,
+                            stats: viewModel.selectedMonster.map { viewModel.stats(for: $0) }
+                        )
+                    case .completed(let monster):
+                        ExchangeCompletedSection(
+                            monster: monster,
+                            stats: viewModel.stats(for: monster),
+                            onClose: { viewModel.reset() }
+                        )
+                    case .error(let message):
+                        ExchangeErrorSection(
+                            monster: viewModel.selectedMonster,
+                            stats: viewModel.selectedMonster.map { viewModel.stats(for: $0) },
+                            message: message,
+                            onBack: { viewModel.reset() }
+                        )
+                    }
+                }
+                .padding()
+            }
+            .toolbarBackground(.hidden, for: .navigationBar)
             .navigationTitle("こうかん")
             .onAppear {
                 viewModel.setModelContext(modelContext)
@@ -90,11 +92,19 @@ private struct ExchangeSelectSection: View {
 
     var body: some View {
         if monsters.isEmpty {
-            ContentUnavailableView(
-                "交換できるモンスターがいません",
-                systemImage: "arrow.triangle.2.circlepath",
-                description: Text("スキャンしてアップロードしたモンスターが必要です")
-            )
+            VStack(spacing: 16) {
+                Spacer()
+                Image(systemName: "arrow.triangle.2.circlepath")
+                    .font(.system(size: 48))
+                    .foregroundStyle(.secondary)
+                Text("交換できるモンスターがいません")
+                    .font(.custom("RocknRollOne-Regular", size: 20))
+                Text("スキャンしてアップロードした\nモンスターが必要です")
+                    .font(.custom("DotGothic16-Regular", size: 15))
+                    .foregroundStyle(.secondary)
+                    .multilineTextAlignment(.center)
+                Spacer()
+            }
         } else {
             VStack(spacing: 12) {
                 Text("交換に出すモンスターを選んでください")

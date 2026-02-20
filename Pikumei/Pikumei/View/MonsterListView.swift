@@ -17,20 +17,27 @@ struct MonsterListView: View {
     ]
 
     var body: some View {
-        ZStack {
-            Image("back_mokume")
-                .resizable()
-                .scaledToFill()
-                .ignoresSafeArea()
+        NavigationStack {
+            ZStack {
+                Image("back_mokume")
+                    .resizable()
+                    .scaledToFill()
+                    .ignoresSafeArea()
 
-            NavigationStack {
                 if monsters.isEmpty {
-                    ContentUnavailableView(
-                        "モンスターがいません",
-                        systemImage: "photo.on.rectangle.angled",
-                        description: Text("スキャンしてモンスターを集めよう")
-                    )
-                    .navigationTitle("モンスター一覧")
+                    VStack(spacing: 16) {
+                        Spacer()
+                        Image(systemName: "photo.on.rectangle.angled")
+                            .font(.system(size: 48))
+                            .foregroundStyle(.secondary)
+                        Text("モンスターがいません")
+                            .font(.custom("RocknRollOne-Regular", size: 20))
+                        Text("スキャンしてモンスターを集めよう")
+                            .font(.custom("DotGothic16-Regular", size: 15))
+                            .foregroundStyle(.secondary)
+                        Spacer()
+                    }
+                    .frame(maxWidth: .infinity)
                 } else {
                     ScrollView {
                         LazyVGrid(columns: columns, spacing: 12) {
@@ -46,11 +53,11 @@ struct MonsterListView: View {
                         }
                         .padding(8)
                     }
-                    .toolbarBackground(.hidden, for: .navigationBar)
-                    .toolbarBackground(.hidden, for: .tabBar)
-                    .navigationTitle("モンスター一覧")
                 }
             }
+            .toolbarBackground(.hidden, for: .navigationBar)
+            .toolbarBackground(.hidden, for: .tabBar)
+            .navigationTitle("モンスター一覧")
         }
     }
 }
