@@ -21,12 +21,12 @@ struct BlueButtonComponent: View {
             ZStack{
                 Image("button_1")
                     .resizable()
-                    .frame(width:300, height: 50)
+                    .frame(width:300, height: 30)
                 Text(title)
-                    .font(.custom("DotGothic16-Regular", size: 17))
                     .foregroundColor(.white)
             }
         }
+        // 押した時に少し沈み込むようなアニメーションをつける（お好みで）
         .buttonStyle(.plain)
     }
 }
