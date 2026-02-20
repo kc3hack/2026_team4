@@ -123,46 +123,16 @@ struct BattleGameView: View {
             // 攻撃ボタン
             HStack(spacing: 8) {
                 ForEach(viewModel.myAttacks.indices, id: \.self) { i in
-                    let atk = viewModel.myAttacks[i]
                     let pp = viewModel.attackPP.indices.contains(i) ? viewModel.attackPP[i] : nil
                     let ppEmpty = pp != nil && pp! <= 0
-                    Button {
+                    BattleAttackButtonComponent(
+                        attack: viewModel.myAttacks[i],
+                        effectiveness: viewModel.attackEffectiveness(at: i),
+                        pp: pp,
+                        isDisabled: !viewModel.isMyTurn || ppEmpty
+                    ) {
                         viewModel.attack(index: i)
-                    } label: {
-                        VStack(spacing: 2) {
-                            Text(atk.name)
-                                .font(.caption)
-                                .bold()
-                            if let eff = viewModel.attackEffectiveness(at: i) {
-                                // 相性表示
-                                if eff > 1.0 {
-                                    Text("▲有利")
-                                        .font(.caption2)
-                                        .foregroundStyle(.green)
-                                } else if eff < 1.0 {
-                                    Text("▼不利")
-                                        .font(.caption2)
-                                        .foregroundStyle(.red)
-                                }
-                                // 命中率表示
-                                if let acc = viewModel.attackAccuracy(at: i) {
-                                    Text("\(acc)%")
-                                        .font(.caption2)
-                                        .foregroundStyle(.secondary)
-                                }
-                            }
-                            // PP 表示
-                            if let pp {
-                                Text("\(pp)/2")
-                                    .font(.caption2)
-                                    .foregroundStyle(pp > 0 ? .orange : .gray)
-                            }
-                        }
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 8)
                     }
-                    .buttonStyle(.bordered)
-                    .disabled(!viewModel.isMyTurn || ppEmpty)
                 }
             }
 

@@ -8,6 +8,7 @@ import SwiftUI
 struct TypeIconComponent: View {
     let type: MonsterType
     var size: CGFloat = 60
+    var color: Color?
 
     var body: some View {
         Image(type.imageName)
@@ -15,7 +16,7 @@ struct TypeIconComponent: View {
             .resizable()
             .scaledToFit()
             .frame(width: size, height: size)
-            .foregroundStyle(type.color)
+            .foregroundStyle(color ?? type.color)
     }
 }
 
