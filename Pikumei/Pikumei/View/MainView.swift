@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// メイン画面（4タブ構成）
+/// メイン画面（5タブ構成）
 struct MainView: View {
     var body: some View {
         TabView {
@@ -19,7 +19,12 @@ struct MainView: View {
                 .tabItem {
                     Label("バトル", systemImage: "bolt.fill")
                 }
-            
+
+            ExchangeView()
+                .tabItem {
+                    Label("こうかん", systemImage: "arrow.triangle.2.circlepath")
+                }
+
             MonsterListView()
                 .tabItem {
                     Label("一覧", systemImage: "list.bullet")
