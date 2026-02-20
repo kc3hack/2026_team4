@@ -66,7 +66,7 @@ private struct BattleIdleSection: View {
     var body: some View {
         VStack(spacing: 16) {
             Text("マッチング通信テスト")
-                .font(.headline)
+                .font(.custom("DotGothic16-Regular", size: 17))
 
             Button {
                 onCreate()
@@ -97,11 +97,11 @@ private struct BattleWaitingSection: View {
         VStack(spacing: 16) {
             ProgressView()
             Text("相手を待っています...")
-                .font(.headline)
+                .font(.custom("DotGothic16-Regular", size: 17))
 
             if let id = battleId {
                 Text("Battle ID: \(id.uuidString.prefix(8))...")
-                    .font(.caption)
+                    .font(.custom("DotGothic16-Regular", size: 12))
                     .foregroundStyle(.secondary)
             }
 
@@ -126,7 +126,7 @@ private struct BattleErrorSection: View {
                 .foregroundStyle(.red)
 
             Text(message)
-                .font(.body)
+                .font(.custom("DotGothic16-Regular", size: 15))
                 .foregroundStyle(.red)
                 .multilineTextAlignment(.center)
 

@@ -88,7 +88,7 @@ private struct ExchangeSelectSection: View {
         } else {
             VStack(spacing: 12) {
                 Text("交換に出すモンスターを選んでください")
-                    .font(.headline)
+                    .font(.custom("DotGothic16-Regular", size: 17))
 
                 ScrollView {
                     LazyVGrid(columns: columns, spacing: 8) {
@@ -105,7 +105,7 @@ private struct ExchangeSelectSection: View {
                                             .cornerRadius(8)
                                     }
                                     Text(monster.name ?? "名前なし")
-                                        .font(.caption)
+                                        .font(.custom("DotGothic16-Regular", size: 12))
                                         .lineLimit(1)
                                 }
                             }
@@ -130,7 +130,7 @@ private struct ExchangeIdleSection: View {
         VStack(spacing: 16) {
             if let monster, let uiImage = monster.uiImage {
                 Text("交換に出すモンスター")
-                    .font(.headline)
+                    .font(.custom("DotGothic16-Regular", size: 17))
 
                 Image(uiImage: uiImage)
                     .resizable()
@@ -139,11 +139,11 @@ private struct ExchangeIdleSection: View {
                     .cornerRadius(12)
 
                 Text(monster.name ?? "名前なし")
-                    .font(.subheadline)
+                    .font(.custom("DotGothic16-Regular", size: 15))
 
                 if let label = monster.classificationLabel {
                     Text(label.displayName)
-                        .font(.caption)
+                        .font(.custom("DotGothic16-Regular", size: 12))
                         .foregroundStyle(.secondary)
                 }
             }
@@ -167,7 +167,7 @@ private struct ExchangeIdleSection: View {
             Button("モンスターを選び直す") {
                 onBack()
             }
-            .font(.caption)
+            .font(.custom("DotGothic16-Regular", size: 12))
         }
     }
 }
@@ -182,11 +182,11 @@ private struct ExchangeWaitingSection: View {
         VStack(spacing: 16) {
             ProgressView()
             Text("相手を待っています...")
-                .font(.headline)
+                .font(.custom("DotGothic16-Regular", size: 17))
 
             if let id = exchangeId {
                 Text("Exchange ID: \(id.uuidString.prefix(8))...")
-                    .font(.caption)
+                    .font(.custom("DotGothic16-Regular", size: 12))
                     .foregroundStyle(.secondary)
             }
 
@@ -205,7 +205,7 @@ private struct ExchangeProcessingSection: View {
         VStack(spacing: 16) {
             ProgressView()
             Text("交換しています...")
-                .font(.headline)
+                .font(.custom("DotGothic16-Regular", size: 17))
         }
     }
 }
@@ -223,7 +223,7 @@ private struct ExchangeCompletedSection: View {
                 .foregroundStyle(.green)
 
             Text("交換完了！")
-                .font(.title2)
+                .font(.custom("RocknRollOne-Regular", size: 22))
                 .bold()
 
             if let uiImage = monster.uiImage {
@@ -235,16 +235,16 @@ private struct ExchangeCompletedSection: View {
             }
 
             Text(monster.name ?? "名前なし")
-                .font(.headline)
+                .font(.custom("DotGothic16-Regular", size: 17))
 
             if let label = monster.classificationLabel {
                 Text(label.displayName)
-                    .font(.subheadline)
+                    .font(.custom("DotGothic16-Regular", size: 15))
                     .foregroundStyle(.secondary)
             }
 
             Text("新しいモンスターを手に入れた！")
-                .font(.body)
+                .font(.custom("DotGothic16-Regular", size: 15))
 
             Button("閉じる") {
                 onClose()
@@ -267,7 +267,7 @@ private struct ExchangeErrorSection: View {
                 .foregroundStyle(.red)
 
             Text(message)
-                .font(.body)
+                .font(.custom("DotGothic16-Regular", size: 15))
                 .foregroundStyle(.red)
                 .multilineTextAlignment(.center)
 
