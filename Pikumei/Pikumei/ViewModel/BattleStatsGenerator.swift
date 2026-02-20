@@ -16,13 +16,13 @@ enum BattleStatsGenerator {
     
     /// タイプごとのステータス分布(0.0 ~ 1.0)
     private static let statsDistributions: [MonsterType: [Double]] = [
-        .fire:  [0.1, 0.3, 0.4, 0.2],
-        .water: [0.2, 0.3, 0.3, 0.2],
-        .leaf:  [0.2, 0.2, 0.2, 0.4],
-        .ghost: [0.4, 0.1, 0.3, 0.2],
-        .human: [0.4, 0.4, 0.1, 0.1],
-        .fish:  [0.2, 0.3, 0.3, 0.2],
-        .bird:  [0.2, 0.4, 0.2, 0.2],
+        .fire:  [0.5, 0.5, 0.8, 0.6],
+        .water: [0.5, 0.4, 0.9, 0.8],
+        .leaf:  [0.5, 0.7, 0.7, 0.7],
+        .ghost: [1.0, 0.2, 0.8, 0.2],
+        .human: [0.8, 0.8, 0.5, 0.3],
+        .fish:  [0.6, 0.8, 0.5, 0.4],
+        .bird:  [0.6, 0.9, 0.3, 0.6],
     ]
     
     /// label + confidence からステータスを生成（nil 時はランダム fallback）
