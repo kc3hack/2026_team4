@@ -67,8 +67,19 @@ class MonsterClassifier {
     
     /// ゴーストタイプへ変換する
     private func toGhostType(monsterType: MonsterType, confidence: Double) -> (MonsterType, Double) {
+        // タイプをghostに変換
         let newMonsterType = MonsterType.ghost
-        let newConfidence = 1.0 - confidence
+        
+        // 信頼度を計算
+        // 不足分 [0.0, threshold]
+        let diff = MonsterClassifier.GHOST_CONFIDENCE_THRESHOLD - confidence
+        // 正規化 [0.0, threshold] -> [0.0, 1.0]
+        let norm = diff / MonsterClassifier.GHOST_CONFIDENCE_THRESHOLD
+        // 追加分 [0.0, 1.0] -> [0.0, 1.0 - threshold]
+        let addition = norm * (1.0 - MonsterClassifier.GHOST_CONFIDENCE_THRESHOLD)
+        // ゴーストタイプとしての信頼度 [threshold, 1.0]
+        let newConfidence = MonsterClassifier.GHOST_CONFIDENCE_THRESHOLD + addition
+        
         return (newMonsterType, newConfidence)
     }
     
