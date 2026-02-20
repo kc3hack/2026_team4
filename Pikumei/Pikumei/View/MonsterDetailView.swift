@@ -12,6 +12,11 @@ struct MonsterDetailView: View {
     /// バトル用ステータス（初期化時に一度だけ算出）
     let stats: BattleStats
 
+    /// モンスターのタイプ（未分類時は .human をデフォルト）
+    private var monsterType: MonsterType {
+        monster.classificationLabel ?? .human
+    }
+
     init(monster: Monster) {
         self.monster = monster
         self.stats = BattleStatsGenerator.generate(
@@ -23,28 +28,38 @@ struct MonsterDetailView: View {
     var body: some View {
         ScrollView {
             VStack(spacing: 20) {
+                // モンスター画像（タイプカラーの枠 + シャドウ）
                 if let uiImage = monster.uiImage {
                     Image(uiImage: uiImage)
                         .resizable()
                         .scaledToFit()
                         .frame(maxWidth: 300)
                         .clipShape(RoundedRectangle(cornerRadius: 12))
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 12)
+                                .stroke(monsterType.color.opacity(0.3), lineWidth: 2)
+                        )
+                        .shadow(color: monsterType.color.opacity(0.2), radius: 6, x: 0, y: 3)
                 }
 
+                // モンスター名
                 Text(monster.name ?? "名前なし")
                     .font(.custom("RocknRollOne-Regular", size: 28))
                     .bold()
+                    .foregroundStyle(monsterType.color)
 
-                if let type = monster.classificationLabel {
-                    Text("タイプ: \(type.displayName)")
+                // タイプラベル（アイコン付き）
+                HStack(spacing: 6) {
+                    TypeIconComponent(type: monsterType, size: 20)
+                    Text("タイプ: \(monsterType.displayName)")
                         .font(.custom("DotGothic16-Regular", size: 15))
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(monsterType.color)
                 }
 
                 if let confidence = monster.classificationConfidence {
                     Text("強さ: \(Int(confidence * 100))%")
                         .font(.custom("DotGothic16-Regular", size: 15))
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(monsterType.color.opacity(0.8))
                 }
 
                 // レーダーチャート（pow(2) で差を強調、バーと同じスケール）
@@ -55,7 +70,7 @@ struct MonsterDetailView: View {
                         ("特攻", pow(Double(stats.specialAttack) / 55.0, 2)),
                         ("特防", pow(Double(stats.specialDefense) / 55.0, 2)),
                     ],
-                    color: .blue
+                    color: monsterType.color
                 )
                 .frame(width: 250, height: 250)
 
@@ -64,10 +79,18 @@ struct MonsterDetailView: View {
 
                 Text("登録日: \(monster.createdAt.formatted(date: .abbreviated, time: .omitted))")
                     .font(.custom("DotGothic16-Regular", size: 12))
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(monsterType.color.opacity(0.6))
             }
             .padding()
         }
+        .background(
+            LinearGradient(
+                colors: [monsterType.bgColor.opacity(0.6), monsterType.bgColor.opacity(0.2)],
+                startPoint: .top,
+                endPoint: .bottom
+            )
+            .ignoresSafeArea()
+        )
         .navigationTitle(monster.name ?? "モンスター詳細")
         .navigationBarTitleDisplayMode(.inline)
     }
@@ -88,12 +111,14 @@ struct MonsterDetailView: View {
         HStack {
             Text(label)
                 .font(.custom("DotGothic16-Regular", size: 12))
+                .foregroundStyle(monsterType.color.opacity(0.8))
                 .frame(width: 40, alignment: .leading)
             Text("\(value)")
                 .font(.custom("DotGothic16-Regular", size: 12))
                 .bold()
+                .foregroundStyle(monsterType.color)
                 .frame(width: 30, alignment: .trailing)
-            StatBarComponent(value: value, maxValue: maxValue)
+            StatBarComponent(value: value, maxValue: maxValue, color: monsterType.color.opacity(0.6))
         }
     }
 }
