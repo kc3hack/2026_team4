@@ -36,7 +36,16 @@ struct BattleView: View {
                     )
                 }
             }
-            .padding()
+            .padding(matchingVM.phase.isBattling ? 0 : 16)
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .background(alignment: .top) {
+                if !matchingVM.phase.isBattling {
+                    Image("bg_fish")
+                        .resizable()
+                        .scaledToFill()
+                        .ignoresSafeArea()
+                }
+            }
             .toolbar(
                 matchingVM.phase.isBattling ? .hidden : .visible,
                 for: .tabBar
@@ -56,13 +65,6 @@ private struct BattleIdleSection: View {
 
     var body: some View {
         VStack(spacing: 16) {
-            Image("battle-logo")
-                .resizable()
-                //.scaledToFill()
-                .frame(width: UIScreen.main.bounds.width * 1.13, height: 400)
-                .rotationEffect(Angle(degrees: -8))
-                .padding(.bottom, 40)
-            
             Text("マッチング通信テスト")
                 .font(.headline)
 

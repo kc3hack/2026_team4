@@ -253,14 +253,20 @@ class ExchangeViewModel: ObservableObject {
                 return
             }
 
-            // サムネイル JPEG をそのまま imageData として使用
-            let imageData: Data
-            if let thumbnailData = opponentMonster.thumbnailData {
-                imageData = thumbnailData
-            } else {
-                // サムネイルがない場合はプレースホルダー
+            // サムネイルから切り抜き画像を生成してPNGで保存
+            guard let thumbnailData = opponentMonster.thumbnailData,
+                  let thumbnailImage = UIImage(data: thumbnailData) else {
                 phase = .error("相手のモンスター画像を取得できませんでした")
                 return
+            }
+
+            let imageData: Data
+            if let cutout = try? await SubjectDetector.detectAndCutout(from: thumbnailImage),
+               let pngData = cutout.pngData() {
+                imageData = pngData
+            } else {
+                // 切り抜き失敗時はそのままPNG変換
+                imageData = thumbnailImage.pngData() ?? thumbnailData
             }
 
             let newMonster = Monster(

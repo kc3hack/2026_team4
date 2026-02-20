@@ -11,24 +11,49 @@ struct BattleGameView: View {
     @StateObject private var viewModel: BattleViewModel
     var onFinish: () -> Void
 
+    // バトル背景をランダムで選択（画面生成時に固定）
+    private let backgroundImage: String
+
+    private static let battleBackgrounds = [
+        "back_battle_mori",
+        "back_battle_sabaku",
+        "back_battle_sougen",
+    ]
+
     init(battleId: UUID, onFinish: @escaping () -> Void) {
         _viewModel = StateObject(wrappedValue: BattleViewModel(battleId: battleId))
         self.onFinish = onFinish
+        self.backgroundImage = Self.battleBackgrounds.randomElement()!
     }
 
     var body: some View {
-        Group {
-            switch viewModel.phase {
-            case .preparing:
-                preparingView
-            case .battling:
-                battlingView
-            case .won:
-                resultView(won: true)
-            case .lost:
-                resultView(won: false)
-            case .connectionError:
-                connectionErrorView
+        ZStack {
+            // バトル背景
+            Image(backgroundImage)
+                .resizable()
+                .scaledToFill()
+                .ignoresSafeArea()
+
+            Group {
+                switch viewModel.phase {
+                case .preparing:
+                    preparingView
+                case .battling:
+                    battlingView
+                case .won:
+                    resultView(won: true)
+                case .lost:
+                    resultView(won: false)
+                case .connectionError:
+                    connectionErrorView
+                }
+            }
+
+            // 攻撃エフェクト
+            if let gif = viewModel.attackEffectGif {
+                GifImageComponent(name: gif, repeatCount: 1, speed: 3.0)
+                    .frame(width: 80, height: 80)
+                    .allowsHitTesting(false)
             }
         }
         .task {
