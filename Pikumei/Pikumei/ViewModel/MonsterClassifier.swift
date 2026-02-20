@@ -49,7 +49,8 @@ class MonsterClassifier {
             self.resultFound = false
             guard let results = request.results as? [VNClassificationObservation] else {return}
             guard let first = results.first else {return}
-            self.monsterType = labelToMonsterType[first.identifier]!
+            guard let monsterType = labelToMonsterType[first.identifier] else {return}
+            self.monsterType = monsterType
             self.confidence = Double(first.confidence)
             self.resultFound = true
         })
@@ -75,7 +76,7 @@ class MonsterClassifier {
             throw MonsterClassifierError.requestNotFound
         }
         
-        // ハンドラーを作成
+        // ハンドラーを作成してリクエストを実行
         guard let cgImage = image.cgImage else {
             throw MonsterClassifierError.invalidImage
         }
@@ -85,17 +86,18 @@ class MonsterClassifier {
         } catch {
             throw MonsterClassifierError.requestFailed
         }
-        
-        // 出力
         guard self.resultFound else {
             throw MonsterClassifierError.resultNotFound
         }
         print("[1] monsterType: \(self.monsterType), confidence: \(self.confidence * 100)%")
+        
+        // ゴーストタイプ判定
         if isGhostType(confidence: self.confidence) {
             (self.monsterType, self.confidence) = toGhostType(monsterType: self.monsterType, confidence: self.confidence)
         }
         print("[2] monsterType: \(self.monsterType), confidence: \(self.confidence * 100)%")
         
+        // 出力
         return (self.monsterType, self.confidence)
     }
 }
