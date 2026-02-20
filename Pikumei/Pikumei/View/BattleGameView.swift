@@ -77,48 +77,32 @@ struct BattleGameView: View {
     // MARK: - バトル中
 
     private var battlingView: some View {
-        VStack(spacing: 20) {
-            // 相手側
-            HStack(spacing: 12) {
-                monsterThumbnail(data: viewModel.opponentThumbnail)
-
-                VStack(alignment: .leading, spacing: 8) {
-                    Text("あいて")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                    Text(viewModel.opponentName ?? viewModel.opponentLabel?.displayName ?? "")
-                        .font(.title3)
-                        .bold()
-                    hpBar(
-                        current: viewModel.opponentHp,
-                        maxHp: viewModel.opponentStats?.hp ?? 1,
-                        color: .red
-                    )
-                }
+        VStack(spacing: 15) {
+            // 相手側 — 右寄せ・小さめ（遠近感）
+            HStack {
+                Spacer()
+                BattleMonsterHUDComponent(
+                    imageData: viewModel.opponentThumbnail,
+                    name: viewModel.opponentName ?? viewModel.opponentLabel?.displayName ?? "",
+                    currentHp: viewModel.opponentHp,
+                    maxHp: viewModel.opponentStats?.hp ?? 1,
+                    type: viewModel.opponentLabel,
+                    size: 80
+                )
             }
-            .frame(maxWidth: .infinity, alignment: .leading)
 
-            Divider()
-
-            // 自分側
-            HStack(spacing: 12) {
-                monsterThumbnail(data: viewModel.myThumbnail)
-
-                VStack(alignment: .leading, spacing: 8) {
-                    Text("じぶん")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                    Text(viewModel.myName ?? viewModel.myLabel?.displayName ?? "")
-                        .font(.title3)
-                        .bold()
-                    hpBar(
-                        current: viewModel.myHp,
-                        maxHp: viewModel.myStats?.hp ?? 1,
-                        color: .green
-                    )
-                }
+            // 自分側 — 左寄せ・大きめ（手前）
+            HStack {
+                BattleMonsterHUDComponent(
+                    imageData: viewModel.myThumbnail,
+                    name: viewModel.myName ?? viewModel.myLabel?.displayName ?? "",
+                    currentHp: viewModel.myHp,
+                    maxHp: viewModel.myStats?.hp ?? 1,
+                    type: viewModel.myLabel,
+                    size: 110
+                )
+                Spacer()
             }
-            .frame(maxWidth: .infinity, alignment: .leading)
 
             // 攻撃ボタン
             HStack(spacing: 8) {
@@ -146,51 +130,6 @@ struct BattleGameView: View {
             logSection
         }
         .padding()
-    }
-
-    // MARK: - HP バー
-
-    private func hpBar(current: Int, maxHp: Int, color: Color) -> some View {
-        let ratio = maxHp > 0 ? Double(current) / Double(maxHp) : 0
-
-        return VStack(alignment: .leading, spacing: 4) {
-            GeometryReader { geo in
-                ZStack(alignment: .leading) {
-                    RoundedRectangle(cornerRadius: 4)
-                        .fill(Color.gray.opacity(0.3))
-                        .frame(height: 16)
-
-                    RoundedRectangle(cornerRadius: 4)
-                        .fill(color)
-                        .frame(width: geo.size.width * Swift.max(ratio, 0), height: 16)
-                        .animation(.easeInOut(duration: 0.3), value: current)
-                }
-            }
-            .frame(height: 16)
-
-            Text("HP \(Swift.max(current, 0)) / \(maxHp)")
-                .font(.caption)
-                .foregroundStyle(.secondary)
-        }
-    }
-
-    // MARK: - モンスターサムネイル
-
-    private func monsterThumbnail(data: Data?) -> some View {
-        Group {
-            if let data, let uiImage = UIImage(data: data) {
-                Image(uiImage: uiImage)
-                    .resizable()
-                    .scaledToFill()
-            } else {
-                Image(systemName: "questionmark.circle")
-                    .resizable()
-                    .scaledToFit()
-                    .foregroundStyle(.secondary)
-            }
-        }
-        .frame(width: 60, height: 60)
-        .clipShape(RoundedRectangle(cornerRadius: 8))
     }
 
     // MARK: - ログ
