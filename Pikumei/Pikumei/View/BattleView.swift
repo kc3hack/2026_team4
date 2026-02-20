@@ -94,7 +94,7 @@ private struct MonsterSelectionSection: View {
                 .font(.custom("DotGothic16-Regular", size: 17))
             
             Button(selector.name ?? "未選択") {
-                Task {await selector.setRandomMonster()}
+                Task { try await selector.setRandomMonster() }
             }
         }
     }

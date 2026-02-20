@@ -16,6 +16,7 @@ class BattleMonsterSelector: ObservableObject {
     @Published public var name: String? = nil
     @Published public var thumbnail: Data? = nil
     
+    /// 指定したIDのモンスターを選択する
     public func setMonster(monsterId: UUID) async {
         do {
             let monster: MonsterLabelRow = try await client
@@ -25,35 +26,53 @@ class BattleMonsterSelector: ObservableObject {
                 .single()
                 .execute()
                 .value
+            
             self.name = monster.name
             self.thumbnail = monster.thumbnailData
             
-            print("[BattleMonsterSelector.setMonster] succeeded")
+            print("[BattleMonsterSelector.setMonster] succeeded, monsterId: \(monsterId)")
         } catch {
             print("[BattleMonsterSelector.setMonster] \(error)")
         }
     }
     
-    public func setRandomMonster() async {
-        guard let monsterId: UUID = try? await fetchRandomMonster() else {return}
-        await setMonster(monsterId: monsterId)
-    }
-    
-    
-    /// 自分のモンスターからランダムに1体選ぶ
-    private func fetchRandomMonster() async throws -> UUID {
-        let userId = try await client.auth.session.user.id
-        let monsters: [MonsterIdRow] = try await client
+    /// 自分のモンスターからランダムに選択する
+    public func setRandomMonster() async throws {
+        guard let userId = try? await client.auth.session.user.id else { // ユーザーID
+            throw BattleMonsterSelectorError.failedFetchUserId
+        }
+        
+        guard let monsters: [MonsterIdRow] = try? await client // モンスターを50体取得
             .from("monsters")
             .select("id")
             .eq("user_id", value: userId.uuidString)
             .limit(50)
             .execute()
-            .value
-        
-        guard let monster = monsters.randomElement() else {
-            throw MatchingError.noMonsters
+            .value else {
+            throw BattleMonsterSelectorError.failedFetchMonsters
         }
-        return monster.id
+        
+        guard let monster = monsters.randomElement() else { // ランダムに1体抽出
+            throw BattleMonsterSelectorError.noMonsters
+        }
+        
+        await setMonster(monsterId: monster.id)
+    }
+}
+
+enum BattleMonsterSelectorError: LocalizedError{
+    case failedFetchUserId
+    case failedFetchMonsters
+    case noMonsters
+    
+    var errorDiscription: String? {
+        switch self {
+        case .failedFetchUserId:
+            return "ユーザーIDを取得できませんでした"
+        case .failedFetchMonsters:
+            return "モンスターリストを取得できませんでした"
+        case .noMonsters:
+            return "モンスターを持っていません"
+        }
     }
 }
