@@ -32,18 +32,18 @@ struct MonsterDetailView: View {
                 }
 
                 Text(monster.name ?? "名前なし")
-                    .font(.title)
+                    .font(.custom("RocknRollOne-Regular", size: 28))
                     .bold()
 
                 if let type = monster.classificationLabel {
                     Text("タイプ: \(type.displayName)")
-                        .font(.body)
+                        .font(.custom("DotGothic16-Regular", size: 15))
                         .foregroundStyle(.secondary)
                 }
 
                 if let confidence = monster.classificationConfidence {
                     Text("強さ: \(Int(confidence * 100))%")
-                        .font(.body)
+                        .font(.custom("DotGothic16-Regular", size: 15))
                         .foregroundStyle(.secondary)
                 }
 
@@ -63,7 +63,7 @@ struct MonsterDetailView: View {
                 statsTable
 
                 Text("登録日: \(monster.createdAt.formatted(date: .abbreviated, time: .omitted))")
-                    .font(.caption)
+                    .font(.custom("DotGothic16-Regular", size: 12))
                     .foregroundStyle(.secondary)
             }
             .padding()
@@ -87,10 +87,10 @@ struct MonsterDetailView: View {
     private func statRow(label: String, value: Int, maxValue: Int) -> some View {
         HStack {
             Text(label)
-                .font(.caption)
+                .font(.custom("DotGothic16-Regular", size: 12))
                 .frame(width: 40, alignment: .leading)
             Text("\(value)")
-                .font(.caption)
+                .font(.custom("DotGothic16-Regular", size: 12))
                 .bold()
                 .frame(width: 30, alignment: .trailing)
             StatBarComponent(value: value, maxValue: maxValue)

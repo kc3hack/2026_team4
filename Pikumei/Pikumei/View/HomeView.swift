@@ -13,10 +13,10 @@ struct HomeView: View {
                 Text("Taro Yamada")
                     .font(Font.custom("RocknRollOne-Regular", size: 48))
                 Text("ぴくめい")
-                    .font(.system(size: 48, weight: .bold, design: .rounded))
+                    .font(.custom("RocknRollOne-Regular", size: 48))
 
                 Text("物を\n戦わせよう！")
-                    .font(.title2)
+                    .font(.custom("RocknRollOne-Regular", size: 22))
                     .multilineTextAlignment(.center)
                     .lineSpacing(8)
 
