@@ -9,6 +9,9 @@ struct HomeView: View {
                 .ignoresSafeArea()
 
             VStack(spacing: 20) {
+                
+                Text("Taro Yamada")
+                    .font(Font.custom("RocknRollOne-Regular", size: 48))
                 Text("ぴくめい")
                     .font(.system(size: 48, weight: .bold, design: .rounded))
 
@@ -16,6 +19,14 @@ struct HomeView: View {
                     .font(.title2)
                     .multilineTextAlignment(.center)
                     .lineSpacing(8)
+
+                // テスト用：タイプアイコン一覧
+                LazyVGrid(columns: [GridItem(.adaptive(minimum: 60))], spacing: 12) {
+                    ForEach(MonsterType.allCases, id: \.self) { type in
+                        TypeIconComponent(type: type)
+                    }
+                }
+                .padding(.horizontal)
 
                 // テスト用：GIFアニメーション
                 GifImageComponent(name: "explosion", repeatCount: 1)
