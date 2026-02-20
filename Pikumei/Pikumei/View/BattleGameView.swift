@@ -87,7 +87,7 @@ struct BattleGameView: View {
                     currentHp: viewModel.opponentHp,
                     maxHp: viewModel.opponentStats?.hp ?? 1,
                     type: viewModel.opponentLabel,
-                    size: 80
+                    size: 120
                 )
                 .overlay { DamageLabelView(damage: viewModel.damageToOpponent) }
             }
@@ -100,7 +100,7 @@ struct BattleGameView: View {
                     currentHp: viewModel.myHp,
                     maxHp: viewModel.myStats?.hp ?? 1,
                     type: viewModel.myLabel,
-                    size: 110
+                    size: 160
                 )
                 .overlay { DamageLabelView(damage: viewModel.damageToMe) }
                 Spacer()
