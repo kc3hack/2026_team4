@@ -41,9 +41,9 @@ struct BattleGameView: View {
                 case .battling:
                     battlingView
                 case .won:
-                    resultView(won: true)
+                    victoryComponent
                 case .lost:
-                    resultView(won: false)
+                    defeatComponent
                 case .connectionError:
                     connectionErrorView
                 }
@@ -174,19 +174,41 @@ struct BattleGameView: View {
         .padding()
     }
 
-    // MARK: - 結果画面
+    // MARK: - 勝利コンポーネント
 
-    private func resultView(won: Bool) -> some View {
+    private var victoryComponent: some View {
         VStack(spacing: 24) {
-            Image(systemName: won ? "crown.fill" : "xmark.circle.fill")
+            Image(systemName: "crown.fill")
                 .font(.system(size: 64))
-                .foregroundStyle(won ? .yellow : .red)
+                .foregroundStyle(.yellow)
 
-            Text(won ? "勝利！" : "敗北...")
+            Text("勝利！")
                 .font(.custom("RocknRollOne-Regular", size: 34))
                 .bold()
 
-            // 最終ログ
+            logSection
+
+            Button("戻る") {
+                viewModel.cleanup()
+                onFinish()
+            }
+            .buttonStyle(.bordered)
+        }
+        .padding()
+    }
+
+    // MARK: - 敗北コンポーネント
+
+    private var defeatComponent: some View {
+        VStack(spacing: 24) {
+            Image(systemName: "xmark.circle.fill")
+                .font(.system(size: 64))
+                .foregroundStyle(.red)
+
+            Text("敗北...")
+                .font(.custom("RocknRollOne-Regular", size: 34))
+                .bold()
+
             logSection
 
             Button("戻る") {
