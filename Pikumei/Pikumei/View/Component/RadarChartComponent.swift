@@ -58,7 +58,7 @@ struct RadarChartComponent: View {
                 ForEach(0..<count, id: \.self) { i in
                     let labelPoint = point(index: i, radius: radius * 1.2, center: center)
                     Text(axes[i].label)
-                        .font(.caption)
+                        .font(.custom("DotGothic16-Regular", size: 12))
                         .bold()
                         .position(labelPoint)
                 }

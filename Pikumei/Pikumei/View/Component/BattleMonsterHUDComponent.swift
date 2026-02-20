@@ -31,7 +31,6 @@ struct BattleMonsterHUDComponent: View {
                 }
             }
             .frame(width: size, height: size)
-            .clipShape(RoundedRectangle(cornerRadius: 8))
 
             // 名前
             Text(name)

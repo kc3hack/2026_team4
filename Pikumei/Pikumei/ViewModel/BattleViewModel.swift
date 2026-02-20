@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import UIKit
 import Supabase
 import Combine
 
@@ -111,6 +112,7 @@ class BattleViewModel: ObservableObject {
             opponentLabel = oppMonster.classificationLabel
             myName = myMonster.name
             opponentName = oppMonster.name
+            // まず生データを表示し、チャネル接続を優先する
             myThumbnail = myMonster.thumbnailData
             opponentThumbnail = oppMonster.thumbnailData
             myAttacks = myMonster.classificationLabel.attacks
@@ -128,6 +130,16 @@ class BattleViewModel: ObservableObject {
             try await subscribeToBattle()
 
             phase = .battling
+
+            // 切り抜きは接続後にバックグラウンドで実行（白背景を除去）
+            Task {
+                let myData = myMonster.thumbnailData
+                let oppData = oppMonster.thumbnailData
+                async let myCutout = cutoutThumbnail(myData)
+                async let oppCutout = cutoutThumbnail(oppData)
+                self.myThumbnail = await myCutout
+                self.opponentThumbnail = await oppCutout
+            }
         } catch {
             battleLog.append("エラー: \(error.localizedDescription)")
             phase = .connectionError
@@ -357,6 +369,13 @@ class BattleViewModel: ObservableObject {
         } else {
             isMyTurn = true
         }
+    }
+
+    /// サムネイルを SubjectDetector で切り抜く（失敗時は元データをそのまま返す）
+    private func cutoutThumbnail(_ data: Data?) async -> Data? {
+        guard let data, let image = UIImage(data: data) else { return data }
+        guard let cutout = try? await SubjectDetector.detectAndCutout(from: image) else { return data }
+        return cutout.pngData()
     }
 
     /// バトル終了を DB に記録する
