@@ -18,12 +18,7 @@ struct MonsterListView: View {
 
     var body: some View {
         NavigationStack {
-            ZStack {
-                Image("back_mokume")
-                    .resizable()
-                    .scaledToFill()
-                    .ignoresSafeArea()
-
+            Group {
                 if monsters.isEmpty {
                     VStack(spacing: 16) {
                         Spacer()
@@ -37,7 +32,6 @@ struct MonsterListView: View {
                             .foregroundStyle(.secondary)
                         Spacer()
                     }
-                    .frame(maxWidth: .infinity)
                 } else {
                     ScrollView {
                         LazyVGrid(columns: columns, spacing: 12) {
@@ -55,8 +49,13 @@ struct MonsterListView: View {
                     }
                 }
             }
-            .toolbarBackground(.hidden, for: .navigationBar)
-            .toolbarBackground(.hidden, for: .tabBar)
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .background {
+                Image("back_mokume")
+                    .resizable()
+                    .scaledToFill()
+                    .ignoresSafeArea()
+            }
             .navigationTitle("モンスター一覧")
         }
     }
