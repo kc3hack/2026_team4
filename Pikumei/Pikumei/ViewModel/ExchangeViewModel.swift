@@ -55,7 +55,7 @@ class ExchangeViewModel: ObservableObject {
     /// 選択中のモンスターで交換を作成し、相手を待つ
     func createExchange() async {
         guard let monster = selectedMonster, let supabaseId = monster.supabaseId else {
-            phase = .error("アップロード済みのモンスターを選択してください")
+            phase = .error("アップロード済みのメイティを選択してください")
             return
         }
 
@@ -92,7 +92,7 @@ class ExchangeViewModel: ObservableObject {
     /// 待機中の交換を探して参加し、交換を完了する
     func joinExchange() async {
         guard let monster = selectedMonster, let supabaseId = monster.supabaseId else {
-            phase = .error("アップロード済みのモンスターを選択してください")
+            phase = .error("アップロード済みのメイティを選択してください")
             return
         }
 
@@ -230,7 +230,7 @@ class ExchangeViewModel: ObservableObject {
             let opponentMonsterId: UUID
             if isPlayer1 {
                 guard let id = exchange.player2MonsterId else {
-                    phase = .error("相手のモンスター情報がありません")
+                    phase = .error("相手のメイティ情報がありません")
                     return
                 }
                 opponentMonsterId = id
@@ -256,7 +256,7 @@ class ExchangeViewModel: ObservableObject {
             // サムネイルから切り抜き画像を生成してPNGで保存
             guard let thumbnailData = opponentMonster.thumbnailData,
                   let thumbnailImage = UIImage(data: thumbnailData) else {
-                phase = .error("相手のモンスター画像を取得できませんでした")
+                phase = .error("相手のメイティ画像を取得できませんでした")
                 return
             }
 

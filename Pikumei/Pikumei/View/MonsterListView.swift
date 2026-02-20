@@ -19,11 +19,11 @@ struct MonsterListView: View {
         NavigationStack {
             if monsters.isEmpty {
                 ContentUnavailableView(
-                    "モンスターがいません",
+                    "メイティがいません",
                     systemImage: "photo.on.rectangle.angled",
-                    description: Text("スキャンしてモンスターを集めよう")
+                    description: Text("スキャンしてメイティを集めよう")
                 )
-                .navigationTitle("モンスター一覧")
+                .navigationTitle("メイティ一覧")
             } else {
                 ScrollView {
                     LazyVGrid(columns: columns, spacing: 4) {
@@ -54,7 +54,7 @@ struct MonsterListView: View {
                         .scaledToFill()
                         .ignoresSafeArea()
                 )
-                .navigationTitle("モンスター一覧")
+                .navigationTitle("メイティ一覧")
             }
         }
     }

@@ -41,7 +41,7 @@ struct MonsterResultView: View {
                 // アニメーション完了後に名前入力を表示
                 if showNameInput && !nameConfirmed {
                     VStack(spacing: 12) {
-                        TextField("モンスターの名前を入力", text: $monsterName)
+                        TextField("メイティの名前を入力", text: $monsterName)
                             .textFieldStyle(.roundedBorder)
                             .padding(.horizontal, 40)
 

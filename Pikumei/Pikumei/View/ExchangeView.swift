@@ -81,13 +81,13 @@ private struct ExchangeSelectSection: View {
     var body: some View {
         if monsters.isEmpty {
             ContentUnavailableView(
-                "交換できるモンスターがいません",
+                "交換できるメイティがいません",
                 systemImage: "arrow.triangle.2.circlepath",
-                description: Text("スキャンしてアップロードしたモンスターが必要です")
+                description: Text("スキャンしてアップロードしたメイティが必要です")
             )
         } else {
             VStack(spacing: 12) {
-                Text("交換に出すモンスターを選んでください")
+                Text("交換に出すメイティを選んでください")
                     .font(.headline)
 
                 ScrollView {
@@ -129,7 +129,7 @@ private struct ExchangeIdleSection: View {
     var body: some View {
         VStack(spacing: 16) {
             if let monster, let uiImage = monster.uiImage {
-                Text("交換に出すモンスター")
+                Text("交換に出すメイティ")
                     .font(.headline)
 
                 Image(uiImage: uiImage)
@@ -164,7 +164,7 @@ private struct ExchangeIdleSection: View {
             }
             .buttonStyle(.bordered)
 
-            Button("モンスターを選び直す") {
+            Button("メイティを選び直す") {
                 onBack()
             }
             .font(.caption)
@@ -243,7 +243,7 @@ private struct ExchangeCompletedSection: View {
                     .foregroundStyle(.secondary)
             }
 
-            Text("新しいモンスターを手に入れた！")
+            Text("新しいメイティを手に入れた！")
                 .font(.body)
 
             Button("閉じる") {

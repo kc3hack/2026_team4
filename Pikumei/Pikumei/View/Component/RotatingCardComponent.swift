@@ -82,7 +82,7 @@ struct RotatingCardComponent: View {
             VStack(spacing: 16) {
                 Text("???")
                     .font(.system(size: 48, weight: .bold))
-                Text("モンスター情報")
+                Text("メイティ情報")
                     .font(.title3)
                     .fontWeight(.semibold)
                 Text("タップして表へ戻す")

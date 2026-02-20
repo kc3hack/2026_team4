@@ -68,7 +68,7 @@ struct MonsterDetailView: View {
             }
             .padding()
         }
-        .navigationTitle(monster.name ?? "モンスター詳細")
+        .navigationTitle(monster.name ?? "メイティ詳細")
         .navigationBarTitleDisplayMode(.inline)
     }
 
