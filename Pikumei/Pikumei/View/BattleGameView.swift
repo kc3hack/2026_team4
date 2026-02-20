@@ -37,9 +37,9 @@ struct BattleGameView: View {
             Group {
                 switch viewModel.phase {
                 case .preparing:
-                    preparingView
+                    BattlePreparingComponent()
                 case .battling:
-                    battlingView
+                    BattlingComponent(viewModel: viewModel)
                 case .won:
                     VictoryComponent(battleLog: viewModel.battleLog) {
                         viewModel.cleanup()
@@ -51,7 +51,10 @@ struct BattleGameView: View {
                         onFinish()
                     }
                 case .connectionError:
-                    connectionErrorView
+                    ConnectionErrorComponent(battleLog: viewModel.battleLog) {
+                        viewModel.cleanup()
+                        onFinish()
+                    }
                 }
             }
 
@@ -68,137 +71,5 @@ struct BattleGameView: View {
         .onDisappear {
             viewModel.cleanup()
         }
-    }
-
-    // MARK: - 準備中
-
-    private var preparingView: some View {
-        VStack(spacing: 16) {
-            ProgressView()
-            Text("バトル準備中...")
-                .font(.custom("DotGothic16-Regular", size: 17))
-        }
-    }
-
-    // MARK: - バトル中
-
-    private var battlingView: some View {
-        VStack(spacing: 15) {
-            // 相手側 — 右寄せ・小さめ（遠近感）
-            HStack {
-                Spacer()
-                BattleMonsterHUDComponent(
-                    imageData: viewModel.opponentThumbnail,
-                    name: viewModel.opponentName ?? viewModel.opponentLabel?.displayName ?? "",
-                    currentHp: viewModel.opponentHp,
-                    maxHp: viewModel.opponentStats?.hp ?? 1,
-                    type: viewModel.opponentLabel,
-                    size: 120
-                )
-                .overlay { DamageLabelView(damage: viewModel.damageToOpponent) }
-            }
-
-            // 自分側 — 左寄せ・大きめ（手前）
-            HStack {
-                BattleMonsterHUDComponent(
-                    imageData: viewModel.myThumbnail,
-                    name: viewModel.myName ?? viewModel.myLabel?.displayName ?? "",
-                    currentHp: viewModel.myHp,
-                    maxHp: viewModel.myStats?.hp ?? 1,
-                    type: viewModel.myLabel,
-                    size: 160
-                )
-                .overlay { DamageLabelView(damage: viewModel.damageToMe) }
-                Spacer()
-            }
-
-            // 攻撃ボタン
-            HStack(spacing: 8) {
-                ForEach(viewModel.myAttacks.indices, id: \.self) { i in
-                    let pp = viewModel.attackPP.indices.contains(i) ? viewModel.attackPP[i] : nil
-                    let ppEmpty = pp != nil && pp! <= 0
-                    BattleAttackButtonComponent(
-                        attack: viewModel.myAttacks[i],
-                        effectiveness: viewModel.attackEffectiveness(at: i),
-                        pp: pp,
-                        isDisabled: !viewModel.isMyTurn || ppEmpty
-                    ) {
-                        viewModel.attack(index: i)
-                    }
-                }
-            }
-
-            if !viewModel.isMyTurn {
-                Text("あいてのターン...")
-                    .font(.custom("DotGothic16-Regular", size: 12))
-                    .foregroundStyle(.secondary)
-            }
-        }
-        .padding()
-    }
-
-    // MARK: - ログ
-
-    private var logSection: some View {
-        VStack(alignment: .leading, spacing: 4) {
-            Text("ログ")
-                .font(.custom("DotGothic16-Regular", size: 12))
-                .foregroundStyle(.secondary)
-
-            ScrollView {
-                LazyVStack(alignment: .leading, spacing: 2) {
-                    ForEach(viewModel.battleLog.indices, id: \.self) { i in
-                        Text(viewModel.battleLog[i])
-                            .font(.custom("DotGothic16-Regular", size: 12))
-                    }
-                }
-            }
-            .frame(maxHeight: 120)
-        }
-    }
-
-    // MARK: - 通信エラー画面
-
-    private var connectionErrorView: some View {
-        VStack(spacing: 24) {
-            Image(systemName: "wifi.exclamationmark")
-                .font(.system(size: 64))
-                .foregroundStyle(.orange)
-
-            Text("通信エラー")
-                .font(.custom("RocknRollOne-Regular", size: 34))
-                .bold()
-
-            logSection
-
-            Button("戻る") {
-                viewModel.cleanup()
-                onFinish()
-            }
-            .buttonStyle(.bordered)
-        }
-        .padding()
-    }
-
-}
-
-// MARK: - ダメージ表示
-
-/// HUD 上にフローティング表示するダメージラベル
-private struct DamageLabelView: View {
-    let damage: Int?
-
-    var body: some View {
-        Group {
-            if let damage {
-                Text(damage == 0 ? "MISS" : "-\(damage)")
-                    .font(.custom("DotGothic16-Regular", size: 28))
-                    .bold()
-                    .foregroundStyle(damage == 0 ? .white : .red)
-                    .shadow(color: .black, radius: 2, x: 1, y: 1)
-                    .transition(.move(edge: .bottom).combined(with: .opacity))
-            }
-        }
-        .animation(.easeOut(duration: 0.15), value: damage)
     }
 }
