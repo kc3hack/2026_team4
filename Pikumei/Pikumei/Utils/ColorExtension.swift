@@ -5,14 +5,7 @@
 //  Created by hayata  on 2026/02/19.
 //
 
-import SwiftUI
-
-extension Color {
-    static let FireTypeRed = Color("fireType-Red")
-    static let WaterTypeBlue = Color("waterType-Blue")
-    static let LeafTypeGreen = Color("leafType-Green")
-    static let GhostTypePurple = Color("ghostType-Purple")
-    static let HumanTypeGray = Color("humanType-Gray")
-    static let FishTypeBlue = Color("fishType-Blue")
-    static let BirdTypeYellow = Color("birdType-Yellow")
-}
+// カラーアセットから Xcode が自動生成するため、手動での定義は不要
+// 利用例:
+//   Color.fireType     — 濃い色（アイコン・テキスト用）
+//   Color.fireTypeBg   — パステル（カード背景用）

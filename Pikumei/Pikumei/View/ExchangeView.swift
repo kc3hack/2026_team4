@@ -49,6 +49,12 @@ struct ExchangeView: View {
                 }
             }
             .padding()
+            .background(
+                Image("back_gray")
+                    .resizable()
+                    .scaledToFill()
+                    .ignoresSafeArea()
+            )
             .navigationTitle("こうかん")
             .onAppear {
                 viewModel.setModelContext(modelContext)

@@ -11,24 +11,49 @@ struct BattleGameView: View {
     @StateObject private var viewModel: BattleViewModel
     var onFinish: () -> Void
 
+    // バトル背景をランダムで選択（画面生成時に固定）
+    private let backgroundImage: String
+
+    private static let battleBackgrounds = [
+        "back_battle_mori",
+        "back_battle_sabaku",
+        "back_battle_sougen",
+    ]
+
     init(battleId: UUID, onFinish: @escaping () -> Void) {
         _viewModel = StateObject(wrappedValue: BattleViewModel(battleId: battleId))
         self.onFinish = onFinish
+        self.backgroundImage = Self.battleBackgrounds.randomElement()!
     }
 
     var body: some View {
-        Group {
-            switch viewModel.phase {
-            case .preparing:
-                preparingView
-            case .battling:
-                battlingView
-            case .won:
-                resultView(won: true)
-            case .lost:
-                resultView(won: false)
-            case .connectionError:
-                connectionErrorView
+        ZStack {
+            // バトル背景
+            Image(backgroundImage)
+                .resizable()
+                .scaledToFill()
+                .ignoresSafeArea()
+
+            Group {
+                switch viewModel.phase {
+                case .preparing:
+                    preparingView
+                case .battling:
+                    battlingView
+                case .won:
+                    resultView(won: true)
+                case .lost:
+                    resultView(won: false)
+                case .connectionError:
+                    connectionErrorView
+                }
+            }
+
+            // 攻撃エフェクト
+            if let gif = viewModel.attackEffectGif {
+                GifImageComponent(name: gif, repeatCount: 1, speed: 3.0)
+                    .frame(width: 80, height: 80)
+                    .allowsHitTesting(false)
             }
         }
         .task {
@@ -52,92 +77,48 @@ struct BattleGameView: View {
     // MARK: - バトル中
 
     private var battlingView: some View {
-        VStack(spacing: 20) {
-            // 相手側
-            HStack(spacing: 12) {
-                monsterThumbnail(data: viewModel.opponentThumbnail)
-
-                VStack(alignment: .leading, spacing: 8) {
-                    Text("あいて")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                    Text(viewModel.opponentName ?? viewModel.opponentLabel?.displayName ?? "")
-                        .font(.title3)
-                        .bold()
-                    hpBar(
-                        current: viewModel.opponentHp,
-                        maxHp: viewModel.opponentStats?.hp ?? 1,
-                        color: .red
-                    )
-                }
+        VStack(spacing: 15) {
+            // 相手側 — 右寄せ・小さめ（遠近感）
+            HStack {
+                Spacer()
+                BattleMonsterHUDComponent(
+                    imageData: viewModel.opponentThumbnail,
+                    name: viewModel.opponentName ?? viewModel.opponentLabel?.displayName ?? "",
+                    currentHp: viewModel.opponentHp,
+                    maxHp: viewModel.opponentStats?.hp ?? 1,
+                    type: viewModel.opponentLabel,
+                    size: 80
+                )
+                .overlay { DamageLabelView(damage: viewModel.damageToOpponent) }
             }
-            .frame(maxWidth: .infinity, alignment: .leading)
 
-            Divider()
-
-            // 自分側
-            HStack(spacing: 12) {
-                monsterThumbnail(data: viewModel.myThumbnail)
-
-                VStack(alignment: .leading, spacing: 8) {
-                    Text("じぶん")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                    Text(viewModel.myName ?? viewModel.myLabel?.displayName ?? "")
-                        .font(.title3)
-                        .bold()
-                    hpBar(
-                        current: viewModel.myHp,
-                        maxHp: viewModel.myStats?.hp ?? 1,
-                        color: .green
-                    )
-                }
+            // 自分側 — 左寄せ・大きめ（手前）
+            HStack {
+                BattleMonsterHUDComponent(
+                    imageData: viewModel.myThumbnail,
+                    name: viewModel.myName ?? viewModel.myLabel?.displayName ?? "",
+                    currentHp: viewModel.myHp,
+                    maxHp: viewModel.myStats?.hp ?? 1,
+                    type: viewModel.myLabel,
+                    size: 110
+                )
+                .overlay { DamageLabelView(damage: viewModel.damageToMe) }
+                Spacer()
             }
-            .frame(maxWidth: .infinity, alignment: .leading)
 
             // 攻撃ボタン
             HStack(spacing: 8) {
                 ForEach(viewModel.myAttacks.indices, id: \.self) { i in
-                    let atk = viewModel.myAttacks[i]
                     let pp = viewModel.attackPP.indices.contains(i) ? viewModel.attackPP[i] : nil
                     let ppEmpty = pp != nil && pp! <= 0
-                    Button {
+                    BattleAttackButtonComponent(
+                        attack: viewModel.myAttacks[i],
+                        effectiveness: viewModel.attackEffectiveness(at: i),
+                        pp: pp,
+                        isDisabled: !viewModel.isMyTurn || ppEmpty
+                    ) {
                         viewModel.attack(index: i)
-                    } label: {
-                        VStack(spacing: 2) {
-                            Text(atk.name)
-                                .font(.caption)
-                                .bold()
-                            if let eff = viewModel.attackEffectiveness(at: i) {
-                                // 相性表示
-                                if eff > 1.0 {
-                                    Text("▲有利")
-                                        .font(.caption2)
-                                        .foregroundStyle(.green)
-                                } else if eff < 1.0 {
-                                    Text("▼不利")
-                                        .font(.caption2)
-                                        .foregroundStyle(.red)
-                                }
-                                // 命中率表示
-                                if let acc = viewModel.attackAccuracy(at: i) {
-                                    Text("\(acc)%")
-                                        .font(.caption2)
-                                        .foregroundStyle(.secondary)
-                                }
-                            }
-                            // PP 表示
-                            if let pp {
-                                Text("\(pp)/2")
-                                    .font(.caption2)
-                                    .foregroundStyle(pp > 0 ? .orange : .gray)
-                            }
-                        }
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 8)
                     }
-                    .buttonStyle(.bordered)
-                    .disabled(!viewModel.isMyTurn || ppEmpty)
                 }
             }
 
@@ -146,56 +127,8 @@ struct BattleGameView: View {
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
-
-            // バトルログ
-            logSection
         }
         .padding()
-    }
-
-    // MARK: - HP バー
-
-    private func hpBar(current: Int, maxHp: Int, color: Color) -> some View {
-        let ratio = maxHp > 0 ? Double(current) / Double(maxHp) : 0
-
-        return VStack(alignment: .leading, spacing: 4) {
-            GeometryReader { geo in
-                ZStack(alignment: .leading) {
-                    RoundedRectangle(cornerRadius: 4)
-                        .fill(Color.gray.opacity(0.3))
-                        .frame(height: 16)
-
-                    RoundedRectangle(cornerRadius: 4)
-                        .fill(color)
-                        .frame(width: geo.size.width * Swift.max(ratio, 0), height: 16)
-                        .animation(.easeInOut(duration: 0.3), value: current)
-                }
-            }
-            .frame(height: 16)
-
-            Text("HP \(Swift.max(current, 0)) / \(maxHp)")
-                .font(.caption)
-                .foregroundStyle(.secondary)
-        }
-    }
-
-    // MARK: - モンスターサムネイル
-
-    private func monsterThumbnail(data: Data?) -> some View {
-        Group {
-            if let data, let uiImage = UIImage(data: data) {
-                Image(uiImage: uiImage)
-                    .resizable()
-                    .scaledToFill()
-            } else {
-                Image(systemName: "questionmark.circle")
-                    .resizable()
-                    .scaledToFit()
-                    .foregroundStyle(.secondary)
-            }
-        }
-        .frame(width: 60, height: 60)
-        .clipShape(RoundedRectangle(cornerRadius: 8))
     }
 
     // MARK: - ログ
@@ -263,5 +196,26 @@ struct BattleGameView: View {
             .buttonStyle(.bordered)
         }
         .padding()
+    }
+}
+
+// MARK: - ダメージ表示
+
+/// HUD 上にフローティング表示するダメージラベル
+private struct DamageLabelView: View {
+    let damage: Int?
+
+    var body: some View {
+        Group {
+            if let damage {
+                Text(damage == 0 ? "MISS" : "-\(damage)")
+                    .font(.custom("DotGothic16-Regular", size: 28))
+                    .bold()
+                    .foregroundStyle(damage == 0 ? .white : .red)
+                    .shadow(color: .black, radius: 2, x: 1, y: 1)
+                    .transition(.move(edge: .bottom).combined(with: .opacity))
+            }
+        }
+        .animation(.easeOut(duration: 0.15), value: damage)
     }
 }

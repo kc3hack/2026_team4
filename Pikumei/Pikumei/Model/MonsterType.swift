@@ -3,7 +3,7 @@
 //  Pikumei
 //
 
-import Foundation
+import SwiftUI
 
 enum MonsterType: String, Codable, CaseIterable {
     case fire
@@ -16,6 +16,47 @@ enum MonsterType: String, Codable, CaseIterable {
 }
 
 extension MonsterType {
+    /// タイプに対応するアセット画像名
+    var imageName: String {
+        rawValue
+    }
+
+    /// タイプに対応するカラーアセット名（濃い色）
+    var colorName: String {
+        switch self {
+        case .fire:  return "FireType"
+        case .water: return "WaterType"
+        case .leaf:  return "LeafType"
+        case .ghost: return "GhostType"
+        case .human: return "HumanType"
+        case .fish:  return "FishType"
+        case .bird:  return "BirdType"
+        }
+    }
+
+    /// タイプに対応する背景カラーアセット名（パステル）
+    var bgColorName: String {
+        switch self {
+        case .fire:  return "FireType-Bg"
+        case .water: return "WaterType-Bg"
+        case .leaf:  return "LeafType-Bg"
+        case .ghost: return "GhostType-Bg"
+        case .human: return "HumanType-Bg"
+        case .fish:  return "FishType-Bg"
+        case .bird:  return "BirdType-Bg"
+        }
+    }
+
+    /// SwiftUI用のカラー（濃い色）
+    var color: Color {
+        Color(colorName)
+    }
+
+    /// SwiftUI用の背景カラー（パステル）
+    var bgColor: Color {
+        Color(bgColorName)
+    }
+
     /// 日本語の表示名
     var displayName: String {
         switch self {
