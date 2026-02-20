@@ -83,10 +83,10 @@ struct RotatingCardComponent: View {
                 Text("???")
                     .font(.system(size: 48, weight: .bold))
                 Text("モンスター情報")
-                    .font(.title3)
+                    .font(.custom("RocknRollOne-Regular", size: 20))
                     .fontWeight(.semibold)
                 Text("タップして表へ戻す")
-                    .font(.caption)
+                    .font(.custom("DotGothic16-Regular", size: 12))
                     .foregroundStyle(.white.opacity(0.7))
             }
             .foregroundStyle(.white)
