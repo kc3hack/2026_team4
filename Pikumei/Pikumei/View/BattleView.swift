@@ -40,7 +40,7 @@ struct BattleView: View {
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .background(alignment: .top) {
                 if !matchingVM.phase.isBattling {
-                    Image("bg_fish")
+                    Image("back_splash")
                         .resizable()
                         .scaledToFill()
                         .ignoresSafeArea()
