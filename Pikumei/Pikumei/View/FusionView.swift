@@ -142,7 +142,7 @@ struct FusionView: View {
                     }
                     Image(systemName: "plus")
                         .font(.title)
-                        .foregroundStyle(.white)
+                        .foregroundStyle(.black)
                     if let second = vm.secondMonster {
                         MonsterCardComponent(
                             monster: second,
