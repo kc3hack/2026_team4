@@ -41,9 +41,7 @@ struct FusionView: View {
                 resultView(monster: monster)
             }
         }
-        .navigationTitle("合体")
-        .navigationBarTitleDisplayMode(.inline)
-        .navigationBarBackButtonHidden(showCustomBack)
+        .navigationBarBackButtonHidden(hideDefaultBack)
         .toolbar {
             if showCustomBack {
                 ToolbarItem(placement: .navigationBarLeading) {
@@ -58,8 +56,19 @@ struct FusionView: View {
                 }
             }
         }
+        .toolbar(.hidden, for: .tabBar)
         .onAppear {
             vm.setModelContext(modelContext)
+        }
+    }
+
+    /// selectSecond / confirm では独自の「戻る」ボタン、result では戻るボタン自体を非表示
+    private var hideDefaultBack: Bool {
+        switch vm.phase {
+        case .selectSecond, .confirm, .result:
+            return true
+        default:
+            return false
         }
     }
 
@@ -168,7 +177,7 @@ struct FusionView: View {
                     .foregroundStyle(.white.opacity(0.7))
 
                 BlueButtonComponent(title: "合体する") {
-                    vm.fuse()
+                    Task { await vm.fuse() }
                 }
             }
             .padding()
@@ -178,37 +187,35 @@ struct FusionView: View {
     // MARK: - 合体結果
 
     private func resultView(monster: Monster) -> some View {
-        VStack(spacing: 20) {
-            Spacer()
+        ScrollView {
+            VStack(spacing: 20) {
+                Text("合体成功！")
+                    .font(.custom("RocknRollOne-Regular", size: 24))
+                    .foregroundStyle(.black)
+                    .padding(.top, 20)
 
-            Text("合体成功！")
-                .font(.custom("RocknRollOne-Regular", size: 24))
-                .foregroundStyle(.white)
+                if let uiImage = monster.uiImage {
+                    Image(uiImage: uiImage)
+                        .resizable()
+                        .scaledToFit()
+                        .frame(maxWidth: 250, maxHeight: 250)
+                        .clipShape(RoundedRectangle(cornerRadius: 16))
+                        .shadow(color: .white.opacity(0.3), radius: 12)
+                }
 
-            if let uiImage = monster.uiImage {
-                Image(uiImage: uiImage)
-                    .resizable()
-                    .scaledToFit()
-                    .frame(maxWidth: 250, maxHeight: 250)
-                    .clipShape(RoundedRectangle(cornerRadius: 16))
-                    .shadow(color: .white.opacity(0.3), radius: 12)
+                MonsterCardComponent(
+                    monster: monster,
+                    stats: monster.battleStats
+                )
+                .frame(maxWidth: 200)
+
+                BlueButtonComponent(title: "とじる") {
+                    vm.reset()
+                    dismiss()
+                }
             }
-
-            MonsterCardComponent(
-                monster: monster,
-                stats: monster.battleStats
-            )
-            .frame(maxWidth: 200)
-
-            Spacer()
-
-            BlueButtonComponent(title: "とじる") {
-                dismiss()
-            }
-
-            Spacer(minLength: 40)
+            .padding()
         }
-        .padding()
     }
 
     // MARK: - ヘルパー

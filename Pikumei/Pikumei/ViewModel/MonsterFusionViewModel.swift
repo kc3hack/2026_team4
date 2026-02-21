@@ -13,6 +13,8 @@ import UIKit
 @Observable
 class MonsterFusionViewModel {
 
+    private let syncService = MonsterSyncService()
+
     enum FusionPhase {
         case selectFirst        // 1体目（自分のモンスター）を選択
         case selectSecond       // 2体目（交換産モンスター）を選択
@@ -33,24 +35,24 @@ class MonsterFusionViewModel {
 
     // MARK: - 合体可能なモンスターの取得
 
-    /// 自分のモンスター（交換産でも合体済みでもない）
+    /// 自分のモンスター（交換産でないもの、合体済み含む）
     func fetchOwnMonsters() -> [Monster] {
         guard let context = modelContext else { return [] }
         let descriptor = FetchDescriptor<Monster>(
             sortBy: [SortDescriptor(\.createdAt, order: .reverse)]
         )
         let all = (try? context.fetch(descriptor)) ?? []
-        return all.filter { !$0.isExchanged && !$0.isFused }
+        return all.filter { !$0.isExchanged }
     }
 
-    /// 交換で手に入れたモンスター（合体済みでない）
+    /// 交換で手に入れたモンスター（合体済み含む）
     func fetchExchangedMonsters() -> [Monster] {
         guard let context = modelContext else { return [] }
         let descriptor = FetchDescriptor<Monster>(
             sortBy: [SortDescriptor(\.createdAt, order: .reverse)]
         )
         let all = (try? context.fetch(descriptor)) ?? []
-        return all.filter { $0.isExchanged && !$0.isFused }
+        return all.filter { $0.isExchanged }
     }
 
     // MARK: - 選択
@@ -82,7 +84,7 @@ class MonsterFusionViewModel {
 
     // MARK: - 合体実行
 
-    func fuse() {
+    func fuse() async {
         guard let first = firstMonster,
               let second = secondMonster,
               let context = modelContext else { return }
@@ -91,9 +93,8 @@ class MonsterFusionViewModel {
         let types = [first.classificationLabel, second.classificationLabel].compactMap { $0 }
         let fusedType = types.randomElement()
 
-        // ステータス: 各値の高い方 + ボーナス
-        let stats = calculateFusedStats()
-        guard let stats else { return }
+        // previewStats は confirm フェーズで計算済み
+        guard let stats = previewStats else { return }
 
         // 画像合成: 左右半分ずつ
         let fusedImageData: Data
@@ -106,6 +107,11 @@ class MonsterFusionViewModel {
             fusedImageData = first.imageData
         }
 
+        // 両方の名前を結合
+        let firstName = first.name ?? "？？？"
+        let secondName = second.name ?? "？？？"
+        let fusedName = "\(firstName)\(secondName)"
+
         let fusedMonster = Monster(
             imageData: fusedImageData,
             classificationLabel: fusedType,
@@ -113,6 +119,7 @@ class MonsterFusionViewModel {
                 first.classificationConfidence ?? 0,
                 second.classificationConfidence ?? 0
             ),
+            name: fusedName,
             isFused: true,
             fusedHp: stats.hp,
             fusedAttack: stats.attack,
@@ -124,7 +131,19 @@ class MonsterFusionViewModel {
         context.delete(first)
         context.delete(second)
         context.insert(fusedMonster)
-        try? context.save()
+        do {
+            try context.save()
+        } catch {
+            print("合体モンスターの保存に失敗: \(error)")
+        }
+
+        // Supabase にアップロードして supabaseId を付与（バトル参加に必要）
+        do {
+            try await syncService.upload(monster: fusedMonster)
+            try context.save()
+        } catch {
+            print("合体モンスターのアップロードに失敗: \(error)")
+        }
 
         firstMonster = nil
         secondMonster = nil

@@ -38,12 +38,9 @@ class ExchangeViewModel: ObservableObject {
         modelContext = context
     }
 
-    /// モンスターからバトルステータスを生成する
+    /// モンスターからバトルステータスを生成する（合体モンスターは合体ステータスを返す）
     func stats(for monster: Monster) -> BattleStats {
-        BattleStatsGenerator.generate(
-            label: monster.classificationLabel,
-            confidence: monster.classificationConfidence
-        )
+        monster.battleStats
     }
 
     // MARK: - モンスター選択
@@ -190,7 +187,7 @@ class ExchangeViewModel: ObservableObject {
         ) { [weak self] action in
             print("[Exchange] Realtime UPDATE 受信: \(action.record)")
             if let status = action.record["status"]?.stringValue,
-               status == "matched" {
+               status == "matched" || status == "completed" {
                 print("[Exchange] status=matched 検出 → 交換処理開始")
                 Task { @MainActor [weak self] in
                     guard let self, !self.isCompleting, case .waiting = self.phase else { return }
@@ -218,7 +215,7 @@ class ExchangeViewModel: ObservableObject {
                 .execute()
                 .value
 
-            if current.status == "matched" {
+            if current.status == "matched" || current.status == "completed" {
                 // Realtime コールバックで既に処理開始されている場合はスキップ
                 guard !isCompleting, case .waiting = phase else { return }
                 print("[Exchange] 購読前にマッチ済み → 交換処理開始")
@@ -272,7 +269,7 @@ class ExchangeViewModel: ObservableObject {
             // 相手のモンスター情報を取得
             let opponentMonster: MonsterLabelRow = try await client
                 .from("monsters")
-                .select("id, classification_label, classification_confidence, name, thumbnail")
+                .select("id, classification_label, classification_confidence, name, thumbnail, fused_hp, fused_attack, fused_special_attack, fused_special_defense")
                 .eq("id", value: opponentMonsterId.uuidString)
                 .single()
                 .execute()
@@ -306,13 +303,20 @@ class ExchangeViewModel: ObservableObject {
                 classificationConfidence: opponentMonster.classificationConfidence,
                 supabaseId: opponentMonster.id,
                 name: opponentMonster.name,
-                isExchanged: true
+                isExchanged: true,
+                isFused: opponentMonster.isFused,
+                fusedHp: opponentMonster.fusedHp,
+                fusedAttack: opponentMonster.fusedAttack,
+                fusedSpecialAttack: opponentMonster.fusedSpecialAttack,
+                fusedSpecialDefense: opponentMonster.fusedSpecialDefense
             )
             // DB 側を先に確定してからローカルデータを変更する（DB 更新失敗時にローカルが不整合にならないようにする）
+            // status=matched の場合のみ更新（相手が先に completed にしていても問題ない）
             try await client
                 .from("exchanges")
                 .update(["status": "completed"])
                 .eq("id", value: exchangeId.uuidString)
+                .eq("status", value: "matched")
                 .execute()
 
             context.insert(newMonster)
