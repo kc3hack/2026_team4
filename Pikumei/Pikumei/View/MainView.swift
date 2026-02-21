@@ -30,6 +30,7 @@ struct MainView: View {
                     Label("一覧", systemImage: "list.bullet")
                 }
         }
+        .tint(.pikumeiNavy)
     }
 }
 
