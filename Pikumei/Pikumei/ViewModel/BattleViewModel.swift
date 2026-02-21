@@ -27,7 +27,8 @@ class BattleViewModel: ObservableObject {
     @Published var battleLog: [String] = []
     @Published var myAttacks: [BattleAttack] = []
     @Published var attackPP: [Int?] = []  // nil = 無制限, 数値 = 残り回数
-    @Published var attackEffectGif: String?  // 攻撃エフェクトのGIF名
+    @Published var effectOnOpponent: String?  // 相手モンスター上に表示するエフェクト
+    @Published var effectOnMe: String?        // 自分モンスター上に表示するエフェクト
     @Published var damageToOpponent: Int?  // 相手へのダメージ（0 = MISS）
     @Published var damageToMe: Int?  // 自分へのダメージ（0 = MISS）
 
@@ -161,17 +162,28 @@ class BattleViewModel: ObservableObject {
     }
 
     /// 攻撃エフェクトを表示して再生完了後に消す
-    private let effectSpeed: Double = 1.8
+    private let effectSpeed: Double = 1.5
 
-    func showAttackEffect(attack: BattleAttack) {
+    enum AttackTarget { case opponent, me }
+
+    func showAttackEffect(attack: BattleAttack, target: AttackTarget) {
         let gifName = attack.effectGif
-        attackEffectGif = gifName
-        // キャッシュから実際の再生時間を取得し、速度倍率で割った時間後に消す
         let originalDuration = GifCacheStore.shared.frames(for: gifName)?.duration ?? 1.0
         let displayDuration = originalDuration / effectSpeed
-        Task {
-            try? await Task.sleep(for: .seconds(displayDuration))
-            attackEffectGif = nil
+
+        switch target {
+        case .opponent:
+            effectOnOpponent = gifName
+            Task {
+                try? await Task.sleep(for: .seconds(displayDuration))
+                effectOnOpponent = nil
+            }
+        case .me:
+            effectOnMe = gifName
+            Task {
+                try? await Task.sleep(for: .seconds(displayDuration))
+                effectOnMe = nil
+            }
         }
     }
 
@@ -187,7 +199,7 @@ class BattleViewModel: ObservableObject {
 
         let chosen = myAttacks[index]
         SoundPlayerComponent.shared.play(chosen.sound)
-        showAttackEffect(attack: chosen)
+        showAttackEffect(attack: chosen, target: .opponent)
         let multiplier = chosen.type.effectiveness(against: opponentLabel)
 
         // PP 消費
@@ -281,14 +293,18 @@ class BattleViewModel: ObservableObject {
 
         // subscribe 完了を待ってから phase を遷移させる
         try await ch.subscribeWithError()
+
+        // 相手が subscribe 完了するまで少し待つ（レースコンディション対策）
+        try await Task.sleep(for: .seconds(2))
+
         startReadyPing()
     }
 
-    /// ready イベントを定期送信（相手の ready を受信するまで、10秒でタイムアウト）
+    /// ready イベントを定期送信（相手の ready を受信するまで、20秒でタイムアウト）
     private func startReadyPing() {
         readyPingTask = Task {
             var elapsed = 0
-            while !opponentReady, elapsed < 10 {
+            while !opponentReady, elapsed < 20 {
                 do {
                     try await channel?.broadcast(event: "ready", message: ReadyMessage(type: "ready"))
                     try await Task.sleep(for: .seconds(1))
@@ -314,9 +330,12 @@ class BattleViewModel: ObservableObject {
         readyPingTask?.cancel()
         readyPingTask = nil
 
-        // 相手に ready を返す（相手がまだ受信していない可能性があるため）
+        // 相手に ready を複数回返す（相手が受信できていない可能性があるため）
         Task {
-            try? await channel?.broadcast(event: "ready", message: ReadyMessage(type: "ready"))
+            for _ in 0..<3 {
+                try? await channel?.broadcast(event: "ready", message: ReadyMessage(type: "ready"))
+                try? await Task.sleep(for: .milliseconds(200))
+            }
         }
 
         isMyTurn = isPlayer1
@@ -334,7 +353,7 @@ class BattleViewModel: ObservableObject {
         // 相手の技の効果音・エフェクトを再生
         SoundPlayerComponent.shared.play(opponentAttack?.sound ?? .panch)
         if let opponentAttack {
-            showAttackEffect(attack: opponentAttack)
+            showAttackEffect(attack: opponentAttack, target: .me)
         }
 
         if hit {

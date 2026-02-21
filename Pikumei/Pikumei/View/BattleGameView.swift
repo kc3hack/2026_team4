@@ -58,12 +58,6 @@ struct BattleGameView: View {
                 }
             }
 
-            // 攻撃エフェクト
-            if let gif = viewModel.attackEffectGif {
-                GifImageComponent(name: gif, repeatCount: 1, speed: 3.0)
-                    .frame(width: 80, height: 80)
-                    .allowsHitTesting(false)
-            }
         }
         .task {
             await viewModel.prepare()

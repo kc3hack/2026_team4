@@ -23,6 +23,13 @@ struct BattlingComponent: View {
                     size: 120
                 )
                 .overlay { DamageLabelComponent(damage: viewModel.damageToOpponent) }
+                .overlay {
+                    if let gif = viewModel.effectOnOpponent {
+                        GifImageComponent(name: gif, repeatCount: 1, speed: 1.5)
+                            .frame(width: 120, height: 120)
+                            .allowsHitTesting(false)
+                    }
+                }
             }
 
             // 自分側 — 左寄せ・大きめ（手前）
@@ -36,6 +43,13 @@ struct BattlingComponent: View {
                     size: 160
                 )
                 .overlay { DamageLabelComponent(damage: viewModel.damageToMe) }
+                .overlay {
+                    if let gif = viewModel.effectOnMe {
+                        GifImageComponent(name: gif, repeatCount: 1, speed: 1.5)
+                            .frame(width: 160, height: 160)
+                            .allowsHitTesting(false)
+                    }
+                }
                 Spacer()
             }
 
