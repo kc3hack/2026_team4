@@ -9,7 +9,7 @@ import SwiftData
 /// モンスター選択画面
 struct BattleMonsterSelectionView: View {
     @Environment(\.dismiss) private var dismiss
-    @StateObject var selectionVM: BattleMonsterSelectionViewModel
+    @ObservedObject var selectionVM: BattleMonsterSelectionViewModel
     @Query(sort: \Monster.createdAt, order: .reverse) private var monsters: [Monster]
     private let monsterListVM = MonsterListViewModel()
     
