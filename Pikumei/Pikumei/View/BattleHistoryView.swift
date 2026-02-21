@@ -74,7 +74,10 @@ struct BattleHistoryView: View {
             }
         }
         .padding()
-        .background(RoundedRectangle(cornerRadius: 12).fill(.white.opacity(0.85)))
+        .background(
+            RoundedRectangle(cornerRadius: 12)
+                .fill(.white.opacity(0.85))
+        )
     }
     
     // MARK: - 戦績サマリー
@@ -87,7 +90,10 @@ struct BattleHistoryView: View {
             SummaryItem(title: "勝率", value: "\(Int(summary.winRate * 100))%", color: .orange)
         }
         .padding()
-        .background(RoundedRectangle(cornerRadius: 12).fill(.white.opacity(0.85)))
+        .background(
+            RoundedRectangle(cornerRadius: 12)
+                .fill(.white.opacity(0.85))
+        )
     }
     
     // MARK: - 勝率推移グラフ
@@ -99,11 +105,18 @@ struct BattleHistoryView: View {
                 .foregroundStyle(Color.pikumeiNavy)
             
             Chart(trend) { point in
-                LineMark(x: .value("バトル", point.id), y: .value("勝率", point.winRate * 100))
-                    .foregroundStyle(.orange)
-                PointMark(x: .value("バトル", point.id), y: .value("勝率", point.winRate * 100))
-                    .foregroundStyle(.orange)
-                    .symbolSize(30)
+                LineMark(
+                    x: .value("バトル", point.id),
+                    y: .value("勝率", point.winRate * 100)
+                )
+                .foregroundStyle(.orange)
+                
+                PointMark(
+                    x: .value("バトル", point.id),
+                    y: .value("勝率", point.winRate * 100)
+                )
+                .foregroundStyle(.orange)
+                .symbolSize(30)
             }
             .frame(height: 180)
             .chartYScale(domain: 0...100)
@@ -112,14 +125,18 @@ struct BattleHistoryView: View {
                     AxisGridLine()
                     AxisValueLabel {
                         if let v = value.as(Int.self) {
-                            Text("\(v)%").font(.custom("DotGothic16-Regular", size: 10))
+                            Text("\(v)%")
+                                .font(.custom("DotGothic16-Regular", size: 10))
                         }
                     }
                 }
             }
         }
         .padding()
-        .background(RoundedRectangle(cornerRadius: 12).fill(.white.opacity(0.85)))
+        .background(
+            RoundedRectangle(cornerRadius: 12)
+                .fill(.white.opacity(0.85))
+        )
     }
     
     // MARK: - タイプ別戦績グラフ
@@ -131,14 +148,23 @@ struct BattleHistoryView: View {
                 .foregroundStyle(Color.pikumeiNavy)
             
             Chart(stats) { stat in
-                BarMark(x: .value("タイプ", stat.opponentType.displayName), y: .value("回数", stat.count))
-                    .foregroundStyle(stat.isWin ? .green : .red)
+                BarMark(
+                    x: .value("タイプ", stat.opponentType.displayName),
+                    y: .value("回数", stat.count)
+                )
+                .foregroundStyle(stat.isWin ? .green : .red)
             }
             .frame(height: 180)
-            .chartForegroundStyleScale(["勝利": .green, "敗北": .red])
+            .chartForegroundStyleScale([
+                "勝利": .green,
+                "敗北": .red
+            ])
         }
         .padding()
-        .background(RoundedRectangle(cornerRadius: 12).fill(.white.opacity(0.85)))
+        .background(
+            RoundedRectangle(cornerRadius: 12)
+                .fill(.white.opacity(0.85))
+        )
     }
 }
 
