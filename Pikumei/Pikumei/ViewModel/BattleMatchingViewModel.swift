@@ -15,11 +15,14 @@ class BattleMatchingViewModel: ObservableObject {
         case idle           // 初期状態
         case waiting        // バトル作成済み、相手待ち
         case battling       // マッチ成立 → バトル中
+        case soloBattling   // ソロバトル中（CPU対戦）
         case error(String)  // エラー
 
         var isBattling: Bool {
-            if case .battling = self { return true }
-            return false
+            switch self {
+            case .battling, .soloBattling: return true
+            default: return false
+            }
         }
     }
 
