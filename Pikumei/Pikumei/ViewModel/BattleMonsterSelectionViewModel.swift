@@ -26,30 +26,6 @@ class BattleMonsterSelectionViewModel: ObservableObject {
         print("[Monster Selection] updated")
     }
     
-    /// 自分のモンスターからランダムに選択する
-    public func setRandomMonster() async throws {
-        guard let userId = try? await client.auth.session.user.id else { // ユーザーID
-            throw BattleMonsterSelectionViewModelError.failedFetchUserId
-        }
-        
-        guard let monsters: [MonsterIdRow] = try? await client // モンスターを50体取得
-            .from("monsters")
-            .select("id")
-            .eq("user_id", value: userId.uuidString)
-            .limit(50)
-            .execute()
-            .value else {
-            throw BattleMonsterSelectionViewModelError.failedFetchMonsters
-        }
-        
-        guard let monster = monsters.randomElement() else { // ランダムに1体抽出
-            throw BattleMonsterSelectionViewModelError.noMonsters
-        }
-        
-        self.monsterId = monster.id
-        print("[Monster Selection] selected monster(id: \(self.monsterId!))")
-    }
-    
     /// モンスター情報を取得
     private func fetchMonster() async throws -> Monster? {
         guard let id = self.monsterId else {return nil}

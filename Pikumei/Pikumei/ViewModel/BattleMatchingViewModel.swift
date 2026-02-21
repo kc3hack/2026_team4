@@ -81,7 +81,6 @@ class BattleMatchingViewModel: ObservableObject {
         do {
             try await ensureAuthenticated()
             let userId = try await client.auth.session.user.id
-            let monsterId = try await fetchRandomMonster(userId: userId)
 
             // 自分以外が作った直近5分以内の waiting バトルを1件取得
             let fiveMinutesAgo = ISO8601DateFormatter().string(
@@ -216,22 +215,6 @@ class BattleMatchingViewModel: ObservableObject {
     }
 
     // MARK: - Private
-
-    /// 自分のモンスターからランダムに1体選ぶ
-    private func fetchRandomMonster(userId: UUID) async throws -> UUID {
-        let monsters: [MonsterIdRow] = try await client
-            .from("monsters")
-            .select("id")
-            .eq("user_id", value: userId.uuidString)
-            .limit(50)
-            .execute()
-            .value
-
-        guard let monster = monsters.randomElement() else {
-            throw MatchingError.noMonsters
-        }
-        return monster.id
-    }
 
     private func ensureAuthenticated() async throws {
         let session = try? await client.auth.session
