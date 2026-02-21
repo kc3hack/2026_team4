@@ -20,15 +20,15 @@ class BattleMonsterSelectionViewModel: ObservableObject {
     @Published public var touched: UUID? = nil // タップされたモンスターのモンスターID
     
     public func updateMonster() async {
-        guard let monster = try? await self.fetchMonster() else {return}
+        guard let monster = try? await self.fetchMonster(self.monsterId) else {return}
         self.monster = monster
         self.stats = BattleStatsGenerator.generate(label: monster.classificationLabel, confidence: monster.classificationConfidence)
         print("[Monster Selection] updated")
     }
     
     /// モンスター情報を取得
-    private func fetchMonster() async throws -> Monster? {
-        guard let id = self.monsterId else {return nil}
+    private func fetchMonster(_ monsterId: UUID?) async throws -> Monster? {
+        guard let id = monsterId else {return nil}
         let monster: MonsterLabelRow = try await client
             .from("monsters")
             .select("id, classification_label, classification_confidence, name, thumbnail")
@@ -56,6 +56,29 @@ class BattleMonsterSelectionViewModel: ObservableObject {
         self.monsterId = self.touched
         await self.updateMonster()
         
+    }
+    
+    /// 自分のモンスターからランダムに1体取得する
+    public func getRandomMonster() async throws -> Monster? {
+        guard let userId = try? await client.auth.session.user.id else { // ユーザーID
+            throw BattleMonsterSelectionViewModelError.failedFetchUserId
+        }
+        
+        guard let monsters: [MonsterIdRow] = try? await client // モンスターを50体取得
+            .from("monsters")
+            .select("id")
+            .eq("user_id", value: userId.uuidString)
+            .limit(50)
+            .execute()
+            .value
+        else {
+            throw BattleMonsterSelectionViewModelError.failedFetchMonsters
+        }
+        
+        guard let monsterIdRow = monsters.randomElement() else { // ランダムに1体抽出
+            throw BattleMonsterSelectionViewModelError.noMonsters
+        }
+        return try? await fetchMonster(monsterIdRow.id)
     }
 }
 
