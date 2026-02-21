@@ -305,7 +305,8 @@ class ExchangeViewModel: ObservableObject {
                 classificationLabel: opponentMonster.classificationLabel,
                 classificationConfidence: opponentMonster.classificationConfidence,
                 supabaseId: opponentMonster.id,
-                name: opponentMonster.name
+                name: opponentMonster.name,
+                isExchanged: true
             )
             // DB 側を先に確定してからローカルデータを変更する（DB 更新失敗時にローカルが不整合にならないようにする）
             try await client
