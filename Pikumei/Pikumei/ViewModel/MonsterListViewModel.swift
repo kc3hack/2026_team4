@@ -8,11 +8,8 @@ import Foundation
 /// モンスター一覧画面の ViewModel
 class MonsterListViewModel {
 
-    /// モンスターからバトルステータスを生成する
+    /// モンスターからバトルステータスを生成する（合体モンスターは合体ステータスを返す）
     func stats(for monster: Monster) -> BattleStats {
-        BattleStatsGenerator.generate(
-            label: monster.classificationLabel,
-            confidence: monster.classificationConfidence
-        )
+        monster.battleStats
     }
 }

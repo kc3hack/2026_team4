@@ -38,12 +38,9 @@ class ExchangeViewModel: ObservableObject {
         modelContext = context
     }
 
-    /// モンスターからバトルステータスを生成する
+    /// モンスターからバトルステータスを生成する（合体モンスターは合体ステータスを返す）
     func stats(for monster: Monster) -> BattleStats {
-        BattleStatsGenerator.generate(
-            label: monster.classificationLabel,
-            confidence: monster.classificationConfidence
-        )
+        monster.battleStats
     }
 
     // MARK: - モンスター選択
@@ -272,7 +269,7 @@ class ExchangeViewModel: ObservableObject {
             // 相手のモンスター情報を取得
             let opponentMonster: MonsterLabelRow = try await client
                 .from("monsters")
-                .select("id, classification_label, classification_confidence, name, thumbnail")
+                .select("id, classification_label, classification_confidence, name, thumbnail, fused_hp, fused_attack, fused_special_attack, fused_special_defense")
                 .eq("id", value: opponentMonsterId.uuidString)
                 .single()
                 .execute()
@@ -306,7 +303,12 @@ class ExchangeViewModel: ObservableObject {
                 classificationConfidence: opponentMonster.classificationConfidence,
                 supabaseId: opponentMonster.id,
                 name: opponentMonster.name,
-                isExchanged: true
+                isExchanged: true,
+                isFused: opponentMonster.isFused,
+                fusedHp: opponentMonster.fusedHp,
+                fusedAttack: opponentMonster.fusedAttack,
+                fusedSpecialAttack: opponentMonster.fusedSpecialAttack,
+                fusedSpecialDefense: opponentMonster.fusedSpecialDefense
             )
             // DB 側を先に確定してからローカルデータを変更する（DB 更新失敗時にローカルが不整合にならないようにする）
             try await client

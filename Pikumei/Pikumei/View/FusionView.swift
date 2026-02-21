@@ -43,7 +43,7 @@ struct FusionView: View {
         }
         .navigationTitle("合体")
         .navigationBarTitleDisplayMode(.inline)
-        .navigationBarBackButtonHidden(showCustomBack)
+        .navigationBarBackButtonHidden(hideDefaultBack)
         .toolbar {
             if showCustomBack {
                 ToolbarItem(placement: .navigationBarLeading) {
@@ -60,6 +60,16 @@ struct FusionView: View {
         }
         .onAppear {
             vm.setModelContext(modelContext)
+        }
+    }
+
+    /// selectSecond / confirm では独自の「戻る」ボタン、result では戻るボタン自体を非表示
+    private var hideDefaultBack: Bool {
+        switch vm.phase {
+        case .selectSecond, .confirm, .result:
+            return true
+        default:
+            return false
         }
     }
 
@@ -168,7 +178,7 @@ struct FusionView: View {
                     .foregroundStyle(.white.opacity(0.7))
 
                 BlueButtonComponent(title: "合体する") {
-                    vm.fuse()
+                    Task { await vm.fuse() }
                 }
             }
             .padding()
