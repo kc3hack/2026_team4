@@ -22,7 +22,7 @@ struct MonsterListView: View {
                 if monsters.isEmpty {
                     VStack(spacing: 16) {
                         Spacer()
-                        Image(systemName: "photo.on.rectangle.angled")
+                        Image("character_remove")
                             .font(.system(size: 48))
                             .foregroundStyle(.secondary)
                         Text("メイティがいません")
