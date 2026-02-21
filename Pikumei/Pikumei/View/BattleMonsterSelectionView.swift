@@ -54,19 +54,26 @@ struct BattleMonsterSelectionView: View {
         }
         .toolbarBackground(.hidden, for: .navigationBar)
         .toolbarBackground(.hidden, for: .tabBar)
-        .overlay(
-            Button{
-                Task {
-                    await selectionVM.confirmMonster()
-                    dismiss()
+        .overlay() {
+            VStack() {
+                Spacer(minLength: 700)
+                
+                Button{
+                    Task {
+                        await selectionVM.confirmMonster()
+                        dismiss()
+                    }
+                } label: {
+                    Text("決定")
                 }
-            } label: {
-                Text("決定")
-            }
+                .padding()
                 .background(Color.blue)
                 .accentColor(Color.white)
                 .disabled(selectionVM.touched == nil)
-        )
+                
+                Spacer(minLength: .zero)
+            }
+        }
     }
     
     
