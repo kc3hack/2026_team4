@@ -58,7 +58,7 @@ struct MonsterResultView: View {
                     .frame(width: 260)
                     .rareCardEffect()
                     .clipShape(RoundedRectangle(cornerRadius: 14))
-
+                    .padding(90)
                 // 名前確定後のみ閉じるボタンを表示
                 if nameConfirmed {
                     Button {
