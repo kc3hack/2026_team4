@@ -19,21 +19,19 @@ struct BattleMonsterSelectionView: View {
     ]
     
     var body: some View {
-        NavigationStack {
-            ZStack() {
-                Image("back_splash")
-                    .resizable()
-                    .scaledToFill()
-                    .ignoresSafeArea()
-                
-                if monsters.isEmpty {
-                    emptyContent
-                } else {
-                    content
-                }
+        ZStack() {
+            Image("back_splash")
+                .resizable()
+                .scaledToFill()
+                .ignoresSafeArea()
+
+            if monsters.isEmpty {
+                emptyContent
+            } else {
+                content
             }
-            .navigationTitle("メイティ選択")
         }
+        .navigationTitle("メイティ選択")
         .task {
             selectionVM.resetTouched()
         }
@@ -43,7 +41,7 @@ struct BattleMonsterSelectionView: View {
         ScrollView {
             Spacer(minLength: 100)
             Text("バトルに出すメイティを選んでください")
-                .font(.custom("DotGothic16-Regular", size: 17))
+                .font(.custom("RocknRollOne-Regular", size: 17))
             LazyVGrid(columns: columns, spacing: 12) {
                 ForEach(monsters) { (monster: Monster) in
                     card(monster: monster)
@@ -52,7 +50,6 @@ struct BattleMonsterSelectionView: View {
             }
             .padding(8)
         }
-        .toolbarBackground(.hidden, for: .navigationBar)
         .toolbarBackground(.visible, for: .tabBar)
         .overlay() {
             VStack() {
@@ -104,6 +101,8 @@ struct BattleMonsterSelectionView: View {
 
 #Preview {
     let selectionVM = BattleMonsterSelectionViewModel()
-    BattleMonsterSelectionView(selectionVM: selectionVM)
-        .modelContainer(for: Monster.self, inMemory: true)
+    NavigationStack {
+        BattleMonsterSelectionView(selectionVM: selectionVM)
+    }
+    .modelContainer(for: Monster.self, inMemory: true)
 }

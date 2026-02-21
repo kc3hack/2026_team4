@@ -146,7 +146,7 @@ private struct MonsterSelectionSection: View {
     var body: some View {
         VStack(spacing: 16) {
             Text("メイティ選択")
-                .font(.custom("DotGothic16-Regular", size: 17))
+                .font(.custom("RocknRollOne-Regular", size: 22))
             
             
             NavigationLink{BattleMonsterSelectionView(selectionVM: selectionVM)
@@ -158,6 +158,7 @@ private struct MonsterSelectionSection: View {
                             monster: monster,
                             stats: stats
                         )
+                        .padding(.top, 8)
                         .padding(.horizontal, 50)
                     }
                 }
