@@ -22,6 +22,13 @@ struct BattlingComponent: View {
                     type: viewModel.opponentLabel,
                     size: 120
                 )
+                .overlay {
+                    if let gif = viewModel.effectOnOpponent {
+                        GifImageComponent(name: gif, repeatCount: 1, speed: 1.5)
+                            .frame(width: 120, height: 120)
+                            .allowsHitTesting(false)
+                    }
+                }
                 .overlay { DamageLabelComponent(damage: viewModel.damageToOpponent) }
             }
 
@@ -35,9 +42,34 @@ struct BattlingComponent: View {
                     type: viewModel.myLabel,
                     size: 160
                 )
+                .overlay {
+                    if let gif = viewModel.effectOnMe {
+                        GifImageComponent(name: gif, repeatCount: 1, speed: 1.5)
+                            .frame(width: 160, height: 160)
+                            .allowsHitTesting(false)
+                    }
+                }
                 .overlay { DamageLabelComponent(damage: viewModel.damageToMe) }
                 Spacer()
             }
+
+            // バトルメッセージ（高さ固定でボタンが動かないようにする）
+            Group {
+                if let message = viewModel.battleMessage {
+                    Text(message)
+                        .font(.custom("DotGothic16-Regular", size: 16))
+                        .multilineTextAlignment(.center)
+                        .foregroundStyle(.white)
+                } else {
+                    Text(" ")
+                        .font(.custom("DotGothic16-Regular", size: 16))
+                }
+            }
+            .frame(maxWidth: .infinity)
+            .frame(height: 44)
+            .background(.black.opacity(viewModel.battleMessage != nil ? 0.6 : 0))
+            .cornerRadius(8)
+            .animation(.easeInOut(duration: 0.3), value: viewModel.battleMessage)
 
             // 攻撃ボタン
             HStack(spacing: 8) {
@@ -55,11 +87,22 @@ struct BattlingComponent: View {
                 }
             }
 
-            if !viewModel.isMyTurn {
-                Text("あいてのターン...")
-                    .font(.custom("DotGothic16-Regular", size: 12))
-                    .foregroundStyle(.secondary)
+            // ターン情報（高さ固定でボタン位置がずれないようにする）
+            Group {
+                if viewModel.isMyTurn && viewModel.turnTimeRemaining > 0 {
+                    Text("のこり \(viewModel.turnTimeRemaining)秒")
+                        .font(.custom("DotGothic16-Regular", size: 14))
+                        .foregroundStyle(viewModel.turnTimeRemaining <= 10 ? .red : .primary)
+                } else if !viewModel.isMyTurn {
+                    Text("あいてのターン...")
+                        .font(.custom("DotGothic16-Regular", size: 12))
+                        .foregroundStyle(.secondary)
+                } else {
+                    Text(" ")
+                        .font(.custom("DotGothic16-Regular", size: 14))
+                }
             }
+            .frame(height: 20)
         }
         .padding()
     }
@@ -75,10 +118,10 @@ struct DamageLabelComponent: View {
         Group {
             if let damage {
                 Text(damage == 0 ? "MISS" : "-\(damage)")
-                    .font(.custom("DotGothic16-Regular", size: 28))
+                    .font(.custom("DotGothic16-Regular", size: 36))
                     .bold()
                     .foregroundStyle(damage == 0 ? .white : .red)
-                    .shadow(color: .black, radius: 2, x: 1, y: 1)
+                    .shadow(color: .black.opacity(0.6), radius: 2, x: 1, y: 1)
                     .transition(.move(edge: .bottom).combined(with: .opacity))
             }
         }

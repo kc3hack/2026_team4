@@ -3,7 +3,6 @@ import Lottie
 
 //VictoryComponent をベースにした敗北画面
 struct DefeatComponent: View {
-    let battleLog: [String]
     let onBack: () -> Void
     
     // アニメーション制御用の状態変数（Victoryと同じ）
@@ -97,7 +96,6 @@ struct DefeatComponent: View {
 // プレビュー
 #Preview {
     DefeatComponent(
-        battleLog: [],
         onBack: { print("ホームに戻る") }
     )
     // ダークモードでの見え方も確認

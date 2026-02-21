@@ -40,7 +40,7 @@ struct BattleView: View {
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .background(alignment: .top) {
                 if !matchingVM.phase.isBattling {
-                    Image("bg_fish")
+                    Image("back_splash")
                         .resizable()
                         .scaledToFill()
                         .ignoresSafeArea()
@@ -65,8 +65,8 @@ private struct BattleIdleSection: View {
 
     var body: some View {
         VStack(spacing: 16) {
-            Text("マッチング通信テスト")
-                .font(.custom("DotGothic16-Regular", size: 17))
+            Text("2人でバトル")
+                .font(.custom("RocknRollOne-Regular", size: 22))
             
             BlueButtonComponent(title: "バトルを作成して待つ") {
                 onCreate()
