@@ -37,17 +37,21 @@ class BattleMatchingViewModel: ObservableObject {
 
     // MARK: - ソロバトル開始
 
-    /// モンスター2体以上の存在チェックをしてソロバトル用VMを返す
-    func startSoloBattle(modelContext: ModelContext) -> SoloBattleViewModel? {
+    /// モンスター1体以上の存在チェックをしてソロバトル用VMを返す
+    func startSoloBattle(monster monsterWrapper: Monster?, modelContext: ModelContext) -> SoloBattleViewModel? {
+        guard let monster = monsterWrapper else {
+            phase = .error("モンスターが選択されていません")
+            return nil
+        }
         soloErrorMessage = nil
         do {
             let descriptor = FetchDescriptor<Monster>()
             let count = try modelContext.fetchCount(descriptor)
-            guard count >= 2 else {
-                soloErrorMessage = "メイティが2体以上必要です。先にスキャンしてください"
+            guard count >= 1 else {
+                soloErrorMessage = "メイティが1体以上必要です。先にスキャンしてください"
                 return nil
             }
-            let vm = SoloBattleViewModel(modelContext: modelContext)
+            let vm = SoloBattleViewModel(monster: monster, modelContext: modelContext)
             phase = .soloBattling
             return vm
         } catch {

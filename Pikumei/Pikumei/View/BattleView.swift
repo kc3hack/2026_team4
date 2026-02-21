@@ -12,7 +12,7 @@ struct BattleView: View {
     @StateObject private var selectionVM = BattleMonsterSelectionViewModel()
     @Environment(\.modelContext) private var modelContext
     @State private var soloBattleVM: SoloBattleViewModel?
-
+    
     var body: some View {
         NavigationStack {
             VStack(spacing: 24) {
@@ -26,7 +26,10 @@ struct BattleView: View {
                             await matchingVM.joinBattle(monsterId: selectionVM.monsterId)
                         } },
                         onSolo: {
-                            soloBattleVM = matchingVM.startSoloBattle(modelContext: modelContext)
+                            soloBattleVM = matchingVM.startSoloBattle(
+                                monster: selectionVM.monster,
+                                modelContext: modelContext
+                            )
                         },
                         soloErrorMessage: matchingVM.soloErrorMessage,
                         selectionVM: selectionVM
@@ -76,7 +79,7 @@ struct BattleView: View {
             
         }
     }
-
+    
 }
 
 // MARK: - 初期状態
@@ -89,43 +92,43 @@ private struct BattleIdleSection: View {
     var onSolo: () -> Void
     var soloErrorMessage: String?
     @StateObject var selectionVM: BattleMonsterSelectionViewModel
-
-
+    
+    
     var body: some View {
         VStack(spacing: 16) {
             MonsterSelectionSection(
                 selectionVM: selectionVM
             )
-
+            
             Text("2人でバトル")
                 .font(.custom("RocknRollOne-Regular", size: 22))
-
+            
             BlueButtonComponent(title: "バトルを作成して待つ") {
                 onCreate()
             }
-
-
+            
+            
             BrownButtonComponent(title: "待機中バトルに参加"){
                 onJoin()
             }
-
+            
             Divider()
                 .padding(.vertical, 8)
-
+            
             Text("ひとりでバトル")
                 .font(.custom("RocknRollOne-Regular", size: 22))
-
+            
             BlueButtonComponent(title: "CPUとバトル") {
                 onSolo()
             }
-
+            
             if let errorMessage = soloErrorMessage {
                 Text(errorMessage)
                     .font(.custom("DotGothic16-Regular", size: 13))
                     .foregroundStyle(.red)
                     .multilineTextAlignment(.center)
             }
-
+            
             NavigationLink(destination: BattleHistoryView()) {
                 HStack(spacing: 6) {
                     Image(systemName: "clock.arrow.circlepath")
