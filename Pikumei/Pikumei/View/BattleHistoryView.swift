@@ -1,10 +1,3 @@
-//
-//  BattleHistoryView.swift
-//  Pikumei
-//
-//  バトル履歴・戦績画面
-//
-
 import SwiftUI
 import SwiftData
 import Charts
@@ -12,6 +5,13 @@ import Charts
 struct BattleHistoryView: View {
     @Query(sort: \BattleHistory.battleDate, order: .reverse)
     private var histories: [BattleHistory]
+    
+    // 日時フォーマット用のプロパティ（秒数まで表示）
+    private var dateFormatter: DateFormatter {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy/MM/dd HH:mm"
+        return formatter
+    }
     
     var body: some View {
         Group {
@@ -24,10 +24,7 @@ struct BattleHistoryView: View {
             } else {
                 ScrollView {
                     VStack(spacing: 20) {
-                        // 【変更点】履歴リストを一番上に配置しました
                         historyListSection
-                        
-                        // 統計・グラフセクションを下に配置
                         summarySection
                         winRateChartSection
                         typeMatchupChartSection
@@ -45,7 +42,7 @@ struct BattleHistoryView: View {
         )
     }
     
-    // MARK: - バトル履歴リスト (一番上に表示)
+    // MARK: - バトル履歴リスト
     
     private var historyListSection: some View {
         VStack(alignment: .leading, spacing: 8) {
@@ -55,8 +52,24 @@ struct BattleHistoryView: View {
             
             LazyVStack(spacing: 0) {
                 ForEach(histories) { history in
-                    BattleHistoryRowComponent(history: history)
-                    // 最後の要素以外に区切り線を表示
+                    // 横並びのレイアウト
+                    HStack(alignment: .center, spacing: 12) {
+                        
+                        // 左側：名前、アイコン、WIN/LOSEバッジなど
+                        BattleHistoryRowComponent(history: history)
+                        
+                        Spacer()
+                        
+                        // 右側：新しい日時（yyyy/MM/dd HH:mm:ss）
+                        Text(dateFormatter.string(from: history.battleDate))
+                            .font(.custom("DotGothic16-Regular", size: 10))
+                            .foregroundStyle(.secondary)
+                            .lineLimit(1)
+                            .fixedSize() // 文字が圧縮されないように固定
+                    }
+                    .padding(.vertical, 10) // 上下余白を少し広げて見やすく
+                    .padding(.horizontal, 4)
+                    
                     if history.id != histories.last?.id {
                         Divider()
                     }
@@ -71,7 +84,6 @@ struct BattleHistoryView: View {
     }
     
     // MARK: - 戦績サマリー
-    
     private var summarySection: some View {
         let summary = BattleHistoryViewModel.summary(from: histories)
         return HStack(spacing: 0) {
@@ -88,7 +100,6 @@ struct BattleHistoryView: View {
     }
     
     // MARK: - 勝率推移グラフ
-    
     private var winRateChartSection: some View {
         let trend = BattleHistoryViewModel.winRateTrend(from: histories)
         return VStack(alignment: .leading, spacing: 8) {
@@ -97,26 +108,18 @@ struct BattleHistoryView: View {
                 .foregroundStyle(Color.pikumeiNavy)
             
             Chart(trend) { point in
-                LineMark(
-                    x: .value("バトル", point.id),
-                    y: .value("勝率", point.winRate * 100)
-                )
-                .foregroundStyle(.orange)
-                
-                PointMark(
-                    x: .value("バトル", point.id),
-                    y: .value("勝率", point.winRate * 100)
-                )
-                .foregroundStyle(.orange)
-                .symbolSize(30)
+                LineMark(x: .value("バトル", point.id), y: .value("勝率", point.winRate * 100))
+                    .foregroundStyle(.orange)
+                PointMark(x: .value("バトル", point.id), y: .value("勝率", point.winRate * 100))
+                    .foregroundStyle(.orange)
+                    .symbolSize(30)
             }
             .chartYAxis {
                 AxisMarks(values: [0, 25, 50, 75, 100]) { value in
                     AxisGridLine()
                     AxisValueLabel {
                         if let v = value.as(Int.self) {
-                            Text("\(v)%")
-                                .font(.custom("DotGothic16-Regular", size: 10))
+                            Text("\(v)%").font(.custom("DotGothic16-Regular", size: 10))
                         }
                     }
                 }
@@ -125,14 +128,10 @@ struct BattleHistoryView: View {
             .frame(height: 180)
         }
         .padding()
-        .background(
-            RoundedRectangle(cornerRadius: 12)
-                .fill(.white.opacity(0.85))
-        )
+        .background(RoundedRectangle(cornerRadius: 12).fill(.white.opacity(0.85)))
     }
     
     // MARK: - タイプ別戦績グラフ
-    
     private var typeMatchupChartSection: some View {
         let stats = BattleHistoryViewModel.typeMatchupStats(from: histories)
         return VStack(alignment: .leading, spacing: 8) {
@@ -141,49 +140,26 @@ struct BattleHistoryView: View {
                 .foregroundStyle(Color.pikumeiNavy)
             
             Chart(stats) { stat in
-                BarMark(
-                    x: .value("タイプ", stat.opponentType.displayName),
-                    y: .value("回数", stat.count)
-                )
-                .foregroundStyle(stat.isWin ? .green : .red)
+                BarMark(x: .value("タイプ", stat.opponentType.displayName), y: .value("回数", stat.count))
+                    .foregroundStyle(stat.isWin ? .green : .red)
             }
-            .chartForegroundStyleScale([
-                "勝利": .green,
-                "敗北": .red,
-            ])
+            .chartForegroundStyleScale(["勝利": .green, "敗北": .red])
             .frame(height: 180)
         }
         .padding()
-        .background(
-            RoundedRectangle(cornerRadius: 12)
-                .fill(.white.opacity(0.85))
-        )
+        .background(RoundedRectangle(cornerRadius: 12).fill(.white.opacity(0.85)))
     }
 }
-
-// MARK: - サマリーアイテム
 
 private struct SummaryItem: View {
     let title: String
     let value: String
     let color: Color
-    
     var body: some View {
         VStack(spacing: 4) {
-            Text(value)
-                .font(.custom("RocknRollOne-Regular", size: 20))
-                .foregroundStyle(color)
-            Text(title)
-                .font(.custom("DotGothic16-Regular", size: 11))
-                .foregroundStyle(.secondary)
+            Text(value).font(.custom("RocknRollOne-Regular", size: 20)).foregroundStyle(color)
+            Text(title).font(.custom("DotGothic16-Regular", size: 11)).foregroundStyle(.secondary)
         }
         .frame(maxWidth: .infinity)
-    }
-}
-
-#Preview {
-    NavigationStack {
-        BattleHistoryView()
-            .modelContainer(for: BattleHistory.self, inMemory: true)
     }
 }

@@ -56,9 +56,9 @@ struct BattleHistoryRowComponent: View {
                 )
 
             // 日付
-            Text(history.battleDate, format: .dateTime.month().day())
-                .font(.custom("DotGothic16-Regular", size: 11))
-                .foregroundStyle(.secondary)
+//            Text(history.battleDate, format: .dateTime.month().day())
+//                .font(.custom("DotGothic16-Regular", size: 11))
+//                .foregroundStyle(.secondary)
         }
         .padding(.vertical, 4)
     }
