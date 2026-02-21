@@ -41,7 +41,7 @@ struct BattleMonsterSelectionView: View {
     
     var content: some View {
         ScrollView {
-            Spacer(minLength: 0)
+            Spacer(minLength: 100)
             Text("バトルに出すモンスターを選んでください")
                 .font(.custom("DotGothic16-Regular", size: 17))
             LazyVGrid(columns: columns, spacing: 12) {
