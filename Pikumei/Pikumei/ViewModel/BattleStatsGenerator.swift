@@ -63,6 +63,6 @@ enum BattleStatsGenerator {
         let span = Double(range.upperBound - range.lowerBound)
         let addition = Int(floor(span * scale * confidence))
         let stat = range.lowerBound + addition
-        return min(stat, range.upperBound)
+        return max(range.lowerBound, min(stat, range.upperBound))
     }
 }
