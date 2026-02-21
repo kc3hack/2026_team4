@@ -1,13 +1,16 @@
 //  BattleView.swift
 //  Pikumei
 //
-//  バトル画面（マッチング → バトル）
+//  バトル画面（マッチング → バトル / ソロバトル）
 //
 
 import SwiftUI
+import SwiftData
 
 struct BattleView: View {
     @StateObject private var matchingVM = BattleMatchingViewModel()
+    @Environment(\.modelContext) private var modelContext
+    @State private var soloBattleVM: SoloBattleViewModel?
 
     var body: some View {
         NavigationStack {
@@ -16,7 +19,11 @@ struct BattleView: View {
                 case .idle:
                     BattleIdleSection(
                         onCreate: { Task { await matchingVM.createBattle() } },
-                        onJoin: { Task { await matchingVM.joinBattle() } }
+                        onJoin: { Task { await matchingVM.joinBattle() } },
+                        onSolo: {
+                            soloBattleVM = matchingVM.startSoloBattle(modelContext: modelContext)
+                        },
+                        soloErrorMessage: matchingVM.soloErrorMessage
                     )
                 case .waiting:
                     BattleWaitingSection(
@@ -27,6 +34,13 @@ struct BattleView: View {
                     if let battleId = matchingVM.battleId {
                         BattleGameView(battleId: battleId) {
                             matchingVM.reset()
+                        }
+                    }
+                case .soloBattling:
+                    if let soloVM = soloBattleVM {
+                        BattleGameView(viewModel: soloVM) {
+                            soloBattleVM = nil
+                            matchingVM.phase = .idle
                         }
                     }
                 case .error(let message):
@@ -55,6 +69,7 @@ struct BattleView: View {
             }
         }
     }
+
 }
 
 // MARK: - 初期状態
@@ -62,19 +77,38 @@ struct BattleView: View {
 private struct BattleIdleSection: View {
     var onCreate: () -> Void
     var onJoin: () -> Void
+    var onSolo: () -> Void
+    var soloErrorMessage: String?
 
     var body: some View {
         VStack(spacing: 16) {
             Text("2人でバトル")
                 .font(.custom("RocknRollOne-Regular", size: 22))
-            
+
             BlueButtonComponent(title: "バトルを作成して待つ") {
                 onCreate()
             }
-            
-            
+
+
             BrownButtonComponent(title: "待機中バトルに参加"){
                 onJoin()
+            }
+
+            Divider()
+                .padding(.vertical, 8)
+
+            Text("ひとりでバトル")
+                .font(.custom("RocknRollOne-Regular", size: 22))
+
+            BlueButtonComponent(title: "CPUとバトル") {
+                onSolo()
+            }
+
+            if let errorMessage = soloErrorMessage {
+                Text(errorMessage)
+                    .font(.custom("DotGothic16-Regular", size: 13))
+                    .foregroundStyle(.red)
+                    .multilineTextAlignment(.center)
             }
         }
     }

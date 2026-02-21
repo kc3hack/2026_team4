@@ -26,6 +26,13 @@ struct BattleGameView: View {
         self.backgroundImage = Self.battleBackgrounds.randomElement()!
     }
 
+    /// ソロバトル用: 生成済みの ViewModel を直接受け取る
+    init(viewModel: BattleViewModel, onFinish: @escaping () -> Void) {
+        _viewModel = StateObject(wrappedValue: viewModel)
+        self.onFinish = onFinish
+        self.backgroundImage = Self.battleBackgrounds.randomElement()!
+    }
+
     var body: some View {
         ZStack {
             // バトル背景
