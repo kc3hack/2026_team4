@@ -58,11 +58,15 @@ struct MonsterResultView: View {
                     .frame(width: 260)
                     .rareCardEffect()
                     .clipShape(RoundedRectangle(cornerRadius: 14))
-
+                    .padding(90)
                 // 名前確定後のみ閉じるボタンを表示
                 if nameConfirmed {
-                    Button("閉じる") {
+                    Button {
                         dismiss()
+                    } label: {
+                        Text("閉じる")
+                            .font(.custom("RocknRollOne-Regular", size: 30))
+                            .frame(minWidth: 160, minHeight: 50)
                     }
                     .buttonStyle(.borderedProminent)
                     .padding(.bottom, 32)
