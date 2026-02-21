@@ -5,18 +5,6 @@ struct GameLoadingView: View {
     // 表示するテキスト（「スキャン中...」など画面ごとに変えられるように）
     let loadingText: String
     
-    // アプリの戦略に合わせたTipsリスト
-    private let tips = [
-        "🔥 ほのおは、くさやとりに強い！でもみずには注意。",
-        "💧 みずしぶきで、ほのおを消し止めよう。",
-        "🌿 くさタイプは、みずやさかなに有利だよ。",
-        "👻 ゴーストはヒトに強いけど、とりには勝てない…",
-        "👤 ヒトはさかなに強い！知恵を絞って戦おう。",
-        "🐟 さかなはとりを驚かせるのが得意！",
-        "🐦 とりは空からくさやゴーストを狙い撃ち！",
-        "📸 はっきり撮るほど、メイティの絆ゲージが貯まりやすい！"
-    ]
-    
     @State private var selectedTip: String = ""
     
     var body: some View {
@@ -47,7 +35,7 @@ struct GameLoadingView: View {
             }
         }
         .onAppear {
-            selectedTip = tips.randomElement() ?? "準備中..."
+            selectedTip = GameTip.random()
         }
     }
     
