@@ -24,7 +24,7 @@ class BattleViewModel: ObservableObject {
     @Published var opponentName: String?
     @Published var myThumbnail: Data?
     @Published var opponentThumbnail: Data?
-    @Published var battleLog: [String] = []
+    @Published var battleMessage: String?     // 画面に一時表示するメッセージ
     @Published var myAttacks: [BattleAttack] = []
     @Published var attackPP: [Int?] = []  // nil = 無制限, 数値 = 残り回数
     @Published var effectOnOpponent: String?  // 相手モンスター上に表示するエフェクト
@@ -81,7 +81,6 @@ class BattleViewModel: ObservableObject {
             }
 
             guard let battle, let player2MonsterId = battle.player2MonsterId else {
-                battleLog.append("対戦相手の情報を取得できませんでした")
                 phase = .connectionError
                 return
             }
@@ -149,7 +148,6 @@ class BattleViewModel: ObservableObject {
                 self.opponentThumbnail = await oppCutout
             }
         } catch {
-            battleLog.append("エラー: \(error.localizedDescription)")
             phase = .connectionError
         }
     }
@@ -229,15 +227,21 @@ class BattleViewModel: ObservableObject {
             damage = max(Int(rawDamage * 100.0 / (100.0 + Double(defStat))), 1)
             opponentHp -= damage
             damageToOpponent = damage
-            battleLog.append("\(chosen.name)攻撃！ \(damage) ダメージ！")
-            if multiplier > 1.0 { battleLog.append("こうかはばつぐんだ！") }
-            else if multiplier < 1.0 { battleLog.append("こうかはいまひとつ...") }
+            let name = myName ?? "〇〇"
+            if multiplier > 1.0 {
+                showBattleMessage("\(name)の\(chosen.name)攻撃！\nこうかはばつぐんだ！")
+            } else if multiplier < 1.0 {
+                showBattleMessage("\(name)の\(chosen.name)攻撃！\nこうかはいまひとつ...")
+            } else {
+                showBattleMessage("\(name)の\(chosen.name)攻撃！")
+            }
         } else {
             // ミス時はGIFエフェクトなしでミス効果音のみ再生
             SoundPlayerComponent.shared.play(.miss)
             damage = 0
             damageToOpponent = 0  // 0 = MISS 表示用
-            battleLog.append("\(chosen.name)攻撃！ ...しかし外れた！")
+            let name = myName ?? "〇〇"
+            showBattleMessage("\(name)の攻撃は外れた！")
         }
 
         // ダメージ表示を1秒後に消す
@@ -258,7 +262,6 @@ class BattleViewModel: ObservableObject {
             if hit, opponentHp <= 0, self.phase == .battling {
                 opponentHp = 0
                 phase = .won
-                battleLog.append("勝利！")
                 finishBattle(winnerId: userId)
                 // 敗者に終了を通知
                 if let winnerId = self.userId {
@@ -344,7 +347,6 @@ class BattleViewModel: ObservableObject {
                 self.opponentTimeoutTask = nil
                 self.myHp = 0
                 self.phase = .lost
-                self.battleLog.append("敗北...")
             }
         }
 
@@ -373,7 +375,6 @@ class BattleViewModel: ObservableObject {
             // タイムアウト: 相手が応答しなかった
             if !opponentReady {
                 await MainActor.run {
-                    battleLog.append("対戦相手との接続がタイムアウトしました")
                     phase = .connectionError
                 }
             }
@@ -386,7 +387,6 @@ class BattleViewModel: ObservableObject {
         opponentTimeoutTask = Task {
             try? await Task.sleep(for: .seconds(20))
             guard !Task.isCancelled, !self.isMyTurn, self.phase == .battling else { return }
-            battleLog.append("対戦相手との接続がタイムアウトしました")
             phase = .connectionError
         }
     }
@@ -435,7 +435,7 @@ class BattleViewModel: ObservableObject {
         }
 
         isMyTurn = isPlayer1
-        battleLog.append("バトル開始！")
+        showBattleMessage("バトル開始！")
 
         // Player1（先攻）はターン制限タイマーを開始
         if isMyTurn {
@@ -466,7 +466,7 @@ class BattleViewModel: ObservableObject {
 
         let attackType = MonsterType(rawValue: attackTypeRaw ?? "") ?? opponentLabel
         let opponentAttack = opponentLabel.attacks.first { $0.type == attackType }
-        let attackName = opponentAttack?.name ?? "???"
+        let attackName = opponentAttack?.name
 
         if hit {
             // ヒット時のみ攻撃エフェクト・効果音を再生
@@ -490,15 +490,22 @@ class BattleViewModel: ObservableObject {
             myHp -= actualDamage
             damageToMe = actualDamage
 
-            battleLog.append("\(attackName)攻撃！ \(actualDamage) ダメージ！")
+            let oppName = opponentName ?? "〇〇"
+            let atkLabel = attackName.map { "\($0)" } ?? ""
             let multiplier = attackType.effectiveness(against: myLabel)
-            if multiplier > 1.0 { battleLog.append("こうかはばつぐんだ！") }
-            else if multiplier < 1.0 { battleLog.append("こうかはいまひとつ...") }
+            if multiplier > 1.0 {
+                showBattleMessage("\(oppName)の\(atkLabel)攻撃！\nこうかはばつぐんだ！")
+            } else if multiplier < 1.0 {
+                showBattleMessage("\(oppName)の\(atkLabel)攻撃！\nこうかはいまひとつ...")
+            } else {
+                showBattleMessage("\(oppName)の\(atkLabel)攻撃！")
+            }
         } else {
             // ミス時はGIFエフェクトなしでミス効果音のみ再生
             SoundPlayerComponent.shared.play(.miss)
             damageToMe = 0  // 0 = MISS 表示用
-            battleLog.append("\(attackName)攻撃！ ...しかし外れた！")
+            let oppName = opponentName ?? "〇〇"
+            showBattleMessage("\(oppName)の攻撃は外れた！")
         }
 
         // ダメージ表示を1秒後に消す
@@ -510,11 +517,15 @@ class BattleViewModel: ObservableObject {
         if myHp <= 0 {
             myHp = 0
             phase = .lost
-            battleLog.append("敗北...")
         } else {
             isMyTurn = true
             startTurnTimer()
         }
+    }
+
+    /// battleMessage をセットする（次のメッセージで上書きされるまで表示し続ける）
+    private func showBattleMessage(_ text: String) {
+        battleMessage = text
     }
 
     /// サムネイルを SubjectDetector で切り抜く（失敗時は元データをそのまま返す）
@@ -537,7 +548,6 @@ class BattleViewModel: ObservableObject {
                     .execute()
             } catch {
                 print("⚠️ バトル結果の記録に失敗: \(error)")
-                battleLog.append("バトル結果の記録に失敗しました")
             }
         }
     }
