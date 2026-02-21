@@ -72,6 +72,7 @@ struct MonsterResultView: View {
                     .padding(.bottom, 32)
                 }
             }
+            .padding(.top, 120)
             .zIndex(1)
         }
         .task {
