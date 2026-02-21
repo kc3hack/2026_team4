@@ -38,11 +38,13 @@ class BattleMatchingViewModel: ObservableObject {
     // MARK: - ソロバトル開始
 
     /// モンスター1体以上の存在チェックをしてソロバトル用VMを返す
-    func startSoloBattle(monster monsterWrapper: Monster?, modelContext: ModelContext) -> SoloBattleViewModel? {
-        guard let monster = monsterWrapper else {
+    func startSoloBattle(selectionVM : BattleMonsterSelectionViewModel, modelContext: ModelContext) async -> SoloBattleViewModel? {
+        let randomMonster = try? await selectionVM.getRandomMonster()
+        guard let monster = selectionVM.monster ?? randomMonster else {
             phase = .error("モンスターが選択されていません")
             return nil
         }
+        
         soloErrorMessage = nil
         do {
             let descriptor = FetchDescriptor<Monster>()
@@ -63,8 +65,9 @@ class BattleMatchingViewModel: ObservableObject {
     // MARK: - バトル作成（端末A用）
 
     /// バトルを作成し、相手を待つ
-    func createBattle(monsterId monsterIdWrapper: UUID?) async {
-        guard let monsterId = monsterIdWrapper else {
+    func createBattle(selectionVM : BattleMonsterSelectionViewModel) async {
+        let randomMonster = try? await selectionVM.getRandomMonster()
+        guard let monster = selectionVM.monster ?? randomMonster else {
             phase = .error("モンスターが選択されていません")
             return
         }
@@ -72,6 +75,7 @@ class BattleMatchingViewModel: ObservableObject {
         do {
             try await ensureAuthenticated()
             let userId = try await client.auth.session.user.id
+            let monsterId = monster.supabaseId!
             print("[Matching] userId: \(userId)")
             print("[Matching] monsterId: \(monsterId)")
 
@@ -102,8 +106,9 @@ class BattleMatchingViewModel: ObservableObject {
     // MARK: - バトル参加（端末B用）
 
     /// 待機中のバトルを探して自分のモンスターで参加する
-    func joinBattle(monsterId monsterIdWrapper: UUID?) async {
-        guard let monsterId = monsterIdWrapper else {
+    func joinBattle(selectionVM : BattleMonsterSelectionViewModel) async {
+        let randomMonster = try? await selectionVM.getRandomMonster()
+        guard let monster = selectionVM.monster ?? randomMonster else {
             phase = .error("モンスターが選択されていません")
             return
         }
@@ -111,6 +116,7 @@ class BattleMatchingViewModel: ObservableObject {
         do {
             try await ensureAuthenticated()
             let userId = try await client.auth.session.user.id
+            let monsterId = monster.supabaseId!
 
             // 自分以外が作った直近5分以内の waiting バトルを1件取得
             let fiveMinutesAgo = ISO8601DateFormatter().string(
