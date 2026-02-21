@@ -28,7 +28,7 @@ struct MonsterCardComponent: View {
             // モンスター名 + タイプアイコン
             HStack(spacing: 4) {
                 TypeIconComponent(type: monsterType, size: 18)
-                Text(monster.name ?? "なまえなし")
+                Text(monster.name ?? "名を持たぬメイティ")
                     .font(.custom("RocknRollOne-Regular", size: 13))
                     .foregroundStyle(monsterType.color)
                     .lineLimit(1)
