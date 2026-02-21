@@ -45,8 +45,62 @@ enum SubjectDetector {
             throw SubjectDetectorError.processingFailed
         }
 
+        // 4. 透過領域をトリミングして被写体だけの画像にする
+        let trimmed = trimTransparentArea(outputCG) ?? outputCG
+
         // 元画像の向き情報を引き継ぐ（カメラ撮影時の回転を維持）
-        return UIImage(cgImage: outputCG, scale: image.scale, orientation: image.imageOrientation)
+        return UIImage(cgImage: trimmed, scale: image.scale, orientation: image.imageOrientation)
+    }
+
+    /// 不透明ピクセルの最小矩形でクロップし、透過余白を除去する
+    private static func trimTransparentArea(_ cgImage: CGImage) -> CGImage? {
+        let width = cgImage.width
+        let height = cgImage.height
+
+        guard let data = cgImage.dataProvider?.data,
+              let ptr = CFDataGetBytePtr(data) else { return nil }
+
+        let bytesPerPixel = cgImage.bitsPerPixel / 8
+        let bytesPerRow = cgImage.bytesPerRow
+
+        // アルファチャンネルの位置を特定
+        let alphaInfo = cgImage.alphaInfo
+        let alphaOffset: Int
+        switch alphaInfo {
+        case .premultipliedFirst, .first, .noneSkipFirst:
+            alphaOffset = 0
+        case .premultipliedLast, .last, .noneSkipLast:
+            alphaOffset = bytesPerPixel - 1
+        default:
+            return nil
+        }
+
+        var minX = width, minY = height, maxX = 0, maxY = 0
+
+        for y in 0..<height {
+            for x in 0..<width {
+                let offset = y * bytesPerRow + x * bytesPerPixel + alphaOffset
+                if ptr[offset] > 0 {
+                    minX = min(minX, x)
+                    minY = min(minY, y)
+                    maxX = max(maxX, x)
+                    maxY = max(maxY, y)
+                }
+            }
+        }
+
+        guard minX <= maxX, minY <= maxY else { return nil }
+
+        // 少し余白を残す（被写体がギリギリにならないように）
+        let padding = Int(Double(max(maxX - minX, maxY - minY)) * 0.05)
+        let cropRect = CGRect(
+            x: max(0, minX - padding),
+            y: max(0, minY - padding),
+            width: min(width - max(0, minX - padding), maxX - minX + 1 + padding * 2),
+            height: min(height - max(0, minY - padding), maxY - minY + 1 + padding * 2)
+        )
+
+        return cgImage.cropping(to: cropRect)
     }
 }
 
