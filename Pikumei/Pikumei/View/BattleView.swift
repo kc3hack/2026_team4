@@ -77,9 +77,9 @@ private struct BattleIdleSection: View {
             MonsterSelectionSection(
                 selectionVM: selectionVM
             )
-            
-            Text("マッチング通信テスト")
-                .font(.custom("DotGothic16-Regular", size: 17))
+
+            Text("2人でバトル")
+                .font(.custom("RocknRollOne-Regular", size: 22))
             
             BlueButtonComponent(title: "バトルを作成して待つ") {
                 onCreate()

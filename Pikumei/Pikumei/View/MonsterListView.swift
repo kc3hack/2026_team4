@@ -17,40 +17,62 @@ struct MonsterListView: View {
     ]
 
     var body: some View {
-        ZStack {
-            Image("back_mokume")
-                .resizable()
-                .scaledToFill()
-                .ignoresSafeArea()
-
-            NavigationStack {
+        NavigationStack {
+            Group {
                 if monsters.isEmpty {
-                    ContentUnavailableView(
-                        "モンスターがいません",
-                        systemImage: "photo.on.rectangle.angled",
-                        description: Text("スキャンしてモンスターを集めよう")
-                    )
-                    .navigationTitle("モンスター一覧")
+                    VStack(spacing: 16) {
+                        Spacer()
+                        Image(systemName: "photo.on.rectangle.angled")
+                            .font(.system(size: 48))
+                            .foregroundStyle(.secondary)
+                        Text("モンスターがいません")
+                            .font(.custom("RocknRollOne-Regular", size: 20))
+                        Text("スキャンしてモンスターを集めよう")
+                            .font(.custom("DotGothic16-Regular", size: 15))
+                            .foregroundStyle(.secondary)
+                        Spacer()
+                    }
                 } else {
                     ScrollView {
-                        LazyVGrid(columns: columns, spacing: 12) {
-                            ForEach(monsters) { monster in
-                                NavigationLink(destination: MonsterDetailView(monster: monster)) {
-                                    MonsterCardComponent(
-                                        monster: monster,
-                                        stats: viewModel.stats(for: monster)
-                                    )
+                        VStack(spacing: 16) {
+                            ForEach(MonsterType.allCases, id: \.self) { type in
+                                let filtered = monsters.filter { $0.classificationLabel == type }
+                                if !filtered.isEmpty {
+                                    Section {
+                                        LazyVGrid(columns: columns, spacing: 12) {
+                                            ForEach(filtered) { monster in
+                                                NavigationLink(destination: MonsterDetailView(monster: monster)) {
+                                                    MonsterCardComponent(
+                                                        monster: monster,
+                                                        stats: viewModel.stats(for: monster)
+                                                    )
+                                                }
+                                                .buttonStyle(.plain)
+                                            }
+                                        }
+                                    } header: {
+                                        TypeLabelComponent(type: type, text: "\(type.displayName)タイプ", iconSize: 22, fontSize: 16)
+                                            .frame(maxWidth: .infinity, alignment: .leading)
+                                    }
                                 }
-                                .buttonStyle(.plain)
                             }
                         }
                         .padding(8)
                     }
-                    .toolbarBackground(.hidden, for: .navigationBar)
-                    .toolbarBackground(.hidden, for: .tabBar)
-                    .navigationTitle("モンスター一覧")
                 }
             }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .background {
+                ZStack {
+                    Image("back_mokume")
+                        .resizable()
+                        .scaledToFill()
+                    Color.white.opacity(0.3)
+                }
+                .ignoresSafeArea()
+            }
+
+            .navigationTitle("モンスター一覧")
         }
     }
 }

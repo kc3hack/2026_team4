@@ -15,13 +15,13 @@ struct MonsterCardComponent: View {
     }
 
     var body: some View {
-        VStack(spacing: 6) {
+        VStack(spacing: 8) {
             // モンスター画像
             if let uiImage = monster.uiImage {
                 Image(uiImage: uiImage)
                     .resizable()
                     .scaledToFit()
-                    .frame(maxHeight: 160)
+                    .frame(maxHeight: 140)
                     .clipShape(RoundedRectangle(cornerRadius: 8))
             }
 
@@ -35,31 +35,31 @@ struct MonsterCardComponent: View {
             }
 
             // HP バー
-            VStack(spacing: 2) {
+            VStack(spacing: 3) {
                 HStack {
                     Text("HP")
-                        .font(.custom("DotGothic16-Regular", size: 10))
+                        .font(.custom("DotGothic16-Regular", size: 14))
                         .foregroundStyle(monsterType.color)
                     Spacer()
                     Text("\(stats.hp)")
-                        .font(.custom("DotGothic16-Regular", size: 10))
+                        .font(.custom("DotGothic16-Regular", size: 14))
                         .foregroundStyle(monsterType.color)
                 }
                 GeometryReader { geo in
                     ZStack(alignment: .leading) {
-                        RoundedRectangle(cornerRadius: 3)
+                        RoundedRectangle(cornerRadius: 4)
                             .fill(Color.white.opacity(0.5))
-                            .frame(height: 6)
-                        RoundedRectangle(cornerRadius: 3)
+                            .frame(height: 8)
+                        RoundedRectangle(cornerRadius: 4)
                             .fill(monsterType.color)
-                            .frame(width: geo.size.width * hpRatio, height: 6)
+                            .frame(width: geo.size.width * hpRatio, height: 8)
                     }
                 }
-                .frame(height: 6)
+                .frame(height: 8)
             }
 
             // ステータス
-            HStack(spacing: 8) {
+            HStack(spacing: 12) {
                 statLabel("ATK", value: stats.attack)
                 statLabel("S.ATK", value: stats.specialAttack)
                 statLabel("S.DEF", value: stats.specialDefense)
@@ -83,12 +83,12 @@ struct MonsterCardComponent: View {
     }
 
     private func statLabel(_ label: String, value: Int) -> some View {
-        VStack(spacing: 1) {
+        VStack(spacing: 2) {
             Text(label)
-                .font(.custom("DotGothic16-Regular", size: 8))
-                .foregroundStyle(monsterType.color.opacity(0.7))
+                .font(.custom("DotGothic16-Regular", size: 11))
+                .foregroundStyle(monsterType.color.opacity(0.8))
             Text("\(value)")
-                .font(.custom("DotGothic16-Regular", size: 10))
+                .font(.custom("DotGothic16-Regular", size: 15))
                 .foregroundStyle(monsterType.color)
         }
     }
