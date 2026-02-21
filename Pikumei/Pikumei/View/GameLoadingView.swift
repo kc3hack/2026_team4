@@ -78,3 +78,6 @@ struct GameLoadingView: View {
         )
     }
 }
+#Preview {
+    GameLoadingView(loadingText: "ロード中...")
+}
