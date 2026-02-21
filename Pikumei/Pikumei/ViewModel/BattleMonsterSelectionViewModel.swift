@@ -8,6 +8,7 @@
 import Combine
 import Foundation
 import Supabase
+import UIKit
 
 /// バトルに使用するモンスターの選択を管理する
 @MainActor
@@ -38,7 +39,12 @@ class BattleMonsterSelectionViewModel: ObservableObject {
             .value
 
         guard let thumbnailData = monster.thumbnailData else {return nil}
-        return Monster(imageData: thumbnailData,
+        guard let image = UIImage(data: thumbnailData) else {return nil}
+        let cutoutWrapper = try? await SubjectDetector.detectAndCutout(from: image)
+        guard let cutout = cutoutWrapper else {return nil}
+        guard let imageData = cutout.pngData() else {return nil}
+
+        return Monster(imageData: imageData,
                        classificationLabel: monster.classificationLabel,
                        classificationConfidence: monster.classificationConfidence,
                        supabaseId: id,

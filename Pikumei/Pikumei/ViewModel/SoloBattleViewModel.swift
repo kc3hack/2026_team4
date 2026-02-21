@@ -85,10 +85,8 @@ class SoloBattleViewModel: BattleViewModel {
             Task {
                 let myData = myMonster.imageData
                 let oppData = cpuMonster.imageData
-                async let myCutout = cutoutThumbnail(myData)
-                async let oppCutout = cutoutThumbnail(oppData)
-                self.myThumbnail = await myCutout
-                self.opponentThumbnail = await oppCutout
+                self.myThumbnail = await cutoutThumbnail(myData, isFused: myMonster.isFused)
+                self.opponentThumbnail = await cutoutThumbnail(oppData, isFused: cpuMonster.isFused)
             }
         } catch {
             phase = .connectionError
@@ -120,6 +118,7 @@ class SoloBattleViewModel: BattleViewModel {
         if hit {
             SoundPlayerComponent.shared.play(chosen.sound)
             showAttackEffect(attack: chosen, target: .opponent)
+            parformDamageAnimation(target: .opponent)
             // メイン技（powerRate 1.0）は特攻、サブ技は攻撃を使用
             let attackStat = chosen.powerRate >= 1.0 ? myStats.specialAttack : myStats.attack
             let defStat = opponentStats.specialDefense
@@ -137,6 +136,7 @@ class SoloBattleViewModel: BattleViewModel {
             }
         } else {
             SoundPlayerComponent.shared.play(.miss)
+            parformMissAnimation(target: .opponent)
             damage = 0
             damageToOpponent = 0
             let name = myName ?? "〇〇"
@@ -154,7 +154,7 @@ class SoloBattleViewModel: BattleViewModel {
             opponentHp = 0
             isFinishing = true
             Task {
-                try? await Task.sleep(for: .seconds(1.5))
+                try? await Task.sleep(for: .seconds(2.0))
                 self.phase = .won
             }
             return
@@ -213,6 +213,7 @@ class SoloBattleViewModel: BattleViewModel {
         if hit {
             SoundPlayerComponent.shared.play(chosen.sound)
             showAttackEffect(attack: chosen, target: .me)
+            parformDamageAnimation(target: .me)
             let attackStat = chosen.powerRate >= 1.0 ? opponentStats.specialAttack : opponentStats.attack
             let defStat = myStats.specialDefense
             let rawDamage = Double(attackStat) * chosen.powerRate * multiplier
@@ -229,6 +230,7 @@ class SoloBattleViewModel: BattleViewModel {
             }
         } else {
             SoundPlayerComponent.shared.play(.miss)
+            parformMissAnimation(target: .me)
             damageToMe = 0
             let oppName = opponentName ?? "CPU"
             showBattleMessage("\(oppName)の攻撃は外れた！")
@@ -245,7 +247,7 @@ class SoloBattleViewModel: BattleViewModel {
             myHp = 0
             isFinishing = true
             Task {
-                try? await Task.sleep(for: .seconds(1.5))
+                try? await Task.sleep(for: .seconds(2.0))
                 self.phase = .lost
             }
         } else {
@@ -263,12 +265,4 @@ class SoloBattleViewModel: BattleViewModel {
         stopTurnTimer()
     }
 
-    // MARK: - Private
-
-    /// サムネイルを SubjectDetector で切り抜く（失敗時は元データをそのまま返す）
-    private func cutoutThumbnail(_ data: Data?) async -> Data? {
-        guard let data, let image = UIImage(data: data) else { return data }
-        guard let cutout = try? await SubjectDetector.detectAndCutout(from: image) else { return data }
-        return cutout.pngData()
-    }
 }

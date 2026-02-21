@@ -32,7 +32,11 @@ class BattleViewModel: ObservableObject {
     @Published var damageToOpponent: Int?  // 相手へのダメージ（0 = MISS）
     @Published var damageToMe: Int?  // 自分へのダメージ（0 = MISS）
     @Published var turnTimeRemaining: Int = 0  // ターン制限時間の残り秒数
-
+    @Published var myBlinkTrigger: Bool = false
+    @Published var opponentBlinkTrigger: Bool = false
+    @Published var myFlipTrigger: Bool = false
+    @Published var opponentFlipTrigger: Bool = false
+    
     let battleId: UUID
     private var isPlayer1 = false
     private var userId: UUID?
@@ -143,10 +147,8 @@ class BattleViewModel: ObservableObject {
             Task {
                 let myData = myMonster.thumbnailData
                 let oppData = oppMonster.thumbnailData
-                async let myCutout = cutoutThumbnail(myData)
-                async let oppCutout = cutoutThumbnail(oppData)
-                self.myThumbnail = await myCutout
-                self.opponentThumbnail = await oppCutout
+                self.myThumbnail = await cutoutThumbnail(myData, isFused: myMonster.isFused)
+                self.opponentThumbnail = await cutoutThumbnail(oppData, isFused: oppMonster.isFused)
             }
         } catch {
             phase = .connectionError
@@ -192,6 +194,22 @@ class BattleViewModel: ObservableObject {
             }
         }
     }
+    
+    /// ダメージを受けたモンスターにBlinkアニメーションを適用する
+    func parformDamageAnimation(target: AttackTarget) {
+        switch target {
+        case .me: myBlinkTrigger.toggle()
+        case .opponent: opponentBlinkTrigger.toggle()
+        }
+    }
+    
+    /// 攻撃を回避したモンスターにFlipアニメーションを適用する
+    func parformMissAnimation(target: AttackTarget) {
+        switch target {
+        case .me: myFlipTrigger.toggle()
+        case .opponent: opponentFlipTrigger.toggle()
+        }
+    }
 
     // MARK: - 攻撃
 
@@ -221,6 +239,7 @@ class BattleViewModel: ObservableObject {
             // ヒット時のみ攻撃エフェクト・効果音を再生
             SoundPlayerComponent.shared.play(chosen.sound)
             showAttackEffect(attack: chosen, target: .opponent)
+            parformDamageAnimation(target: .opponent)
             // メイン技（powerRate 1.0）は特攻、サブ技は攻撃を使用
             let attackStat = chosen.powerRate >= 1.0 ? myStats.specialAttack : myStats.attack
             let defStat = opponentStats.specialDefense
@@ -239,6 +258,7 @@ class BattleViewModel: ObservableObject {
         } else {
             // ミス時はGIFエフェクトなしでミス効果音のみ再生
             SoundPlayerComponent.shared.play(.miss)
+            parformMissAnimation(target: .opponent)
             damage = 0
             damageToOpponent = 0  // 0 = MISS 表示用
             let name = myName ?? "〇〇"
@@ -264,7 +284,7 @@ class BattleViewModel: ObservableObject {
                 opponentHp = 0
                 self.isFinishing = true
                 // 最後のダメージ表示を見せるため少し待つ
-                try? await Task.sleep(for: .seconds(1.5))
+                try? await Task.sleep(for: .seconds(2.0))
                 phase = .won
                 finishBattle(winnerId: userId)
                 // 敗者に終了を通知
@@ -352,7 +372,7 @@ class BattleViewModel: ObservableObject {
                 self.opponentTimeoutTask = nil
                 self.myHp = 0
                 self.isFinishing = true
-                try? await Task.sleep(for: .seconds(1.5))
+                try? await Task.sleep(for: .seconds(2.0))
                 self.phase = .lost
             }
         }
@@ -480,7 +500,9 @@ class BattleViewModel: ObservableObject {
             SoundPlayerComponent.shared.play(opponentAttack?.sound ?? .panch)
             if let opponentAttack {
                 showAttackEffect(attack: opponentAttack, target: .me)
+                
             }
+            parformDamageAnimation(target: .me)
             let actualDamage: Int
             if let receivedDamage, receivedDamage > 0 {
                 // 送信側が計算したダメージ値を使用
@@ -510,6 +532,7 @@ class BattleViewModel: ObservableObject {
         } else {
             // ミス時はGIFエフェクトなしでミス効果音のみ再生
             SoundPlayerComponent.shared.play(.miss)
+            parformMissAnimation(target: .me)
             damageToMe = 0  // 0 = MISS 表示用
             let oppName = opponentName ?? "〇〇"
             showBattleMessage("\(oppName)の攻撃は外れた！")
@@ -526,7 +549,7 @@ class BattleViewModel: ObservableObject {
             guard !isFinishing else { return }
             isFinishing = true
             Task {
-                try? await Task.sleep(for: .seconds(1.5))
+                try? await Task.sleep(for: .seconds(2.0))
                 self.phase = .lost
             }
         } else {
@@ -541,10 +564,41 @@ class BattleViewModel: ObservableObject {
     }
 
     /// サムネイルを SubjectDetector で切り抜く（失敗時は元データをそのまま返す）
-    private func cutoutThumbnail(_ data: Data?) async -> Data? {
+    /// 合体モンスターは左右を個別に切り抜いて再合成する（全体で実行すると片側だけ検出される場合がある）
+    func cutoutThumbnail(_ data: Data?, isFused: Bool = false) async -> Data? {
         guard let data, let image = UIImage(data: data) else { return data }
+        if isFused {
+            return await cutoutFusedThumbnail(image) ?? data
+        }
         guard let cutout = try? await SubjectDetector.detectAndCutout(from: image) else { return data }
         return cutout.pngData()
+    }
+
+    /// 合体モンスター用: 左右半分を個別に切り抜いて再合成する
+    private func cutoutFusedThumbnail(_ image: UIImage) async -> Data? {
+        guard let cgImage = image.cgImage else { return nil }
+        let w = cgImage.width
+        let h = cgImage.height
+        let halfW = w / 2
+
+        guard let leftCG = cgImage.cropping(to: CGRect(x: 0, y: 0, width: halfW, height: h)),
+              let rightCG = cgImage.cropping(to: CGRect(x: halfW, y: 0, width: w - halfW, height: h)) else {
+            return nil
+        }
+
+        let leftImg = UIImage(cgImage: leftCG)
+        let rightImg = UIImage(cgImage: rightCG)
+
+        let leftCut = (try? await SubjectDetector.detectAndCutout(from: leftImg)) ?? leftImg
+        let rightCut = (try? await SubjectDetector.detectAndCutout(from: rightImg)) ?? rightImg
+
+        let size = CGSize(width: CGFloat(w), height: CGFloat(h))
+        let renderer = UIGraphicsImageRenderer(size: size)
+        let merged = renderer.image { _ in
+            leftCut.draw(in: CGRect(x: 0, y: 0, width: CGFloat(halfW), height: CGFloat(h)))
+            rightCut.draw(in: CGRect(x: CGFloat(halfW), y: 0, width: CGFloat(w - halfW), height: CGFloat(h)))
+        }
+        return merged.pngData()
     }
 
     /// バトル終了を DB に記録する
