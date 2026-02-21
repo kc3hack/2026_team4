@@ -199,15 +199,6 @@ struct FusionView: View {
                     .foregroundStyle(.black)
                     .padding(.top, 20)
 
-                if let uiImage = monster.uiImage {
-                    Image(uiImage: uiImage)
-                        .resizable()
-                        .scaledToFit()
-                        .frame(maxWidth: 250, maxHeight: 250)
-                        .clipShape(RoundedRectangle(cornerRadius: 16))
-                        .shadow(color: .white.opacity(0.3), radius: 12)
-                }
-
                 MonsterCardComponent(
                     monster: monster,
                     stats: monster.battleStats
