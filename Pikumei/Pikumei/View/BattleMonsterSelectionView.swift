@@ -53,22 +53,18 @@ struct BattleMonsterSelectionView: View {
             .padding(8)
         }
         .toolbarBackground(.hidden, for: .navigationBar)
-        .toolbarBackground(.hidden, for: .tabBar)
+        .toolbarBackground(.visible, for: .tabBar)
         .overlay() {
             VStack() {
                 Spacer(minLength: 700)
                 
-                Button{
+                BlueButtonComponent(title: "決定") {
                     Task {
                         await selectionVM.confirmMonster()
                         dismiss()
                     }
-                } label: {
-                    Text("決定")
                 }
-                .padding()
-                .background(Color.blue)
-                .accentColor(Color.white)
+                .opacity(selectionVM.touched == nil ? 0.4 : 1.0)
                 .disabled(selectionVM.touched == nil)
                 
                 Spacer(minLength: .zero)
@@ -85,7 +81,13 @@ struct BattleMonsterSelectionView: View {
                 monster: monster,
                 stats: monsterListVM.stats(for: monster)
             )
-            .border(Color.red, width: (monster.supabaseId == selectionVM.touched) ? 4 : 0)
+            .overlay(
+                RoundedRectangle(cornerRadius: 14)
+                    .stroke(Color.pikumeiNavy, lineWidth: 3)
+                    .opacity(monster.supabaseId == selectionVM.touched ? 1 : 0)
+            )
+            .scaleEffect(monster.supabaseId == selectionVM.touched ? 1.03 : 1.0)
+            .animation(.easeInOut(duration: 0.15), value: selectionVM.touched)
         }
     }
     
