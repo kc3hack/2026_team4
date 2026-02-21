@@ -7,6 +7,7 @@
 
 import SwiftUI
 import SwiftData
+import Lottie
 
 struct ExchangeView: View {
     @StateObject private var viewModel = ExchangeViewModel()
@@ -244,9 +245,11 @@ private struct ExchangeCompletedSection: View {
 
     var body: some View {
         VStack(spacing: 16) {
-            Image(systemName: "checkmark.circle.fill")
-                .font(.system(size: 48))
-                .foregroundStyle(.green)
+            
+            LottieView(animation: .named("koukann"))
+                .playing(loopMode: .playOnce) //
+                .resizable()
+                .frame(width: 120, height: 120)
 
             Text("交換完了！")
                 .font(.custom("RocknRollOne-Regular", size: 22))
