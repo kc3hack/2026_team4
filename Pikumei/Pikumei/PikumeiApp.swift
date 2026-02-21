@@ -18,11 +18,9 @@ struct PikumeiApp: App {
         UINavigationBar.appearance().largeTitleTextAttributes = [.font: largeTitleFont]
         UINavigationBar.appearance().titleTextAttributes = [.font: inlineTitleFont]
 
-        // ナビバー背景を透明にしてスクロール時の白背景を防ぐ
+        // ナビバー背景を透明にしつつフォントを維持
         let navBarAppearance = UINavigationBarAppearance()
-        navBarAppearance.configureWithOpaqueBackground()
-        navBarAppearance.backgroundColor = .clear
-        navBarAppearance.shadowColor = .clear
+        navBarAppearance.configureWithTransparentBackground()
         navBarAppearance.largeTitleTextAttributes = [.font: largeTitleFont]
         navBarAppearance.titleTextAttributes = [.font: inlineTitleFont]
         UINavigationBar.appearance().standardAppearance = navBarAppearance
