@@ -18,6 +18,17 @@ struct PikumeiApp: App {
         UINavigationBar.appearance().largeTitleTextAttributes = [.font: largeTitleFont]
         UINavigationBar.appearance().titleTextAttributes = [.font: inlineTitleFont]
 
+        // ナビバー背景を透明にしてスクロール時の白背景を防ぐ
+        let navBarAppearance = UINavigationBarAppearance()
+        navBarAppearance.configureWithOpaqueBackground()
+        navBarAppearance.backgroundColor = .clear
+        navBarAppearance.shadowColor = .clear
+        navBarAppearance.largeTitleTextAttributes = [.font: largeTitleFont]
+        navBarAppearance.titleTextAttributes = [.font: inlineTitleFont]
+        UINavigationBar.appearance().standardAppearance = navBarAppearance
+        UINavigationBar.appearance().scrollEdgeAppearance = navBarAppearance
+
+
         // タブバーのフォント・色・背景をゲームチックに統一
         let tabBarFont = UIFont(name: "DotGothic16-Regular", size: 10)!
         let navyColor = UIColor(red: 0x1E / 255.0, green: 0x33 / 255.0, blue: 0x65 / 255.0, alpha: 1)
