@@ -84,8 +84,10 @@ Pikumei/
 ### その他
 
 ## 使用技術
-
 <!-- 使用技術を入力してください -->
+
+## 使用素材・クレジット (Credits)
+**効果音:** OtoLogic(https://otologic.jp/)
 
 
 <!--

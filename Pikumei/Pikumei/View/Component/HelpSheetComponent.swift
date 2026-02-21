@@ -49,17 +49,20 @@ struct HelpSheetComponent: View {
 
             // 表の説明
             HStack(spacing: 4) {
-                Text("→ 攻撃側")
+                Spacer()
+                Text("防御側")
                     .font(.custom("RocknRollOne-Regular", size: 10))
                     .foregroundStyle(.secondary)
                 Spacer()
-                Text("↓ 防御側")
-                    .font(.custom("RocknRollOne-Regular", size: 10))
-                    .foregroundStyle(.secondary)
             }
 
-            // 相性グリッド
-            matchupGrid
+            HStack(spacing: 4) {
+                Text("攻撃側")
+                    .font(.custom("RocknRollOne-Regular", size: 10))
+                    .foregroundStyle(.secondary)
+                    .rotationEffect(Angle(degrees: -90))
+                matchupGrid
+            }
         }
     }
 
@@ -77,17 +80,17 @@ struct HelpSheetComponent: View {
                         .frame(width: cellSize, height: cellSize)
                 }
             }
-
-            // 各防御タイプの行
-            ForEach(allTypes, id: \.self) { defenderType in
+            
+            // 各攻撃タイプの行
+            ForEach(allTypes, id: \.self) { attackerType in
                 GridRow {
-                    // 行ヘッダー（防御側）
-                    TypeIconComponent(type: defenderType, size: 20)
+                    // 行ヘッダー(攻撃側)
+                    TypeIconComponent(type: attackerType, size: 20)
                         .frame(width: cellSize, height: cellSize)
 
-                    // 各攻撃タイプとの相性セル
-                    ForEach(allTypes, id: \.self) { attackType in
-                        matchupCell(attacker: attackType, defender: defenderType)
+                    // 各防御タイプとの相性セル
+                    ForEach(allTypes, id: \.self) { defenderType in
+                        matchupCell(attacker: attackerType, defender: defenderType)
                             .frame(width: cellSize, height: cellSize)
                     }
                 }
@@ -130,11 +133,14 @@ struct HelpSheetComponent: View {
         VStack(alignment: .leading, spacing: 8) {
             sectionHeader("バトルのしくみ")
 
-            VStack(alignment: .leading, spacing: 6) {
-                ruleItem(title: "命中率", description: "ばつぐん70% / 等倍90% / いまひとつ100%")
-                ruleItem(title: "PP制限", description: "ばつぐん技は1バトル2回まで、それ以外は無制限")
-                ruleItem(title: "ダメージ", description: "メイン技→特攻使用 / サブ技→攻撃使用")
-                ruleItem(title: "制限時間", description: "15秒（時間切れでランダム自動攻撃）")
+            HStack() {
+                VStack(alignment: .leading, spacing: 6) {
+                    ruleItem(title: "命中率", description: "ばつぐん70% / 等倍90% / いまひとつ100%")
+                    ruleItem(title: "PP制限", description: "ばつぐん技は1バトル2回まで、それ以外は無制限")
+                    ruleItem(title: "ダメージ", description: "メイン技→特攻使用 / サブ技→攻撃使用")
+                    ruleItem(title: "制限時間", description: "15秒（時間切れでランダム自動攻撃）")
+                }
+                Spacer()
             }
             .padding(12)
             .background(Color(.systemGray6))

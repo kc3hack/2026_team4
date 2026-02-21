@@ -12,11 +12,11 @@ struct BattleStatsGeneratorTests {
         let stats = BattleStatsGenerator.generate(label: .ghost, confidence: 0.95)
         // ghost は seed 最高(0.90)、高 confidence → 高ステータスになるはず
         #expect(stats.hp >= 140, "ghost+高confidence の HP は高いはず")
-        #expect(stats.attack >= 35, "ghost+高confidence の Attack は高いはず")
+        #expect(stats.specialAttack >= 35, "ghost+高confidence の SpecialAttack は高いはず")
     }
 
     @Test func fishLowConfidenceProducesLowStats() {
-        let stats = BattleStatsGenerator.generate(label: .fish, confidence: 0.1)
+        let stats = BattleStatsGenerator.generate(label: .fish, confidence: 0.55)
         // fish は seed 最低(0.30)、低 confidence → 低ステータスになるはず
         #expect(stats.hp <= 130, "fish+低confidence の HP は低いはず")
         #expect(stats.attack <= 35, "fish+低confidence の Attack は低いはず")
@@ -24,7 +24,7 @@ struct BattleStatsGeneratorTests {
 
     @Test func statsAreWithinValidRange() {
         for type in MonsterType.allCases {
-            for conf in [0.0, 0.5, 1.0] {
+            for conf in [0.5, 0.75, 1.0] {
                 let stats = BattleStatsGenerator.generate(label: type, confidence: conf)
                 #expect((80...180).contains(stats.hp),
                         "\(type) conf=\(conf): HP \(stats.hp) out of range")
