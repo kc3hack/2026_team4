@@ -34,7 +34,7 @@ struct MainView: View {
 
                 HomeView()
                     .tabItem {
-                        Label("ホーム", systemImage: "house.fill")
+                        Label("合体", systemImage: "arrow.triangle.merge")
                     }
                     .tag(4)
             }
