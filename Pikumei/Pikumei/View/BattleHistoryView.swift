@@ -157,7 +157,7 @@ struct BattleHistoryView: View {
             .frame(height: 180)
             .chartForegroundStyleScale([
                 "勝利": .green,
-                "敗北": .red
+                "敗北": .red,
             ])
         }
         .padding()
