@@ -56,23 +56,32 @@ struct BattlingComponent: View {
                 .overlay { DamageLabelComponent(damage: viewModel.damageToMe) }
                 Spacer()
             }
-            
-            // バトルメッセージ（高さ固定でボタンが動かないようにする）
+
+            // バトルメッセージ（ドラクエ風ウィンドウ）
             Group {
                 if let message = viewModel.battleMessage {
                     Text(message)
                         .font(.custom("DotGothic16-Regular", size: 16))
-                        .multilineTextAlignment(.center)
+                        .multilineTextAlignment(.leading)
                         .foregroundStyle(.white)
                 } else {
                     Text(" ")
                         .font(.custom("DotGothic16-Regular", size: 16))
                 }
             }
-            .frame(maxWidth: .infinity)
+            .frame(maxWidth: .infinity, alignment: .leading)
             .frame(height: 44)
-            .background(.black.opacity(viewModel.battleMessage != nil ? 0.6 : 0))
-            .cornerRadius(8)
+            .padding(.horizontal, 16)
+            .padding(.vertical, 2)
+            .background(
+                RoundedRectangle(cornerRadius: 8)
+                    .fill(Color(white: 0.15).opacity(0.85))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 8)
+                            .stroke(.white.opacity(0.7), lineWidth: 1)
+                    )
+                    .opacity(viewModel.battleMessage != nil ? 1 : 0)
+            )
             .animation(.easeInOut(duration: 0.3), value: viewModel.battleMessage)
             
             // 攻撃ボタン
