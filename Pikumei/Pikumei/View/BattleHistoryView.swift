@@ -185,3 +185,10 @@ private struct SummaryItem: View {
         .frame(maxWidth: .infinity)
     }
 }
+
+#Preview {
+    NavigationStack {
+        BattleHistoryView()
+            .modelContainer(for: BattleHistory.self, inMemory: true)
+    }
+}
