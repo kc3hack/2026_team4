@@ -9,7 +9,7 @@ import SwiftData
 /// バトル履歴リストの1行分を表示するコンポーネント
 struct BattleHistoryRowComponent: View {
     let history: BattleHistory
-
+    
     var body: some View {
         HStack(spacing: 12) {
             // 相手サムネイル
@@ -26,14 +26,14 @@ struct BattleHistoryRowComponent: View {
                     .frame(width: 40, height: 40)
                     .foregroundStyle(.gray.opacity(0.5))
             }
-
+            
             // 相手モンスター名 + タイプ
             VStack(alignment: .leading, spacing: 2) {
                 Text(history.opponentName ?? "???")
                     .font(.custom("DotGothic16-Regular", size: 14))
                     .foregroundStyle(Color.pikumeiNavy)
                     .lineLimit(1)
-
+                
                 TypeLabelComponent(
                     type: history.opponentType,
                     text: history.opponentType.displayName,
@@ -41,9 +41,9 @@ struct BattleHistoryRowComponent: View {
                     fontSize: 11
                 )
             }
-
+            
             Spacer()
-
+            
             // WIN / LOSE バッジ
             Text(history.isWin ? "WIN" : "LOSE")
                 .font(.custom("RocknRollOne-Regular", size: 12))
@@ -54,11 +54,6 @@ struct BattleHistoryRowComponent: View {
                     Capsule()
                         .fill(history.isWin ? .green : .red)
                 )
-
-            // 日付
-            Text(history.battleDate, format: .dateTime.month().day())
-                .font(.custom("DotGothic16-Regular", size: 11))
-                .foregroundStyle(.secondary)
         }
         .padding(.vertical, 4)
     }

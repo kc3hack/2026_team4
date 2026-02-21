@@ -12,32 +12,33 @@ import UIKit
 
 @MainActor
 class SoloBattleViewModel: BattleViewModel {
+    private var monster: Monster
     private let modelContext: ModelContext
     private var cpuAttacks: [BattleAttack] = []
     private var cpuAttackPP: [Int?] = []
     private var cpuAttackTask: Task<Void, Never>?
     private var isFinishing = false
 
-    init(modelContext: ModelContext) {
+    init(monster: Monster, modelContext: ModelContext) {
+        self.monster = monster
         self.modelContext = modelContext
         super.init(battleId: UUID())
     }
 
     // MARK: - 準備
 
-    /// SwiftDataからモンスターを2体ランダム取得してバトルを開始する
+    /// SwiftDataからモンスターを1体ランダム取得してバトルを開始する
     override func prepare() async {
         do {
             let descriptor = FetchDescriptor<Monster>()
             let monsters = try modelContext.fetch(descriptor)
-            guard monsters.count >= 2 else {
+            guard monsters.count >= 1 else {
                 phase = .connectionError
                 return
             }
 
-            let shuffled = monsters.shuffled()
-            let myMonster = shuffled[0]
-            let cpuMonster = shuffled[1]
+            let myMonster = self.monster
+            let cpuMonster = monsters.shuffled()[0]
 
             let myType = myMonster.classificationLabel ?? .fire
             let cpuType = cpuMonster.classificationLabel ?? .fire

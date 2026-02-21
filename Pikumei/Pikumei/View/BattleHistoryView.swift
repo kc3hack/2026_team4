@@ -1,10 +1,3 @@
-//
-//  BattleHistoryView.swift
-//  Pikumei
-//
-//  バトル履歴・戦績画面
-//
-
 import SwiftUI
 import SwiftData
 import Charts
@@ -12,6 +5,13 @@ import Charts
 struct BattleHistoryView: View {
     @Query(sort: \BattleHistory.battleDate, order: .reverse)
     private var histories: [BattleHistory]
+    
+    // 日時フォーマット用のプロパティ
+    private var dateFormatter: DateFormatter {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy/MM/dd HH:mm"
+        return formatter
+    }
     
     var body: some View {
         Group {
@@ -24,10 +24,7 @@ struct BattleHistoryView: View {
             } else {
                 ScrollView {
                     VStack(spacing: 20) {
-                        // 【変更点】履歴リストを一番上に配置しました
                         historyListSection
-                        
-                        // 統計・グラフセクションを下に配置
                         summarySection
                         winRateChartSection
                         typeMatchupChartSection
@@ -45,8 +42,7 @@ struct BattleHistoryView: View {
         )
     }
     
-    // MARK: - バトル履歴リスト (一番上に表示)
-    
+    // MARK: - バトル履歴リスト
     private var historyListSection: some View {
         VStack(alignment: .leading, spacing: 8) {
             Text("最新の履歴")
@@ -55,8 +51,22 @@ struct BattleHistoryView: View {
             
             LazyVStack(spacing: 0) {
                 ForEach(histories) { history in
-                    BattleHistoryRowComponent(history: history)
-                    // 最後の要素以外に区切り線を表示
+                    HStack(alignment: .center, spacing: 12) {
+                        // 左側：名前、アイコン、WIN/LOSEバッジ
+                        BattleHistoryRowComponent(history: history)
+                        
+                        Spacer()
+                        
+                        // 右側：新しい日時（yyyy/MM/dd HH:mm）
+                        Text(dateFormatter.string(from: history.battleDate))
+                            .font(.custom("DotGothic16-Regular", size: 10))
+                            .foregroundStyle(.secondary)
+                            .lineLimit(1)
+                            .fixedSize()
+                    }
+                    .padding(.vertical, 10)
+                    .padding(.horizontal, 4)
+                    
                     if history.id != histories.last?.id {
                         Divider()
                     }
@@ -71,7 +81,6 @@ struct BattleHistoryView: View {
     }
     
     // MARK: - 戦績サマリー
-    
     private var summarySection: some View {
         let summary = BattleHistoryViewModel.summary(from: histories)
         return HStack(spacing: 0) {
@@ -88,7 +97,6 @@ struct BattleHistoryView: View {
     }
     
     // MARK: - 勝率推移グラフ
-    
     private var winRateChartSection: some View {
         let trend = BattleHistoryViewModel.winRateTrend(from: histories)
         return VStack(alignment: .leading, spacing: 8) {
@@ -110,6 +118,8 @@ struct BattleHistoryView: View {
                 .foregroundStyle(.orange)
                 .symbolSize(30)
             }
+            .frame(height: 180)
+            .chartYScale(domain: 0...100)
             .chartYAxis {
                 AxisMarks(values: [0, 25, 50, 75, 100]) { value in
                     AxisGridLine()
@@ -121,8 +131,6 @@ struct BattleHistoryView: View {
                     }
                 }
             }
-            .chartYScale(domain: 0...100)
-            .frame(height: 180)
         }
         .padding()
         .background(
@@ -132,7 +140,6 @@ struct BattleHistoryView: View {
     }
     
     // MARK: - タイプ別戦績グラフ
-    
     private var typeMatchupChartSection: some View {
         let stats = BattleHistoryViewModel.typeMatchupStats(from: histories)
         return VStack(alignment: .leading, spacing: 8) {
@@ -147,11 +154,11 @@ struct BattleHistoryView: View {
                 )
                 .foregroundStyle(stat.isWin ? .green : .red)
             }
+            .frame(height: 180)
             .chartForegroundStyleScale([
                 "勝利": .green,
                 "敗北": .red,
             ])
-            .frame(height: 180)
         }
         .padding()
         .background(
@@ -160,8 +167,6 @@ struct BattleHistoryView: View {
         )
     }
 }
-
-// MARK: - サマリーアイテム
 
 private struct SummaryItem: View {
     let title: String
