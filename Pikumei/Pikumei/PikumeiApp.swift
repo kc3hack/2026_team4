@@ -49,6 +49,6 @@ struct PikumeiApp: App {
                     // 明示的な .font() がないテキスト・ボタンのデフォルトフォント
                     .environment(\.font, .custom("DotGothic16-Regular", size: 15))
         }
-        .modelContainer(for: Monster.self)
+        .modelContainer(for: [Monster.self, BattleHistory.self])
     }
 }

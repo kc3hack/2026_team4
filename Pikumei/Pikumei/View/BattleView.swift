@@ -110,6 +110,16 @@ private struct BattleIdleSection: View {
                     .foregroundStyle(.red)
                     .multilineTextAlignment(.center)
             }
+
+            NavigationLink(destination: BattleHistoryView()) {
+                HStack(spacing: 6) {
+                    Image(systemName: "clock.arrow.circlepath")
+                    Text("バトル履歴")
+                }
+                .font(.custom("DotGothic16-Regular", size: 15))
+                .foregroundStyle(Color.pikumeiNavy)
+                .padding(.top, 8)
+            }
         }
     }
 }

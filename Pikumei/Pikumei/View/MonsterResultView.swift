@@ -39,7 +39,7 @@ struct MonsterResultView: View {
                 // 紙吹雪後に名前入力をカードの上に表示
                 if showNameInput && !nameConfirmed {
                     HStack(spacing: 8) {
-                        TextField("モンスターの名前を入力", text: $monsterName)
+                        TextField("メイティの名前を入力", text: $monsterName)
                             .textFieldStyle(.roundedBorder)
 
                         if !monsterName.isEmpty {
