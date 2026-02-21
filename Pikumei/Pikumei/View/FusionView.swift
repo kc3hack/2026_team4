@@ -193,7 +193,8 @@ struct FusionView: View {
 
             Text("合体成功！")
                 .font(.custom("RocknRollOne-Regular", size: 24))
-                .foregroundStyle(.white)
+                .foregroundStyle(.black)
+                .padding(.top, 40)
 
             if let uiImage = monster.uiImage {
                 Image(uiImage: uiImage)
@@ -213,10 +214,10 @@ struct FusionView: View {
             Spacer()
 
             BlueButtonComponent(title: "とじる") {
+                vm.reset()
                 dismiss()
             }
-
-            Spacer(minLength: 40)
+            .padding(.bottom, 40)
         }
         .padding()
     }
