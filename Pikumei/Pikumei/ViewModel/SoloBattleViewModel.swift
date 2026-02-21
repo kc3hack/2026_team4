@@ -143,6 +143,7 @@ class SoloBattleViewModel: BattleViewModel {
             }
         } else {
             SoundPlayerComponent.shared.play(.miss)
+            parformMissAnimation(target: .opponent)
             damage = 0
             damageToOpponent = 0
             let name = myName ?? "〇〇"
@@ -232,6 +233,7 @@ class SoloBattleViewModel: BattleViewModel {
             }
         } else {
             SoundPlayerComponent.shared.play(.miss)
+            parformMissAnimation(target: .me)
             damageToMe = 0
             let oppName = opponentName ?? "CPU"
             showBattleMessage("\(oppName)の攻撃は外れた！")

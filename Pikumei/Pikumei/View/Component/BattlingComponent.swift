@@ -21,7 +21,8 @@ struct BattlingComponent: View {
                     maxHp: viewModel.opponentStats?.hp ?? 1,
                     type: viewModel.opponentLabel,
                     size: 120,
-                    blinkTrigger: viewModel.opponentBlinkTrigger
+                    blinkTrigger: viewModel.opponentBlinkTrigger,
+                    flipTrigger: viewModel.opponentFlipTrigger
                 )
                 .overlay {
                     if let gif = viewModel.effectOnOpponent {
@@ -42,7 +43,8 @@ struct BattlingComponent: View {
                     maxHp: viewModel.myStats?.hp ?? 1,
                     type: viewModel.myLabel,
                     size: 160,
-                    blinkTrigger: viewModel.myBlinkTrigger
+                    blinkTrigger: viewModel.myBlinkTrigger,
+                    flipTrigger: viewModel.myFlipTrigger
                 )
                 .overlay {
                     if let gif = viewModel.effectOnMe {
@@ -143,8 +145,16 @@ struct DamageLabelComponent: View {
                     viewModel.parformDamageAnimation(target: .opponent)
                 }
                 
+                Button("Miss opponent") {
+                    viewModel.parformMissAnimation(target: .opponent)
+                }
+                
                 Button("Damage me") {
                     viewModel.parformDamageAnimation(target: .me)
+                }
+                
+                Button("Miss me") {
+                    viewModel.parformMissAnimation(target: .me)
                 }
             }
         )

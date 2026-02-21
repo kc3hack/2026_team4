@@ -34,7 +34,9 @@ class BattleViewModel: ObservableObject {
     @Published var turnTimeRemaining: Int = 0  // ターン制限時間の残り秒数
     @Published var myBlinkTrigger: Bool = false
     @Published var opponentBlinkTrigger: Bool = false
-
+    @Published var myFlipTrigger: Bool = false
+    @Published var opponentFlipTrigger: Bool = false
+    
     let battleId: UUID
     private var isPlayer1 = false
     private var userId: UUID?
@@ -194,11 +196,19 @@ class BattleViewModel: ObservableObject {
         }
     }
     
-    // ダメージを受けたモンスターにアニメーションを適用する
+    /// ダメージを受けたモンスターにBlinkアニメーションを適用する
     func parformDamageAnimation(target: AttackTarget) {
         switch target {
         case .me: myBlinkTrigger.toggle()
         case .opponent: opponentBlinkTrigger.toggle()
+        }
+    }
+    
+    /// 攻撃を回避したモンスターにFlipアニメーションを適用する
+    func parformMissAnimation(target: AttackTarget) {
+        switch target {
+        case .me: myFlipTrigger.toggle()
+        case .opponent: opponentFlipTrigger.toggle()
         }
     }
 
@@ -249,6 +259,7 @@ class BattleViewModel: ObservableObject {
         } else {
             // ミス時はGIFエフェクトなしでミス効果音のみ再生
             SoundPlayerComponent.shared.play(.miss)
+            parformMissAnimation(target: .opponent)
             damage = 0
             damageToOpponent = 0  // 0 = MISS 表示用
             let name = myName ?? "〇〇"
@@ -484,7 +495,9 @@ class BattleViewModel: ObservableObject {
             SoundPlayerComponent.shared.play(opponentAttack?.sound ?? .panch)
             if let opponentAttack {
                 showAttackEffect(attack: opponentAttack, target: .me)
+                
             }
+            parformDamageAnimation(target: .me)
             let actualDamage: Int
             if let receivedDamage, receivedDamage > 0 {
                 // 送信側が計算したダメージ値を使用
@@ -514,6 +527,7 @@ class BattleViewModel: ObservableObject {
         } else {
             // ミス時はGIFエフェクトなしでミス効果音のみ再生
             SoundPlayerComponent.shared.play(.miss)
+            parformMissAnimation(target: .me)
             damageToMe = 0  // 0 = MISS 表示用
             let oppName = opponentName ?? "〇〇"
             showBattleMessage("\(oppName)の攻撃は外れた！")
