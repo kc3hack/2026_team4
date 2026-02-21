@@ -154,7 +154,7 @@ class SoloBattleViewModel: BattleViewModel {
             opponentHp = 0
             isFinishing = true
             Task {
-                try? await Task.sleep(for: .seconds(1.5))
+                try? await Task.sleep(for: .seconds(2.0))
                 self.phase = .won
             }
             return
@@ -247,7 +247,7 @@ class SoloBattleViewModel: BattleViewModel {
             myHp = 0
             isFinishing = true
             Task {
-                try? await Task.sleep(for: .seconds(1.5))
+                try? await Task.sleep(for: .seconds(2.0))
                 self.phase = .lost
             }
         } else {

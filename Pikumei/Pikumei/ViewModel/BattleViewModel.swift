@@ -284,7 +284,7 @@ class BattleViewModel: ObservableObject {
                 opponentHp = 0
                 self.isFinishing = true
                 // 最後のダメージ表示を見せるため少し待つ
-                try? await Task.sleep(for: .seconds(1.5))
+                try? await Task.sleep(for: .seconds(2.0))
                 phase = .won
                 finishBattle(winnerId: userId)
                 // 敗者に終了を通知
@@ -372,7 +372,7 @@ class BattleViewModel: ObservableObject {
                 self.opponentTimeoutTask = nil
                 self.myHp = 0
                 self.isFinishing = true
-                try? await Task.sleep(for: .seconds(1.5))
+                try? await Task.sleep(for: .seconds(2.0))
                 self.phase = .lost
             }
         }
@@ -549,7 +549,7 @@ class BattleViewModel: ObservableObject {
             guard !isFinishing else { return }
             isFinishing = true
             Task {
-                try? await Task.sleep(for: .seconds(1.5))
+                try? await Task.sleep(for: .seconds(2.0))
                 self.phase = .lost
             }
         } else {
