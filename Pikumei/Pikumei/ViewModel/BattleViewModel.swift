@@ -410,6 +410,7 @@ class BattleViewModel: ObservableObject {
                     .execute()
             } catch {
                 print("⚠️ バトル結果の記録に失敗: \(error)")
+                battleLog.append("バトル結果の記録に失敗しました")
             }
         }
     }
