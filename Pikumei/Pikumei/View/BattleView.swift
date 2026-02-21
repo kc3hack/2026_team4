@@ -20,17 +20,17 @@ struct BattleView: View {
                 case .idle:
                     BattleIdleSection(
                         onCreate: { Task {
-                            await matchingVM.createBattle(monsterId: selectionVM.monsterId)
+                            await matchingVM.createBattle(selectionVM: selectionVM)
                         } },
                         onJoin: { Task {
-                            await matchingVM.joinBattle(monsterId: selectionVM.monsterId)
+                            await matchingVM.joinBattle(selectionVM: selectionVM)
                         } },
-                        onSolo: {
-                            soloBattleVM = matchingVM.startSoloBattle(
-                                monster: selectionVM.monster,
+                        onSolo: { Task {
+                            soloBattleVM = await matchingVM.startSoloBattle(
+                                selectionVM: selectionVM,
                                 modelContext: modelContext
                             )
-                        },
+                        } },
                         soloErrorMessage: matchingVM.soloErrorMessage,
                         selectionVM: selectionVM
                     )
