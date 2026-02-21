@@ -193,10 +193,11 @@ class ExchangeViewModel: ObservableObject {
                status == "matched" {
                 print("[Exchange] status=matched 検出 → 交換処理開始")
                 Task { @MainActor [weak self] in
-                    self?.waitingTimeoutTask?.cancel()
-                    self?.unsubscribe()
-                    self?.phase = .exchanging
-                    await self?.completeExchange(exchangeId: exchangeId)
+                    guard let self, !self.isCompleting, case .waiting = self.phase else { return }
+                    self.waitingTimeoutTask?.cancel()
+                    self.unsubscribe()
+                    self.phase = .exchanging
+                    await self.completeExchange(exchangeId: exchangeId)
                 }
             }
         }
@@ -218,6 +219,8 @@ class ExchangeViewModel: ObservableObject {
                 .value
 
             if current.status == "matched" {
+                // Realtime コールバックで既に処理開始されている場合はスキップ
+                guard !isCompleting, case .waiting = phase else { return }
                 print("[Exchange] 購読前にマッチ済み → 交換処理開始")
                 waitingTimeoutTask?.cancel()
                 unsubscribe()
