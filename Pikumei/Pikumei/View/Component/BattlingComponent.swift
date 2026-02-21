@@ -53,6 +53,13 @@ struct BattlingComponent: View {
                 Spacer()
             }
 
+            // ターン制限時間カウントダウン
+            if viewModel.isMyTurn && viewModel.turnTimeRemaining > 0 {
+                Text("のこり \(viewModel.turnTimeRemaining)秒")
+                    .font(.custom("DotGothic16-Regular", size: 14))
+                    .foregroundStyle(viewModel.turnTimeRemaining <= 10 ? .red : .primary)
+            }
+
             // 攻撃ボタン
             HStack(spacing: 8) {
                 ForEach(viewModel.myAttacks.indices, id: \.self) { i in

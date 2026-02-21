@@ -31,6 +31,7 @@ class BattleViewModel: ObservableObject {
     @Published var effectOnMe: String?        // 自分モンスター上に表示するエフェクト
     @Published var damageToOpponent: Int?  // 相手へのダメージ（0 = MISS）
     @Published var damageToMe: Int?  // 自分へのダメージ（0 = MISS）
+    @Published var turnTimeRemaining: Int = 0  // ターン制限時間の残り秒数
 
     let battleId: UUID
     private var isPlayer1 = false
@@ -42,6 +43,7 @@ class BattleViewModel: ObservableObject {
     private var readyPingTask: Task<Void, Never>?
     private var attackResendTask: Task<Void, Never>?
     private var opponentTimeoutTask: Task<Void, Never>?
+    private var turnTimerTask: Task<Void, Never>?
     private var finishedSubscription: RealtimeSubscription?
     private var opponentReady = false
     private var myTurnCount = 0          // 自分の攻撃ターン番号（送信用）
@@ -200,6 +202,7 @@ class BattleViewModel: ObservableObject {
         guard index < myAttacks.count else { return }
         // PP チェック
         if let pp = attackPP[index], pp <= 0 { return }
+        stopTurnTimer()
         isMyTurn = false
         // 相手の攻撃待ちタイムアウト監視を開始
         startOpponentTimeout()
@@ -264,9 +267,10 @@ class BattleViewModel: ObservableObject {
                 }
             }
 
-            // 相手が応答（次の攻撃を送信）するまで 2 秒ごとに再送、15 秒でタイムアウト
+            // 相手が応答（次の攻撃を送信）するまで 2 秒ごとに再送
+            // タイムアウト検知は opponentTimeoutTask に委譲
             var elapsed = 0
-            while !Task.isCancelled, !self.isMyTurn, elapsed < 15 {
+            while !Task.isCancelled, !self.isMyTurn, elapsed < 20 {
                 let p = self.phase
                 guard p == .battling || p == .won else { break }
                 try? await Task.sleep(for: .seconds(2))
@@ -281,12 +285,6 @@ class BattleViewModel: ObservableObject {
                     try? await self.channel?.broadcast(event: "finished", message: finishedMsg)
                 }
             }
-
-            // .battling のままタイムアウト → 通信エラー（.won なら自分の勝利は確定済み）
-            if !Task.isCancelled, !self.isMyTurn, self.phase == .battling {
-                battleLog.append("対戦相手との接続がタイムアウトしました")
-                phase = .connectionError
-            }
         }
     }
 
@@ -299,6 +297,7 @@ class BattleViewModel: ObservableObject {
         attackResendTask = nil
         opponentTimeoutTask?.cancel()
         opponentTimeoutTask = nil
+        stopTurnTimer()
         subscription = nil
         readySubscription = nil
         finishedSubscription = nil
@@ -381,15 +380,43 @@ class BattleViewModel: ObservableObject {
         }
     }
 
-    /// 相手の攻撃待ちタイムアウト（30秒間攻撃が来なければ通信エラー）
+    /// 相手の攻撃待ちタイムアウト（相手のターン制限15秒＋通信遅延を考慮して20秒）
     private func startOpponentTimeout() {
         opponentTimeoutTask?.cancel()
         opponentTimeoutTask = Task {
-            try? await Task.sleep(for: .seconds(30))
+            try? await Task.sleep(for: .seconds(20))
             guard !Task.isCancelled, !self.isMyTurn, self.phase == .battling else { return }
             battleLog.append("対戦相手との接続がタイムアウトしました")
             phase = .connectionError
         }
+    }
+
+    /// ターン制限タイマーを開始（15秒で自動攻撃）
+    private func startTurnTimer() {
+        stopTurnTimer()
+        turnTimeRemaining = 15
+        turnTimerTask = Task {
+            for _ in 0..<15 {
+                try? await Task.sleep(for: .seconds(1))
+                guard !Task.isCancelled else { return }
+                turnTimeRemaining -= 1
+            }
+            guard !Task.isCancelled, self.isMyTurn, self.phase == .battling else { return }
+            // 時間切れ：PP が残っている技からランダムに自動攻撃
+            let available = myAttacks.indices.filter { i in
+                guard let pp = attackPP[i] else { return true }  // nil = 無制限
+                return pp > 0
+            }
+            let chosen = available.randomElement() ?? 0
+            attack(index: chosen)
+        }
+    }
+
+    /// ターン制限タイマーを停止
+    private func stopTurnTimer() {
+        turnTimerTask?.cancel()
+        turnTimerTask = nil
+        turnTimeRemaining = 0
     }
 
     /// 相手の ready を受信
@@ -409,6 +436,11 @@ class BattleViewModel: ObservableObject {
 
         isMyTurn = isPlayer1
         battleLog.append("バトル開始！")
+
+        // Player1（先攻）はターン制限タイマーを開始
+        if isMyTurn {
+            startTurnTimer()
+        }
 
         // Player2（受信待ち側）はタイムアウト監視を開始
         if !isMyTurn {
@@ -481,6 +513,7 @@ class BattleViewModel: ObservableObject {
             battleLog.append("敗北...")
         } else {
             isMyTurn = true
+            startTurnTimer()
         }
     }
 
