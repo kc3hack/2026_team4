@@ -22,7 +22,7 @@ class BattleMonsterSelectionViewModel: ObservableObject {
     public func updateMonster() async {
         guard let monster = try? await self.fetchMonster(self.monsterId) else {return}
         self.monster = monster
-        self.stats = BattleStatsGenerator.generate(label: monster.classificationLabel, confidence: monster.classificationConfidence)
+        self.stats = monster.battleStats
         print("[Monster Selection] updated")
     }
     
@@ -31,18 +31,23 @@ class BattleMonsterSelectionViewModel: ObservableObject {
         guard let id = monsterId else {return nil}
         let monster: MonsterLabelRow = try await client
             .from("monsters")
-            .select("id, classification_label, classification_confidence, name, thumbnail")
+            .select("id, classification_label, classification_confidence, name, thumbnail, fused_hp, fused_attack, fused_special_attack, fused_special_defense")
             .eq("id", value: id.uuidString)
             .single()
             .execute()
             .value
-        
+
         guard let thumbnailData = monster.thumbnailData else {return nil}
         return Monster(imageData: thumbnailData,
                        classificationLabel: monster.classificationLabel,
                        classificationConfidence: monster.classificationConfidence,
                        supabaseId: id,
                        name: monster.name,
+                       isFused: monster.isFused,
+                       fusedHp: monster.fusedHp,
+                       fusedAttack: monster.fusedAttack,
+                       fusedSpecialAttack: monster.fusedSpecialAttack,
+                       fusedSpecialDefense: monster.fusedSpecialDefense
         )
     }
     

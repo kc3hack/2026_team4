@@ -35,7 +35,11 @@ class MonsterSyncService {
             classificationLabel: label.rawValue,
             classificationConfidence: monster.classificationConfidence,
             thumbnail: thumbnail,
-            name: monster.name
+            name: monster.name,
+            fusedHp: monster.fusedHp,
+            fusedAttack: monster.fusedAttack,
+            fusedSpecialAttack: monster.fusedSpecialAttack,
+            fusedSpecialDefense: monster.fusedSpecialDefense
         )
 
         // BYTEA のデコード問題を避けるため id のみ取得
@@ -88,6 +92,10 @@ struct MonsterRecord: Codable {
     let classificationConfidence: Double?
     let thumbnail: Data
     let name: String?
+    let fusedHp: Int?
+    let fusedAttack: Int?
+    let fusedSpecialAttack: Int?
+    let fusedSpecialDefense: Int?
 
     enum CodingKeys: String, CodingKey {
         case userId = "user_id"
@@ -95,6 +103,10 @@ struct MonsterRecord: Codable {
         case classificationConfidence = "classification_confidence"
         case thumbnail
         case name
+        case fusedHp = "fused_hp"
+        case fusedAttack = "fused_attack"
+        case fusedSpecialAttack = "fused_special_attack"
+        case fusedSpecialDefense = "fused_special_defense"
     }
 }
 

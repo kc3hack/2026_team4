@@ -69,6 +69,10 @@ struct MonsterLabelRow: Codable {
     let name: String?
     /// Supabase BYTEA は hex 文字列で返るため String で受け取る
     let thumbnail: String?
+    let fusedHp: Int?
+    let fusedAttack: Int?
+    let fusedSpecialAttack: Int?
+    let fusedSpecialDefense: Int?
 
     enum CodingKeys: String, CodingKey {
         case id
@@ -76,12 +80,35 @@ struct MonsterLabelRow: Codable {
         case classificationConfidence = "classification_confidence"
         case name
         case thumbnail
+        case fusedHp = "fused_hp"
+        case fusedAttack = "fused_attack"
+        case fusedSpecialAttack = "fused_special_attack"
+        case fusedSpecialDefense = "fused_special_defense"
     }
 
     /// BYTEA hex 文字列を Data に変換（二段階デコード）
     var thumbnailData: Data? {
         guard let thumbnail else { return nil }
         return Data(byteaHex: thumbnail)
+    }
+
+    /// 合体モンスターかどうか
+    var isFused: Bool {
+        fusedHp != nil
+    }
+
+    /// 合体ステータスを考慮した BattleStats を返す
+    var battleStats: BattleStats {
+        if let hp = fusedHp,
+           let atk = fusedAttack,
+           let spAtk = fusedSpecialAttack,
+           let spDef = fusedSpecialDefense {
+            return BattleStats(hp: hp, attack: atk, specialAttack: spAtk, specialDefense: spDef)
+        }
+        return BattleStatsGenerator.generate(
+            label: classificationLabel,
+            confidence: classificationConfidence
+        )
     }
 }
 
