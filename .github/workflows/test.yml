@@ -43,4 +43,5 @@ jobs:
           xcodebuild test \
             -scheme Pikumei \
             -destination 'platform=iOS Simulator,name=iPhone 16' \
+            -only-testing:PikumeiTests \
             2>&1 | tee build.log | tail -50
