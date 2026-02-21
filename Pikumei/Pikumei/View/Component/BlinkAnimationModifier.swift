@@ -14,11 +14,11 @@ struct BlinkAnimationModifier: ViewModifier {
     func body(content: Content) -> some View {
         // phaseAnimator: [1, 0, 1, 0] の順番で不透明度を変化させて点滅させる
         content
-            .phaseAnimator([1, 0, 1, 0], trigger: trigger) { content, phase in
+            .phaseAnimator([1, 0, 1, 0, 1, 0], trigger: trigger) { content, phase in
                 content
                     .opacity(phase)
             } animation: { phase in
-                    .linear(duration: 0.1)
+                    .linear(duration: 0.07)
             }
     }
 }
