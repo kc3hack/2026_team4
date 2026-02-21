@@ -6,7 +6,7 @@ struct BattleHistoryView: View {
     @Query(sort: \BattleHistory.battleDate, order: .reverse)
     private var histories: [BattleHistory]
     
-    // 日時フォーマット用のプロパティ（秒数まで表示）
+    // 日時フォーマット用のプロパティ
     private var dateFormatter: DateFormatter {
         let formatter = DateFormatter()
         formatter.dateFormat = "yyyy/MM/dd HH:mm"
@@ -43,7 +43,6 @@ struct BattleHistoryView: View {
     }
     
     // MARK: - バトル履歴リスト
-    
     private var historyListSection: some View {
         VStack(alignment: .leading, spacing: 8) {
             Text("最新の履歴")
@@ -52,22 +51,20 @@ struct BattleHistoryView: View {
             
             LazyVStack(spacing: 0) {
                 ForEach(histories) { history in
-                    // 横並びのレイアウト
                     HStack(alignment: .center, spacing: 12) {
-                        
-                        // 左側：名前、アイコン、WIN/LOSEバッジなど
+                        // 左側：名前、アイコン、WIN/LOSEバッジ
                         BattleHistoryRowComponent(history: history)
                         
                         Spacer()
                         
-                        // 右側：新しい日時（yyyy/MM/dd HH:mm:ss）
+                        // 右側：新しい日時（yyyy/MM/dd HH:mm）
                         Text(dateFormatter.string(from: history.battleDate))
                             .font(.custom("DotGothic16-Regular", size: 10))
                             .foregroundStyle(.secondary)
                             .lineLimit(1)
-                            .fixedSize() // 文字が圧縮されないように固定
+                            .fixedSize()
                     }
-                    .padding(.vertical, 10) // 上下余白を少し広げて見やすく
+                    .padding(.vertical, 10)
                     .padding(.horizontal, 4)
                     
                     if history.id != histories.last?.id {
@@ -77,10 +74,7 @@ struct BattleHistoryView: View {
             }
         }
         .padding()
-        .background(
-            RoundedRectangle(cornerRadius: 12)
-                .fill(.white.opacity(0.85))
-        )
+        .background(RoundedRectangle(cornerRadius: 12).fill(.white.opacity(0.85)))
     }
     
     // MARK: - 戦績サマリー
@@ -93,10 +87,7 @@ struct BattleHistoryView: View {
             SummaryItem(title: "勝率", value: "\(Int(summary.winRate * 100))%", color: .orange)
         }
         .padding()
-        .background(
-            RoundedRectangle(cornerRadius: 12)
-                .fill(.white.opacity(0.85))
-        )
+        .background(RoundedRectangle(cornerRadius: 12).fill(.white.opacity(0.85)))
     }
     
     // MARK: - 勝率推移グラフ
@@ -114,6 +105,8 @@ struct BattleHistoryView: View {
                     .foregroundStyle(.orange)
                     .symbolSize(30)
             }
+            .frame(height: 180)
+            .chartYScale(domain: 0...100)
             .chartYAxis {
                 AxisMarks(values: [0, 25, 50, 75, 100]) { value in
                     AxisGridLine()
@@ -124,8 +117,6 @@ struct BattleHistoryView: View {
                     }
                 }
             }
-            .chartYScale(domain: 0...100)
-            .frame(height: 180)
         }
         .padding()
         .background(RoundedRectangle(cornerRadius: 12).fill(.white.opacity(0.85)))
@@ -143,8 +134,8 @@ struct BattleHistoryView: View {
                 BarMark(x: .value("タイプ", stat.opponentType.displayName), y: .value("回数", stat.count))
                     .foregroundStyle(stat.isWin ? .green : .red)
             }
-            .chartForegroundStyleScale(["勝利": .green, "敗北": .red])
             .frame(height: 180)
+            .chartForegroundStyleScale(["勝利": .green, "敗北": .red])
         }
         .padding()
         .background(RoundedRectangle(cornerRadius: 12).fill(.white.opacity(0.85)))
@@ -155,10 +146,15 @@ private struct SummaryItem: View {
     let title: String
     let value: String
     let color: Color
+    
     var body: some View {
         VStack(spacing: 4) {
-            Text(value).font(.custom("RocknRollOne-Regular", size: 20)).foregroundStyle(color)
-            Text(title).font(.custom("DotGothic16-Regular", size: 11)).foregroundStyle(.secondary)
+            Text(value)
+                .font(.custom("RocknRollOne-Regular", size: 20))
+                .foregroundStyle(color)
+            Text(title)
+                .font(.custom("DotGothic16-Regular", size: 11))
+                .foregroundStyle(.secondary)
         }
         .frame(maxWidth: .infinity)
     }
