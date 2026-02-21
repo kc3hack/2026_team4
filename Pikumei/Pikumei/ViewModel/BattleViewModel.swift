@@ -41,7 +41,11 @@ class BattleViewModel: ObservableObject {
     private var readySubscription: RealtimeSubscription?
     private var readyPingTask: Task<Void, Never>?
     private var attackResendTask: Task<Void, Never>?
+    private var opponentTimeoutTask: Task<Void, Never>?
+    private var finishedSubscription: RealtimeSubscription?
     private var opponentReady = false
+    private var myTurnCount = 0          // 自分の攻撃ターン番号（送信用）
+    private var lastReceivedTurn = -1    // 相手から受信した最新ターン番号（重複排除用）
 
     init(battleId: UUID) {
         self.battleId = battleId
@@ -197,6 +201,8 @@ class BattleViewModel: ObservableObject {
         // PP チェック
         if let pp = attackPP[index], pp <= 0 { return }
         isMyTurn = false
+        // 相手の攻撃待ちタイムアウト監視を開始
+        startOpponentTimeout()
 
         let chosen = myAttacks[index]
         let multiplier = chosen.type.effectiveness(against: opponentLabel)
@@ -238,7 +244,8 @@ class BattleViewModel: ObservableObject {
         }
 
         // 攻撃 Broadcast を相手が応答するまで定期再送（startReadyPing パターン）
-        let message = AttackMessage(type: "attack", attackType: chosen.type.rawValue, hit: hit, damage: damage)
+        myTurnCount += 1
+        let message = AttackMessage(type: "attack", turn: myTurnCount, attackType: chosen.type.rawValue, hit: hit, damage: damage)
         attackResendTask?.cancel()
         attackResendTask = Task {
             // 初回送信
@@ -250,6 +257,11 @@ class BattleViewModel: ObservableObject {
                 phase = .won
                 battleLog.append("勝利！")
                 finishBattle(winnerId: userId)
+                // 敗者に終了を通知
+                if let winnerId = self.userId {
+                    let finishedMsg = FinishedMessage(type: "finished", winnerId: winnerId.uuidString)
+                    try? await self.channel?.broadcast(event: "finished", message: finishedMsg)
+                }
             }
 
             // 相手が応答（次の攻撃を送信）するまで 2 秒ごとに再送、15 秒でタイムアウト
@@ -263,6 +275,11 @@ class BattleViewModel: ObservableObject {
                 let p2 = self.phase
                 guard p2 == .battling || p2 == .won else { break }
                 try? await channel?.broadcast(event: "attack", message: message)
+                // 勝利確定済みなら finished も再送
+                if p2 == .won, let winnerId = self.userId {
+                    let finishedMsg = FinishedMessage(type: "finished", winnerId: winnerId.uuidString)
+                    try? await self.channel?.broadcast(event: "finished", message: finishedMsg)
+                }
             }
 
             // .battling のままタイムアウト → 通信エラー（.won なら自分の勝利は確定済み）
@@ -280,8 +297,11 @@ class BattleViewModel: ObservableObject {
         readyPingTask = nil
         attackResendTask?.cancel()
         attackResendTask = nil
+        opponentTimeoutTask?.cancel()
+        opponentTimeoutTask = nil
         subscription = nil
         readySubscription = nil
+        finishedSubscription = nil
         if let channel {
             Task {
                 await channel.unsubscribe()
@@ -302,17 +322,30 @@ class BattleViewModel: ObservableObject {
         subscription = ch.onBroadcast(event: "attack") { [weak self] payload in
             // SDK は message を payload["payload"] の下にネストする
             let inner = payload["payload"]?.objectValue
+            let turn = inner?["turn"]?.intValue
             let attackTypeRaw = inner?["attackType"]?.stringValue
             let hit = inner?["hit"]?.boolValue ?? false  // 安全側デフォルト
             let damage = inner?["damage"]?.intValue
             Task { @MainActor [weak self] in
-                self?.handleOpponentAttack(attackTypeRaw: attackTypeRaw, hit: hit, damage: damage)
+                self?.handleOpponentAttack(turn: turn, attackTypeRaw: attackTypeRaw, hit: hit, damage: damage)
             }
         }
 
         readySubscription = ch.onBroadcast(event: "ready") { [weak self] _ in
             Task { @MainActor [weak self] in
                 self?.handleOpponentReady()
+            }
+        }
+
+        // 相手の勝利通知を受信したら敗北に遷移する
+        finishedSubscription = ch.onBroadcast(event: "finished") { [weak self] _ in
+            Task { @MainActor [weak self] in
+                guard let self, self.phase == .battling else { return }
+                self.opponentTimeoutTask?.cancel()
+                self.opponentTimeoutTask = nil
+                self.myHp = 0
+                self.phase = .lost
+                self.battleLog.append("敗北...")
             }
         }
 
@@ -348,6 +381,17 @@ class BattleViewModel: ObservableObject {
         }
     }
 
+    /// 相手の攻撃待ちタイムアウト（30秒間攻撃が来なければ通信エラー）
+    private func startOpponentTimeout() {
+        opponentTimeoutTask?.cancel()
+        opponentTimeoutTask = Task {
+            try? await Task.sleep(for: .seconds(30))
+            guard !Task.isCancelled, !self.isMyTurn, self.phase == .battling else { return }
+            battleLog.append("対戦相手との接続がタイムアウトしました")
+            phase = .connectionError
+        }
+    }
+
     /// 相手の ready を受信
     private func handleOpponentReady() {
         guard phase == .battling, !opponentReady else { return }
@@ -365,12 +409,24 @@ class BattleViewModel: ObservableObject {
 
         isMyTurn = isPlayer1
         battleLog.append("バトル開始！")
+
+        // Player2（受信待ち側）はタイムアウト監視を開始
+        if !isMyTurn {
+            startOpponentTimeout()
+        }
     }
 
     /// 相手の攻撃を受信した時の処理
-    private func handleOpponentAttack(attackTypeRaw: String?, hit: Bool, damage receivedDamage: Int?) {
-        // !isMyTurn ガード: リトライで重複メッセージが届いても1回だけ処理する
-        guard !isMyTurn, phase == .battling, let myStats, let opponentStats, let opponentLabel, let myLabel else { return }
+    private func handleOpponentAttack(turn: Int?, attackTypeRaw: String?, hit: Bool, damage receivedDamage: Int?) {
+        // ターン番号による重複排除：同じターンのリトライメッセージは無視する
+        if let turn, turn <= lastReceivedTurn { return }
+        if let turn { lastReceivedTurn = turn }
+
+        guard phase == .battling, let myStats, let opponentStats, let opponentLabel, let myLabel else { return }
+
+        // 攻撃を受信したのでタイムアウト監視をキャンセル
+        opponentTimeoutTask?.cancel()
+        opponentTimeoutTask = nil
 
         // 前回攻撃のリトライ停止（相手がこちらの攻撃を受信済みであることが確認できた）
         attackResendTask?.cancel()
@@ -460,12 +516,19 @@ class BattleViewModel: ObservableObject {
 /// 攻撃イベント用（Codable で broadcast に渡す）
 private struct AttackMessage: Codable {
     let type: String
+    let turn: Int     // ターン番号（リトライ重複排除用）
     let attackType: String
     let hit: Bool
-    let damage: Int  // hit 時のダメージ量（miss 時は 0）
+    let damage: Int   // hit 時のダメージ量（miss 時は 0）
 }
 
 /// 準備完了イベント用
 private struct ReadyMessage: Codable {
     let type: String
+}
+
+/// バトル終了イベント用（勝者が敗者に終了を通知する）
+private struct FinishedMessage: Codable {
+    let type: String
+    let winnerId: String
 }
