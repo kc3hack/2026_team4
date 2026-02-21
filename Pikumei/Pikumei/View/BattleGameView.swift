@@ -41,29 +41,23 @@ struct BattleGameView: View {
                 case .battling:
                     BattlingComponent(viewModel: viewModel)
                 case .won:
-                    VictoryComponent(battleLog: viewModel.battleLog) {
+                    VictoryComponent {
                         viewModel.cleanup()
                         onFinish()
                     }
                 case .lost:
-                    DefeatComponent(battleLog: viewModel.battleLog) {
+                    DefeatComponent {
                         viewModel.cleanup()
                         onFinish()
                     }
                 case .connectionError:
-                    ConnectionErrorComponent(battleLog: viewModel.battleLog) {
+                    ConnectionErrorComponent {
                         viewModel.cleanup()
                         onFinish()
                     }
                 }
             }
 
-            // 攻撃エフェクト
-            if let gif = viewModel.attackEffectGif {
-                GifImageComponent(name: gif, repeatCount: 1, speed: 3.0)
-                    .frame(width: 80, height: 80)
-                    .allowsHitTesting(false)
-            }
         }
         .task {
             await viewModel.prepare()

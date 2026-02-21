@@ -8,8 +8,6 @@ import Lottie
 
 // 🌟 名前を VictoryComponent に変更
 struct VictoryComponent: View {
-    // 🌟 外部からデータを受け取るための変数を追加
-    let battleLog: [String]
     let onBack: () -> Void
 
     @State private var showCharacter = false
@@ -53,15 +51,6 @@ struct VictoryComponent: View {
                     .scaleEffect(showCharacter ? 1.0 : 0.5)
                     .opacity(showCharacter ? 1.0 : 0.0)
                 
-                // 🌟 ここにメンバーが作ってくれた BattleLogComponent を追加してもOKです
-                // （もしログを表示したい場合はコメントアウトを外してください）
-                /*
-                if showButton {
-                    BattleLogComponent(battleLog: battleLog)
-                        .transition(.opacity)
-                }
-                */
-                
                 Spacer().frame(height: 20)
                 
                 if showButton {
@@ -95,9 +84,7 @@ struct VictoryComponent: View {
 
 // プレビュー用
 #Preview {
-    // プレビューでもダミーのデータを渡す必要があります
     VictoryComponent(
-        battleLog: ["100のダメージ！", "倒した！"],
         onBack: {
             print("プレビュー：次へボタンが押されました")
         }
