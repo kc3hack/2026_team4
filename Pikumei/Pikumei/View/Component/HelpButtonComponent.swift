@@ -13,12 +13,13 @@ struct HelpButtonComponent: View {
         Button {
             isShowingHelp = true
         } label: {
-            Text("？")
-                .font(.custom("RocknRollOne-Regular", size: 18))
+            Label("ヘルプ", systemImage: "questionmark.circle")
+                .font(.custom("RocknRollOne-Regular", size: 13))
                 .foregroundStyle(.white)
-                .frame(width: 36, height: 36)
+                .padding(.horizontal, 12)
+                .padding(.vertical, 6)
                 .background(Color.pikumeiNavy)
-                .clipShape(Circle())
+                .clipShape(Capsule())
                 .shadow(color: .black.opacity(0.2), radius: 4, y: 2)
         }
     }
