@@ -37,6 +37,7 @@ struct BattleMonsterHUDComponent: View {
                 .font(.custom("DotGothic16-Regular", size: size * 0.14))
                 .bold()
                 .lineLimit(1)
+                .shadow(color: .white, radius: 1)
 
             // HPバー
             hpBar
