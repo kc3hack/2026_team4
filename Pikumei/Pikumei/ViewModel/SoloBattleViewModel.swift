@@ -182,6 +182,8 @@ class SoloBattleViewModel: BattleViewModel {
         }
         guard !available.isEmpty else {
             // 全技PP切れ → プレイヤーにターンを渡す
+            let oppName = opponentName ?? "CPU"
+            showBattleMessage("\(oppName)は技を出せない！")
             isMyTurn = true
             startTurnTimer()
             return
