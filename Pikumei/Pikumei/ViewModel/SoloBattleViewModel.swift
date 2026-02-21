@@ -120,6 +120,7 @@ class SoloBattleViewModel: BattleViewModel {
         if hit {
             SoundPlayerComponent.shared.play(chosen.sound)
             showAttackEffect(attack: chosen, target: .opponent)
+            parformDamageAnimation(target: .opponent)
             // メイン技（powerRate 1.0）は特攻、サブ技は攻撃を使用
             let attackStat = chosen.powerRate >= 1.0 ? myStats.specialAttack : myStats.attack
             let defStat = opponentStats.specialDefense
@@ -137,6 +138,7 @@ class SoloBattleViewModel: BattleViewModel {
             }
         } else {
             SoundPlayerComponent.shared.play(.miss)
+            parformMissAnimation(target: .opponent)
             damage = 0
             damageToOpponent = 0
             let name = myName ?? "〇〇"
@@ -213,6 +215,7 @@ class SoloBattleViewModel: BattleViewModel {
         if hit {
             SoundPlayerComponent.shared.play(chosen.sound)
             showAttackEffect(attack: chosen, target: .me)
+            parformDamageAnimation(target: .me)
             let attackStat = chosen.powerRate >= 1.0 ? opponentStats.specialAttack : opponentStats.attack
             let defStat = myStats.specialDefense
             let rawDamage = Double(attackStat) * chosen.powerRate * multiplier
@@ -229,6 +232,7 @@ class SoloBattleViewModel: BattleViewModel {
             }
         } else {
             SoundPlayerComponent.shared.play(.miss)
+            parformMissAnimation(target: .me)
             damageToMe = 0
             let oppName = opponentName ?? "CPU"
             showBattleMessage("\(oppName)の攻撃は外れた！")
