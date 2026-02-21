@@ -85,10 +85,8 @@ class SoloBattleViewModel: BattleViewModel {
             Task {
                 let myData = myMonster.imageData
                 let oppData = cpuMonster.imageData
-                async let myCutout = cutoutThumbnail(myData)
-                async let oppCutout = cutoutThumbnail(oppData)
-                self.myThumbnail = await myCutout
-                self.opponentThumbnail = await oppCutout
+                self.myThumbnail = await cutoutThumbnail(myData, isFused: myMonster.isFused)
+                self.opponentThumbnail = await cutoutThumbnail(oppData, isFused: cpuMonster.isFused)
             }
         } catch {
             phase = .connectionError
@@ -267,12 +265,4 @@ class SoloBattleViewModel: BattleViewModel {
         stopTurnTimer()
     }
 
-    // MARK: - Private
-
-    /// サムネイルを SubjectDetector で切り抜く（失敗時は元データをそのまま返す）
-    private func cutoutThumbnail(_ data: Data?) async -> Data? {
-        guard let data, let image = UIImage(data: data) else { return data }
-        guard let cutout = try? await SubjectDetector.detectAndCutout(from: image) else { return data }
-        return cutout.pngData()
-    }
 }

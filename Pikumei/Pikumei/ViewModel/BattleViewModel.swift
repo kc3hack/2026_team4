@@ -147,10 +147,8 @@ class BattleViewModel: ObservableObject {
             Task {
                 let myData = myMonster.thumbnailData
                 let oppData = oppMonster.thumbnailData
-                async let myCutout = cutoutThumbnail(myData)
-                async let oppCutout = cutoutThumbnail(oppData)
-                self.myThumbnail = await myCutout
-                self.opponentThumbnail = await oppCutout
+                self.myThumbnail = await cutoutThumbnail(myData, isFused: myMonster.isFused)
+                self.opponentThumbnail = await cutoutThumbnail(oppData, isFused: oppMonster.isFused)
             }
         } catch {
             phase = .connectionError
@@ -566,10 +564,41 @@ class BattleViewModel: ObservableObject {
     }
 
     /// サムネイルを SubjectDetector で切り抜く（失敗時は元データをそのまま返す）
-    private func cutoutThumbnail(_ data: Data?) async -> Data? {
+    /// 合体モンスターは左右を個別に切り抜いて再合成する（全体で実行すると片側だけ検出される場合がある）
+    func cutoutThumbnail(_ data: Data?, isFused: Bool = false) async -> Data? {
         guard let data, let image = UIImage(data: data) else { return data }
+        if isFused {
+            return await cutoutFusedThumbnail(image) ?? data
+        }
         guard let cutout = try? await SubjectDetector.detectAndCutout(from: image) else { return data }
         return cutout.pngData()
+    }
+
+    /// 合体モンスター用: 左右半分を個別に切り抜いて再合成する
+    private func cutoutFusedThumbnail(_ image: UIImage) async -> Data? {
+        guard let cgImage = image.cgImage else { return nil }
+        let w = cgImage.width
+        let h = cgImage.height
+        let halfW = w / 2
+
+        guard let leftCG = cgImage.cropping(to: CGRect(x: 0, y: 0, width: halfW, height: h)),
+              let rightCG = cgImage.cropping(to: CGRect(x: halfW, y: 0, width: w - halfW, height: h)) else {
+            return nil
+        }
+
+        let leftImg = UIImage(cgImage: leftCG)
+        let rightImg = UIImage(cgImage: rightCG)
+
+        let leftCut = (try? await SubjectDetector.detectAndCutout(from: leftImg)) ?? leftImg
+        let rightCut = (try? await SubjectDetector.detectAndCutout(from: rightImg)) ?? rightImg
+
+        let size = CGSize(width: CGFloat(w), height: CGFloat(h))
+        let renderer = UIGraphicsImageRenderer(size: size)
+        let merged = renderer.image { _ in
+            leftCut.draw(in: CGRect(x: 0, y: 0, width: CGFloat(halfW), height: CGFloat(h)))
+            rightCut.draw(in: CGRect(x: CGFloat(halfW), y: 0, width: CGFloat(w - halfW), height: CGFloat(h)))
+        }
+        return merged.pngData()
     }
 
     /// バトル終了を DB に記録する
