@@ -41,8 +41,6 @@ struct FusionView: View {
                 resultView(monster: monster)
             }
         }
-        .navigationTitle("合体")
-        .navigationBarTitleDisplayMode(.inline)
         .navigationBarBackButtonHidden(hideDefaultBack)
         .toolbar {
             if showCustomBack {
