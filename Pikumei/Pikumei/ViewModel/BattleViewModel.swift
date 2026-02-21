@@ -27,7 +27,8 @@ class BattleViewModel: ObservableObject {
     @Published var battleLog: [String] = []
     @Published var myAttacks: [BattleAttack] = []
     @Published var attackPP: [Int?] = []  // nil = 無制限, 数値 = 残り回数
-    @Published var attackEffectGif: String?  // 攻撃エフェクトのGIF名
+    @Published var effectOnOpponent: String?  // 相手モンスター上に表示するエフェクト
+    @Published var effectOnMe: String?        // 自分モンスター上に表示するエフェクト
     @Published var damageToOpponent: Int?  // 相手へのダメージ（0 = MISS）
     @Published var damageToMe: Int?  // 自分へのダメージ（0 = MISS）
 
@@ -39,6 +40,7 @@ class BattleViewModel: ObservableObject {
     private var subscription: RealtimeSubscription?
     private var readySubscription: RealtimeSubscription?
     private var readyPingTask: Task<Void, Never>?
+    private var attackResendTask: Task<Void, Never>?
     private var opponentReady = false
 
     init(battleId: UUID) {
@@ -161,17 +163,28 @@ class BattleViewModel: ObservableObject {
     }
 
     /// 攻撃エフェクトを表示して再生完了後に消す
-    private let effectSpeed: Double = 1.8
+    private let effectSpeed: Double = 1.5
 
-    func showAttackEffect(attack: BattleAttack) {
+    enum AttackTarget { case opponent, me }
+
+    func showAttackEffect(attack: BattleAttack, target: AttackTarget) {
         let gifName = attack.effectGif
-        attackEffectGif = gifName
-        // キャッシュから実際の再生時間を取得し、速度倍率で割った時間後に消す
         let originalDuration = GifCacheStore.shared.frames(for: gifName)?.duration ?? 1.0
         let displayDuration = originalDuration / effectSpeed
-        Task {
-            try? await Task.sleep(for: .seconds(displayDuration))
-            attackEffectGif = nil
+
+        switch target {
+        case .opponent:
+            effectOnOpponent = gifName
+            Task {
+                try? await Task.sleep(for: .seconds(displayDuration))
+                effectOnOpponent = nil
+            }
+        case .me:
+            effectOnMe = gifName
+            Task {
+                try? await Task.sleep(for: .seconds(displayDuration))
+                effectOnMe = nil
+            }
         }
     }
 
@@ -187,7 +200,7 @@ class BattleViewModel: ObservableObject {
 
         let chosen = myAttacks[index]
         SoundPlayerComponent.shared.play(chosen.sound)
-        showAttackEffect(attack: chosen)
+        showAttackEffect(attack: chosen, target: .opponent)
         let multiplier = chosen.type.effectiveness(against: opponentLabel)
 
         // PP 消費
@@ -197,18 +210,20 @@ class BattleViewModel: ObservableObject {
         let accuracy: Double = multiplier > 1.0 ? 0.7 : (multiplier < 1.0 ? 1.0 : 0.9)
         let hit = Double.random(in: 0..<1) < accuracy
 
+        let damage: Int
         if hit {
             // メイン技（powerRate 1.0）は特攻、サブ技は攻撃を使用
             let attackStat = chosen.powerRate >= 1.0 ? myStats.specialAttack : myStats.attack
             let defStat = opponentStats.specialDefense
             let rawDamage = Double(attackStat) * chosen.powerRate * multiplier
-            let damage = max(Int(rawDamage * 100.0 / (100.0 + Double(defStat))), 1)
+            damage = max(Int(rawDamage * 100.0 / (100.0 + Double(defStat))), 1)
             opponentHp -= damage
             damageToOpponent = damage
             battleLog.append("\(chosen.name)攻撃！ \(damage) ダメージ！")
             if multiplier > 1.0 { battleLog.append("こうかはばつぐんだ！") }
             else if multiplier < 1.0 { battleLog.append("こうかはいまひとつ...") }
         } else {
+            damage = 0
             damageToOpponent = 0  // 0 = MISS 表示用
             battleLog.append("\(chosen.name)攻撃！ ...しかし外れた！")
         }
@@ -219,22 +234,38 @@ class BattleViewModel: ObservableObject {
             damageToOpponent = nil
         }
 
-        // Broadcast 送信完了後に勝利判定（送信前に cleanup されるのを防ぐ）
-        Task {
-            do {
-                try await channel?.broadcast(
-                    event: "attack",
-                    message: AttackMessage(type: "attack", attackType: chosen.type.rawValue, hit: hit)
-                )
-            } catch {
-                battleLog.append("攻撃の送信に失敗しました")
-            }
+        // 攻撃 Broadcast を相手が応答するまで定期再送（startReadyPing パターン）
+        let message = AttackMessage(type: "attack", attackType: chosen.type.rawValue, hit: hit, damage: damage)
+        attackResendTask?.cancel()
+        attackResendTask = Task {
+            // 初回送信
+            try? await channel?.broadcast(event: "attack", message: message)
 
+            // 勝利判定（初回送信後）
             if hit, opponentHp <= 0, self.phase == .battling {
                 opponentHp = 0
                 phase = .won
                 battleLog.append("勝利！")
                 finishBattle(winnerId: userId)
+            }
+
+            // 相手が応答（次の攻撃を送信）するまで 2 秒ごとに再送、15 秒でタイムアウト
+            var elapsed = 0
+            while !Task.isCancelled, !self.isMyTurn, elapsed < 15 {
+                let p = self.phase
+                guard p == .battling || p == .won else { break }
+                try? await Task.sleep(for: .seconds(2))
+                elapsed += 2
+                guard !Task.isCancelled, !self.isMyTurn else { break }
+                let p2 = self.phase
+                guard p2 == .battling || p2 == .won else { break }
+                try? await channel?.broadcast(event: "attack", message: message)
+            }
+
+            // .battling のままタイムアウト → 通信エラー（.won なら自分の勝利は確定済み）
+            if !Task.isCancelled, !self.isMyTurn, self.phase == .battling {
+                battleLog.append("対戦相手との接続がタイムアウトしました")
+                phase = .connectionError
             }
         }
     }
@@ -244,6 +275,8 @@ class BattleViewModel: ObservableObject {
     func cleanup() {
         readyPingTask?.cancel()
         readyPingTask = nil
+        attackResendTask?.cancel()
+        attackResendTask = nil
         subscription = nil
         readySubscription = nil
         if let channel {
@@ -267,9 +300,10 @@ class BattleViewModel: ObservableObject {
             // SDK は message を payload["payload"] の下にネストする
             let inner = payload["payload"]?.objectValue
             let attackTypeRaw = inner?["attackType"]?.stringValue
-            let hit = inner?["hit"]?.boolValue ?? true
+            let hit = inner?["hit"]?.boolValue ?? false  // 安全側デフォルト
+            let damage = inner?["damage"]?.intValue
             Task { @MainActor [weak self] in
-                self?.handleOpponentAttack(attackTypeRaw: attackTypeRaw, hit: hit)
+                self?.handleOpponentAttack(attackTypeRaw: attackTypeRaw, hit: hit, damage: damage)
             }
         }
 
@@ -281,14 +315,18 @@ class BattleViewModel: ObservableObject {
 
         // subscribe 完了を待ってから phase を遷移させる
         try await ch.subscribeWithError()
+
+        // 相手が subscribe 完了するまで少し待つ（レースコンディション対策）
+        try await Task.sleep(for: .seconds(2))
+
         startReadyPing()
     }
 
-    /// ready イベントを定期送信（相手の ready を受信するまで、10秒でタイムアウト）
+    /// ready イベントを定期送信（相手の ready を受信するまで、20秒でタイムアウト）
     private func startReadyPing() {
         readyPingTask = Task {
             var elapsed = 0
-            while !opponentReady, elapsed < 10 {
+            while !opponentReady, elapsed < 20 {
                 do {
                     try await channel?.broadcast(event: "ready", message: ReadyMessage(type: "ready"))
                     try await Task.sleep(for: .seconds(1))
@@ -314,9 +352,12 @@ class BattleViewModel: ObservableObject {
         readyPingTask?.cancel()
         readyPingTask = nil
 
-        // 相手に ready を返す（相手がまだ受信していない可能性があるため）
+        // 相手に ready を複数回返す（相手が受信できていない可能性があるため）
         Task {
-            try? await channel?.broadcast(event: "ready", message: ReadyMessage(type: "ready"))
+            for _ in 0..<3 {
+                try? await channel?.broadcast(event: "ready", message: ReadyMessage(type: "ready"))
+                try? await Task.sleep(for: .milliseconds(200))
+            }
         }
 
         isMyTurn = isPlayer1
@@ -324,8 +365,13 @@ class BattleViewModel: ObservableObject {
     }
 
     /// 相手の攻撃を受信した時の処理
-    private func handleOpponentAttack(attackTypeRaw: String?, hit: Bool) {
-        guard phase == .battling, let myStats, let opponentStats, let opponentLabel, let myLabel else { return }
+    private func handleOpponentAttack(attackTypeRaw: String?, hit: Bool, damage receivedDamage: Int?) {
+        // !isMyTurn ガード: リトライで重複メッセージが届いても1回だけ処理する
+        guard !isMyTurn, phase == .battling, let myStats, let opponentStats, let opponentLabel, let myLabel else { return }
+
+        // 前回攻撃のリトライ停止（相手がこちらの攻撃を受信済みであることが確認できた）
+        attackResendTask?.cancel()
+        attackResendTask = nil
 
         let attackType = MonsterType(rawValue: attackTypeRaw ?? "") ?? opponentLabel
         let opponentAttack = opponentLabel.attacks.first { $0.type == attackType }
@@ -334,21 +380,28 @@ class BattleViewModel: ObservableObject {
         // 相手の技の効果音・エフェクトを再生
         SoundPlayerComponent.shared.play(opponentAttack?.sound ?? .panch)
         if let opponentAttack {
-            showAttackEffect(attack: opponentAttack)
+            showAttackEffect(attack: opponentAttack, target: .me)
         }
 
         if hit {
-            let powerRate = opponentLabel.attacks.first { $0.type == attackType }?.powerRate ?? 1.0
-            let multiplier = attackType.effectiveness(against: myLabel)
-            // メイン技（powerRate 1.0）は特攻、サブ技は攻撃を使用
-            let attackStat = powerRate >= 1.0 ? opponentStats.specialAttack : opponentStats.attack
-            let defStat = myStats.specialDefense
-            let rawDamage = Double(attackStat) * powerRate * multiplier
-            let damage = max(Int(rawDamage * 100.0 / (100.0 + Double(defStat))), 1)
-            myHp -= damage
-            damageToMe = damage
+            let actualDamage: Int
+            if let receivedDamage, receivedDamage > 0 {
+                // 送信側が計算したダメージ値を使用
+                actualDamage = receivedDamage
+            } else {
+                // フォールバック（旧バージョン互換）
+                let powerRate = opponentLabel.attacks.first { $0.type == attackType }?.powerRate ?? 1.0
+                let multiplier = attackType.effectiveness(against: myLabel)
+                let attackStat = powerRate >= 1.0 ? opponentStats.specialAttack : opponentStats.attack
+                let defStat = myStats.specialDefense
+                let rawDamage = Double(attackStat) * powerRate * multiplier
+                actualDamage = max(Int(rawDamage * 100.0 / (100.0 + Double(defStat))), 1)
+            }
+            myHp -= actualDamage
+            damageToMe = actualDamage
 
-            battleLog.append("\(attackName)攻撃！ \(damage) ダメージ！")
+            battleLog.append("\(attackName)攻撃！ \(actualDamage) ダメージ！")
+            let multiplier = attackType.effectiveness(against: myLabel)
             if multiplier > 1.0 { battleLog.append("こうかはばつぐんだ！") }
             else if multiplier < 1.0 { battleLog.append("こうかはいまひとつ...") }
         } else {
@@ -391,6 +444,7 @@ class BattleViewModel: ObservableObject {
                     .execute()
             } catch {
                 print("⚠️ バトル結果の記録に失敗: \(error)")
+                battleLog.append("バトル結果の記録に失敗しました")
             }
         }
     }
@@ -404,6 +458,7 @@ private struct AttackMessage: Codable {
     let type: String
     let attackType: String
     let hit: Bool
+    let damage: Int  // hit 時のダメージ量（miss 時は 0）
 }
 
 /// 準備完了イベント用

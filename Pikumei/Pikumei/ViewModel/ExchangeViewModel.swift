@@ -165,11 +165,23 @@ class ExchangeViewModel: ObservableObject {
 
     // MARK: - Realtime 購読
 
-    /// exchanges テーブルの UPDATE を監視し、status が matched になったら交換処理を実行
+    /// exchanges テーブルの UPDATE を監視し、status が matched になったら交換処理を実行（30秒でタイムアウト）
+    private var waitingTimeoutTask: Task<Void, Never>?
+
     private func subscribeToMatch(exchangeId: UUID) async {
         print("[Exchange] Realtime 購読開始 exchangeId: \(exchangeId)")
         let ch = client.channel("exchange-\(exchangeId.uuidString)")
         channel = ch
+
+        // 30秒でタイムアウト
+        waitingTimeoutTask = Task {
+            try? await Task.sleep(for: .seconds(30))
+            if case .waiting = self.phase {
+                print("[Exchange] 待機タイムアウト（30秒）")
+                self.unsubscribe()
+                self.phase = .error("相手が見つかりませんでした。もう一度お試しください")
+            }
+        }
 
         subscription = ch.onPostgresChange(
             UpdateAction.self,
@@ -181,9 +193,11 @@ class ExchangeViewModel: ObservableObject {
                status == "matched" {
                 print("[Exchange] status=matched 検出 → 交換処理開始")
                 Task { @MainActor [weak self] in
-                    self?.unsubscribe()
-                    self?.phase = .exchanging
-                    await self?.completeExchange(exchangeId: exchangeId)
+                    guard let self, !self.isCompleting, case .waiting = self.phase else { return }
+                    self.waitingTimeoutTask?.cancel()
+                    self.unsubscribe()
+                    self.phase = .exchanging
+                    await self.completeExchange(exchangeId: exchangeId)
                 }
             }
         }
@@ -191,6 +205,9 @@ class ExchangeViewModel: ObservableObject {
         do {
             try await ch.subscribeWithError()
             print("[Exchange] Realtime 購読成功")
+
+            // 相手の UPDATE イベントを取りこぼさないよう少し待つ（レースコンディション対策）
+            try await Task.sleep(for: .seconds(1))
 
             // 購読完了前に相手が参加していた場合のフォールバック
             let current: ExchangeRow = try await client
@@ -202,7 +219,10 @@ class ExchangeViewModel: ObservableObject {
                 .value
 
             if current.status == "matched" {
+                // Realtime コールバックで既に処理開始されている場合はスキップ
+                guard !isCompleting, case .waiting = phase else { return }
                 print("[Exchange] 購読前にマッチ済み → 交換処理開始")
+                waitingTimeoutTask?.cancel()
                 unsubscribe()
                 phase = .exchanging
                 await completeExchange(exchangeId: exchangeId)
@@ -284,6 +304,13 @@ class ExchangeViewModel: ObservableObject {
                 supabaseId: opponentMonster.id,
                 name: opponentMonster.name
             )
+            // DB 側を先に確定してからローカルデータを変更する（DB 更新失敗時にローカルが不整合にならないようにする）
+            try await client
+                .from("exchanges")
+                .update(["status": "completed"])
+                .eq("id", value: exchangeId.uuidString)
+                .execute()
+
             context.insert(newMonster)
 
             // 渡したモンスターをローカルから削除
@@ -292,13 +319,6 @@ class ExchangeViewModel: ObservableObject {
             }
 
             try context.save()
-
-            // exchanges の status を completed に更新
-            try await client
-                .from("exchanges")
-                .update(["status": "completed"])
-                .eq("id", value: exchangeId.uuidString)
-                .execute()
 
             print("[Exchange] 交換完了")
             phase = .completed(newMonster)
@@ -339,6 +359,8 @@ class ExchangeViewModel: ObservableObject {
                 }
             }
         }
+        waitingTimeoutTask?.cancel()
+        waitingTimeoutTask = nil
         unsubscribe()
         phase = .selectMonster
         exchangeId = nil
