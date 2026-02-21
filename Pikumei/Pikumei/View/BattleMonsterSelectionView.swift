@@ -38,18 +38,20 @@ struct BattleMonsterSelectionView: View {
     }
     
     var content: some View {
-        ScrollView {
+        VStack(spacing: 12) {
             Spacer(minLength: 100)
             Text("バトルに出すメイティを選んでください")
-                .font(.custom("RocknRollOne-Regular", size: 17))
-            LazyVGrid(columns: columns, spacing: 12) {
-                ForEach(monsters) { (monster: Monster) in
-                    card(monster: monster)
-                    
+                .font(.custom("DotGothic16-Regular", size: 17))
+            ScrollView {
+                LazyVGrid(columns: columns, spacing: 12) {
+                    ForEach(monsters) { (monster: Monster) in
+                        card(monster: monster)
+                        
+                    }
                 }
+                .padding(8)
+                .padding(.bottom, 160)
             }
-            .padding(8)
-            .padding(.bottom, 160)
         }
         .toolbarBackground(.visible, for: .tabBar)
         .overlay() {
