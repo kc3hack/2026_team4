@@ -22,7 +22,6 @@ struct BattlingComponent: View {
                     type: viewModel.opponentLabel,
                     size: 120
                 )
-                .overlay { DamageLabelComponent(damage: viewModel.damageToOpponent) }
                 .overlay {
                     if let gif = viewModel.effectOnOpponent {
                         GifImageComponent(name: gif, repeatCount: 1, speed: 1.5)
@@ -30,6 +29,7 @@ struct BattlingComponent: View {
                             .allowsHitTesting(false)
                     }
                 }
+                .overlay { DamageLabelComponent(damage: viewModel.damageToOpponent) }
             }
 
             // 自分側 — 左寄せ・大きめ（手前）
@@ -42,7 +42,6 @@ struct BattlingComponent: View {
                     type: viewModel.myLabel,
                     size: 160
                 )
-                .overlay { DamageLabelComponent(damage: viewModel.damageToMe) }
                 .overlay {
                     if let gif = viewModel.effectOnMe {
                         GifImageComponent(name: gif, repeatCount: 1, speed: 1.5)
@@ -50,6 +49,7 @@ struct BattlingComponent: View {
                             .allowsHitTesting(false)
                     }
                 }
+                .overlay { DamageLabelComponent(damage: viewModel.damageToMe) }
                 Spacer()
             }
 
@@ -89,10 +89,10 @@ struct DamageLabelComponent: View {
         Group {
             if let damage {
                 Text(damage == 0 ? "MISS" : "-\(damage)")
-                    .font(.custom("DotGothic16-Regular", size: 28))
+                    .font(.custom("DotGothic16-Regular", size: 36))
                     .bold()
                     .foregroundStyle(damage == 0 ? .white : .red)
-                    .shadow(color: .black, radius: 2, x: 1, y: 1)
+                    .shadow(color: .black.opacity(0.6), radius: 2, x: 1, y: 1)
                     .transition(.move(edge: .bottom).combined(with: .opacity))
             }
         }
