@@ -17,6 +17,7 @@ class SoloBattleViewModel: BattleViewModel {
     private var cpuAttacks: [BattleAttack] = []
     private var cpuAttackPP: [Int?] = []
     private var cpuAttackTask: Task<Void, Never>?
+    private var isFinishing = false
 
     init(monster: Monster, modelContext: ModelContext) {
         self.monster = monster
@@ -157,7 +158,11 @@ class SoloBattleViewModel: BattleViewModel {
         // 勝利判定
         if hit, opponentHp <= 0 {
             opponentHp = 0
-            phase = .won
+            isFinishing = true
+            Task {
+                try? await Task.sleep(for: .seconds(1.5))
+                self.phase = .won
+            }
             return
         }
 
@@ -244,7 +249,11 @@ class SoloBattleViewModel: BattleViewModel {
         // 敗北判定
         if hit, myHp <= 0 {
             myHp = 0
-            phase = .lost
+            isFinishing = true
+            Task {
+                try? await Task.sleep(for: .seconds(1.5))
+                self.phase = .lost
+            }
         } else {
             isMyTurn = true
             startTurnTimer()
@@ -256,6 +265,7 @@ class SoloBattleViewModel: BattleViewModel {
     override func cleanup() {
         cpuAttackTask?.cancel()
         cpuAttackTask = nil
+        isFinishing = false
         stopTurnTimer()
     }
 
