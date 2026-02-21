@@ -66,7 +66,7 @@ struct ExchangeView: View {
                     .scaledToFill()
                     .ignoresSafeArea()
             }
-            .toolbarBackground(.hidden, for: .navigationBar)
+
             .navigationTitle("こうかん")
             .onAppear {
                 viewModel.setModelContext(modelContext)

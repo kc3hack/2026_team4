@@ -71,7 +71,7 @@ struct MonsterListView: View {
                 }
                 .ignoresSafeArea()
             }
-            .toolbarBackground(.hidden, for: .navigationBar)
+
             .navigationTitle("モンスター一覧")
         }
     }
