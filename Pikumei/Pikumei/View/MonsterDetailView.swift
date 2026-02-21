@@ -49,6 +49,17 @@ struct MonsterDetailView: View {
                     .bold()
                     .foregroundStyle(monsterType.color)
 
+                // 交換バッジ
+                if monster.isExchanged {
+                    Text("交換で手に入れたメイティ")
+                        .font(.custom("DotGothic16-Regular", size: 13))
+                        .foregroundStyle(.white)
+                        .padding(.horizontal, 10)
+                        .padding(.vertical, 4)
+                        .background(monsterType.color.opacity(0.7))
+                        .clipShape(Capsule())
+                }
+
                 // タイプラベル（アイコン付き）
                 HStack(spacing: 6) {
                     TypeIconComponent(type: monsterType, size: 20)
