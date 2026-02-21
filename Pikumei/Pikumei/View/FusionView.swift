@@ -152,11 +152,11 @@ struct FusionView: View {
                 }
                 .padding(.horizontal, 8)
 
-                // プレビューステータス
+                // プレビューステータス（ドラクエ風ウィンドウ）
                 if let preview = vm.previewStats {
                     VStack(spacing: 8) {
                         Text("合体後のステータス")
-                            .font(.custom("RocknRollOne-Regular", size: 15))
+                            .font(.custom("DotGothic16-Regular", size: 16))
                             .foregroundStyle(.white)
                         HStack(spacing: 16) {
                             fusionStatLabel("HP", value: preview.hp)
@@ -165,16 +165,21 @@ struct FusionView: View {
                             fusionStatLabel("S.DEF", value: preview.specialDefense)
                         }
                     }
-                    .padding()
+                    .padding(.horizontal, 16)
+                    .padding(.vertical, 12)
                     .background(
-                        RoundedRectangle(cornerRadius: 14)
-                            .fill(Color.black.opacity(0.4))
+                        RoundedRectangle(cornerRadius: 8)
+                            .fill(Color(white: 0.15).opacity(0.85))
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 8)
+                                    .stroke(.white.opacity(0.7), lineWidth: 1)
+                            )
                     )
                 }
 
                 Text("※ 合体すると素材の2体は消えます")
                     .font(.custom("DotGothic16-Regular", size: 13))
-                    .foregroundStyle(.white.opacity(0.7))
+                    .foregroundStyle(.black)
 
                 BlueButtonComponent(title: "合体する") {
                     Task { await vm.fuse() }
