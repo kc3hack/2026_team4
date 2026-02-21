@@ -241,6 +241,9 @@ class ExchangeViewModel: ObservableObject {
         isCompleting = true
         defer { isCompleting = false }
 
+        // 非同期処理中に reset() で selectedMonster が nil になるレースコンディションを防ぐため、先にキャプチャする
+        guard let givenMonster = selectedMonster else { return }
+
         do {
             let userId = try await client.auth.session.user.id
 
@@ -313,10 +316,8 @@ class ExchangeViewModel: ObservableObject {
 
             context.insert(newMonster)
 
-            // 渡したモンスターをローカルから削除
-            if let givenMonster = selectedMonster {
-                context.delete(givenMonster)
-            }
+            // 渡したモンスターをローカルから削除（冒頭でキャプチャ済みの参照を使用）
+            context.delete(givenMonster)
 
             try context.save()
 
@@ -344,6 +345,9 @@ class ExchangeViewModel: ObservableObject {
 
     /// 状態をリセット（DB 上の waiting 交換もキャンセルする）
     func reset() {
+        // 交換処理が実行中の場合はリセットしない（selectedMonster 等の参照が壊れるのを防ぐ）
+        guard !isCompleting else { return }
+
         if let exchangeId {
             Task {
                 do {
@@ -365,7 +369,6 @@ class ExchangeViewModel: ObservableObject {
         phase = .selectMonster
         exchangeId = nil
         selectedMonster = nil
-        isCompleting = false
     }
 
     // MARK: - Private
