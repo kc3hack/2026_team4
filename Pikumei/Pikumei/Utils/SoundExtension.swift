@@ -15,6 +15,7 @@ enum Sound: String {
     case panch = "waza_panch"
     case shippo = "waza_sippo"
     case kazekiri = "waza_kazekiri"
+    case miss = "waza_miss"
 
     // UI効果音
     case sceneTransition = "bamentenkan"
