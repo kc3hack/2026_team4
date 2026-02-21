@@ -194,6 +194,8 @@ struct FusionView: View {
     private func resultView(monster: Monster) -> some View {
         ScrollView {
             VStack(spacing: 20) {
+                Spacer(minLength: 80)
+
                 Text("合体成功！")
                     .font(.custom("RocknRollOne-Regular", size: 24))
                     .foregroundStyle(.black)
