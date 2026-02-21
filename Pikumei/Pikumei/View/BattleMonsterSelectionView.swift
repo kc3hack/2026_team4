@@ -32,7 +32,7 @@ struct BattleMonsterSelectionView: View {
                     content
                 }
             }
-            .navigationTitle("モンスター選択")
+            .navigationTitle("メイティ選択")
         }
         .task {
             selectionVM.resetTouched()
@@ -42,7 +42,7 @@ struct BattleMonsterSelectionView: View {
     var content: some View {
         ScrollView {
             Spacer(minLength: 100)
-            Text("バトルに出すモンスターを選んでください")
+            Text("バトルに出すメイティを選んでください")
                 .font(.custom("DotGothic16-Regular", size: 17))
             LazyVGrid(columns: columns, spacing: 12) {
                 ForEach(monsters) { (monster: Monster) in

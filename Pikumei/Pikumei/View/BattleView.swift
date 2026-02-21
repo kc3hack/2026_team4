@@ -145,7 +145,7 @@ private struct MonsterSelectionSection: View {
     
     var body: some View {
         VStack(spacing: 16) {
-            Text("モンスター選択")
+            Text("メイティ選択")
                 .font(.custom("DotGothic16-Regular", size: 17))
             
             
