@@ -48,6 +48,7 @@ class BattleViewModel: ObservableObject {
     private var opponentReady = false
     private var myTurnCount = 0          // 自分の攻撃ターン番号（送信用）
     private var lastReceivedTurn = -1    // 相手から受信した最新ターン番号（重複排除用）
+    private var isFinishing = false       // 二重遷移防止フラグ
 
     init(battleId: UUID) {
         self.battleId = battleId
@@ -259,8 +260,11 @@ class BattleViewModel: ObservableObject {
             try? await channel?.broadcast(event: "attack", message: message)
 
             // 勝利判定（初回送信後）
-            if hit, opponentHp <= 0, self.phase == .battling {
+            if hit, opponentHp <= 0, self.phase == .battling, !self.isFinishing {
                 opponentHp = 0
+                self.isFinishing = true
+                // 最後のダメージ表示を見せるため少し待つ
+                try? await Task.sleep(for: .seconds(1.5))
                 phase = .won
                 finishBattle(winnerId: userId)
                 // 敗者に終了を通知
@@ -301,6 +305,7 @@ class BattleViewModel: ObservableObject {
         opponentTimeoutTask?.cancel()
         opponentTimeoutTask = nil
         stopTurnTimer()
+        isFinishing = false
         subscription = nil
         readySubscription = nil
         finishedSubscription = nil
@@ -342,10 +347,12 @@ class BattleViewModel: ObservableObject {
         // 相手の勝利通知を受信したら敗北に遷移する
         finishedSubscription = ch.onBroadcast(event: "finished") { [weak self] _ in
             Task { @MainActor [weak self] in
-                guard let self, self.phase == .battling else { return }
+                guard let self, self.phase == .battling, !self.isFinishing else { return }
                 self.opponentTimeoutTask?.cancel()
                 self.opponentTimeoutTask = nil
                 self.myHp = 0
+                self.isFinishing = true
+                try? await Task.sleep(for: .seconds(1.5))
                 self.phase = .lost
             }
         }
@@ -516,7 +523,12 @@ class BattleViewModel: ObservableObject {
 
         if myHp <= 0 {
             myHp = 0
-            phase = .lost
+            guard !isFinishing else { return }
+            isFinishing = true
+            Task {
+                try? await Task.sleep(for: .seconds(1.5))
+                self.phase = .lost
+            }
         } else {
             isMyTurn = true
             startTurnTimer()
