@@ -58,7 +58,7 @@ struct VictoryComponent: View {
                         // 🌟 固定の print文 ではなく、受け取った処理（onBack）を実行する
                         onBack()
                     } label: {
-                        Text("次へ")
+                        Text("ホームに戻る")
                             .font(.title2.bold())
                             .foregroundColor(.orange)
                             .frame(width: 200, height: 55)
@@ -86,7 +86,7 @@ struct VictoryComponent: View {
 #Preview {
     VictoryComponent(
         onBack: {
-            print("プレビュー：次へボタンが押されました")
+            print("ホームに戻る")
         }
     )
 }

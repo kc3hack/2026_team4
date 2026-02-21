@@ -43,7 +43,7 @@ class BattleViewModel: ObservableObject {
     private var readyPingTask: Task<Void, Never>?
     private var attackResendTask: Task<Void, Never>?
     private var opponentTimeoutTask: Task<Void, Never>?
-    private var turnTimerTask: Task<Void, Never>?
+    var turnTimerTask: Task<Void, Never>?
     private var finishedSubscription: RealtimeSubscription?
     private var opponentReady = false
     private var myTurnCount = 0          // 自分の攻撃ターン番号（送信用）
@@ -392,7 +392,7 @@ class BattleViewModel: ObservableObject {
     }
 
     /// ターン制限タイマーを開始（15秒で自動攻撃）
-    private func startTurnTimer() {
+    func startTurnTimer() {
         stopTurnTimer()
         turnTimeRemaining = 15
         turnTimerTask = Task {
@@ -413,7 +413,7 @@ class BattleViewModel: ObservableObject {
     }
 
     /// ターン制限タイマーを停止
-    private func stopTurnTimer() {
+    func stopTurnTimer() {
         turnTimerTask?.cancel()
         turnTimerTask = nil
         turnTimeRemaining = 0
@@ -524,7 +524,7 @@ class BattleViewModel: ObservableObject {
     }
 
     /// battleMessage をセットする（次のメッセージで上書きされるまで表示し続ける）
-    private func showBattleMessage(_ text: String) {
+    func showBattleMessage(_ text: String) {
         battleMessage = text
     }
 

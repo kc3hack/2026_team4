@@ -8,6 +8,7 @@
 import Combine
 import Foundation
 import Supabase
+import SwiftData
 
 @MainActor
 class BattleMatchingViewModel: ObservableObject {
@@ -15,30 +16,59 @@ class BattleMatchingViewModel: ObservableObject {
         case idle           // 初期状態
         case waiting        // バトル作成済み、相手待ち
         case battling       // マッチ成立 → バトル中
+        case soloBattling   // ソロバトル中（CPU対戦）
         case error(String)  // エラー
 
         var isBattling: Bool {
-            if case .battling = self { return true }
-            return false
+            switch self {
+            case .battling, .soloBattling: return true
+            default: return false
+            }
         }
     }
 
     @Published var phase: MatchingPhase = .idle
     @Published var battleId: UUID?
+    @Published var soloErrorMessage: String?
 
     private let client = SupabaseClientProvider.shared
     private var channel: RealtimeChannelV2?
     private var subscription: RealtimeSubscription?
 
+    // MARK: - ソロバトル開始
+
+    /// モンスター2体以上の存在チェックをしてソロバトル用VMを返す
+    func startSoloBattle(modelContext: ModelContext) -> SoloBattleViewModel? {
+        soloErrorMessage = nil
+        do {
+            let descriptor = FetchDescriptor<Monster>()
+            let count = try modelContext.fetchCount(descriptor)
+            guard count >= 2 else {
+                soloErrorMessage = "メイティが2体以上必要です。先にスキャンしてください"
+                return nil
+            }
+            let vm = SoloBattleViewModel(modelContext: modelContext)
+            phase = .soloBattling
+            return vm
+        } catch {
+            soloErrorMessage = "メイティの読み込みに失敗しました"
+            return nil
+        }
+    }
+
     // MARK: - バトル作成（端末A用）
 
-    /// 自分のモンスターをランダムに選んでバトルを作成し、相手を待つ
-    func createBattle() async {
+    /// バトルを作成し、相手を待つ
+    func createBattle(monsterId monsterIdWrapper: UUID?) async {
+        guard let monsterId = monsterIdWrapper else {
+            phase = .error("モンスターが選択されていません")
+            return
+        }
+        
         do {
             try await ensureAuthenticated()
             let userId = try await client.auth.session.user.id
             print("[Matching] userId: \(userId)")
-            let monsterId = try await fetchRandomMonster(userId: userId)
             print("[Matching] monsterId: \(monsterId)")
 
             let record = BattleInsert(
@@ -68,11 +98,15 @@ class BattleMatchingViewModel: ObservableObject {
     // MARK: - バトル参加（端末B用）
 
     /// 待機中のバトルを探して自分のモンスターで参加する
-    func joinBattle() async {
+    func joinBattle(monsterId monsterIdWrapper: UUID?) async {
+        guard let monsterId = monsterIdWrapper else {
+            phase = .error("モンスターが選択されていません")
+            return
+        }
+        
         do {
             try await ensureAuthenticated()
             let userId = try await client.auth.session.user.id
-            let monsterId = try await fetchRandomMonster(userId: userId)
 
             // 自分以外が作った直近5分以内の waiting バトルを1件取得
             let fiveMinutesAgo = ISO8601DateFormatter().string(
@@ -229,22 +263,6 @@ class BattleMatchingViewModel: ObservableObject {
 
     // MARK: - Private
 
-    /// 自分のモンスターからランダムに1体選ぶ
-    private func fetchRandomMonster(userId: UUID) async throws -> UUID {
-        let monsters: [MonsterIdRow] = try await client
-            .from("monsters")
-            .select("id")
-            .eq("user_id", value: userId.uuidString)
-            .limit(50)
-            .execute()
-            .value
-
-        guard let monster = monsters.randomElement() else {
-            throw MatchingError.noMonsters
-        }
-        return monster.id
-    }
-
     private func ensureAuthenticated() async throws {
         let session = try? await client.auth.session
         if session == nil {
@@ -261,7 +279,7 @@ enum MatchingError: LocalizedError {
     var errorDescription: String? {
         switch self {
         case .noMonsters:
-            return "モンスターがありません。先にスキャンしてアップロードしてください"
+            return "メイティがありません。先にスキャンしてアップロードしてください"
         }
     }
 }

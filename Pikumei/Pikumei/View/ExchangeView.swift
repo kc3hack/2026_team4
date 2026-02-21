@@ -7,6 +7,7 @@
 
 import SwiftUI
 import SwiftData
+import Lottie
 
 struct ExchangeView: View {
     @StateObject private var viewModel = ExchangeViewModel()
@@ -97,9 +98,9 @@ private struct ExchangeSelectSection: View {
                 Image(systemName: "arrow.triangle.2.circlepath")
                     .font(.system(size: 48))
                     .foregroundStyle(.secondary)
-                Text("交換できるモンスターがいません")
+                Text("交換できるメイティがいません")
                     .font(.custom("RocknRollOne-Regular", size: 20))
-                Text("スキャンしてアップロードした\nモンスターが必要です")
+                Text("スキャンしてアップロードした\nメイティが必要です")
                     .font(.custom("DotGothic16-Regular", size: 15))
                     .foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)
@@ -107,7 +108,7 @@ private struct ExchangeSelectSection: View {
             }
         } else {
             VStack(spacing: 12) {
-                Text("交換に出すモンスターを選んでください")
+                Text("交換に出すメイティを選んでください")
                     .font(.custom("DotGothic16-Regular", size: 17))
 
                 ScrollView {
@@ -154,7 +155,7 @@ private struct ExchangeIdleSection: View {
     var body: some View {
         VStack(spacing: 16) {
             if let monster, let stats {
-                Text("交換に出すモンスター")
+                Text("交換に出すメイティ")
                     .font(.custom("DotGothic16-Regular", size: 17))
 
                 MonsterCardComponent(monster: monster, stats: stats)
@@ -176,7 +177,7 @@ private struct ExchangeIdleSection: View {
             }
             .buttonStyle(.bordered)
 
-            Button("モンスターを選び直す") {
+            Button("メイティを選び直す") {
                 onBack()
             }
             .font(.custom("DotGothic16-Regular", size: 12))
@@ -244,9 +245,11 @@ private struct ExchangeCompletedSection: View {
 
     var body: some View {
         VStack(spacing: 16) {
-            Image(systemName: "checkmark.circle.fill")
-                .font(.system(size: 48))
-                .foregroundStyle(.green)
+            
+            LottieView(animation: .named("koukann"))
+                .playing(loopMode: .playOnce) //
+                .resizable()
+                .frame(width: 120, height: 120)
 
             Text("交換完了！")
                 .font(.custom("RocknRollOne-Regular", size: 22))
@@ -254,11 +257,15 @@ private struct ExchangeCompletedSection: View {
 
             MonsterCardComponent(monster: monster, stats: stats)
 
-            Text("新しいモンスターを手に入れた！")
+            Text("新しいメイティを手に入れた！")
                 .font(.custom("DotGothic16-Regular", size: 15))
 
-            Button("閉じる") {
+            Button{
                 onClose()
+            } label: {
+                Text("閉じる")
+                    .font(.custom("RocknRollOne-Regular", size: 30))
+                    .frame(minWidth: 160, minHeight: 50)
             }
             .buttonStyle(.borderedProminent)
         }

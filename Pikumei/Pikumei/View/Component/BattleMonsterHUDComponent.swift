@@ -37,6 +37,7 @@ struct BattleMonsterHUDComponent: View {
                 .font(.custom("DotGothic16-Regular", size: size * 0.14))
                 .bold()
                 .lineLimit(1)
+                .shadow(color: .white, radius: 1)
 
             // HPバー
             hpBar
@@ -76,7 +77,7 @@ struct BattleMonsterHUDComponent: View {
 #Preview("大きめ（自分側）") {
     BattleMonsterHUDComponent(
         imageData: nil,
-        name: "テストモンスター",
+        name: "テストメイティ",
         currentHp: 80,
         maxHp: 100,
         type: .fire,
@@ -87,7 +88,7 @@ struct BattleMonsterHUDComponent: View {
 #Preview("小さめ（相手側）") {
     BattleMonsterHUDComponent(
         imageData: nil,
-        name: "あいてモンスター",
+        name: "あいてメイティ",
         currentHp: 45,
         maxHp: 100,
         type: .water,
