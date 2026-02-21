@@ -107,6 +107,11 @@ class MonsterFusionViewModel {
             fusedImageData = first.imageData
         }
 
+        // 両方の名前を結合（例: "ピカ × ゴン"）
+        let firstName = first.name ?? "？？？"
+        let secondName = second.name ?? "？？？"
+        let fusedName = "\(firstName) × \(secondName)"
+
         let fusedMonster = Monster(
             imageData: fusedImageData,
             classificationLabel: fusedType,
@@ -114,6 +119,7 @@ class MonsterFusionViewModel {
                 first.classificationConfidence ?? 0,
                 second.classificationConfidence ?? 0
             ),
+            name: fusedName,
             isFused: true,
             fusedHp: stats.hp,
             fusedAttack: stats.attack,
