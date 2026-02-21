@@ -260,8 +260,12 @@ private struct ExchangeCompletedSection: View {
             Text("新しいメイティを手に入れた！")
                 .font(.custom("DotGothic16-Regular", size: 15))
 
-            Button("閉じる") {
+            Button{
                 onClose()
+            } label: {
+                Text("閉じる")
+                    .font(.custom("RocknRollOne-Regular", size: 30))
+                    .frame(minWidth: 160, minHeight: 50)
             }
             .buttonStyle(.borderedProminent)
         }
