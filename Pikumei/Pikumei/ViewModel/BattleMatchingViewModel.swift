@@ -130,11 +130,23 @@ class BattleMatchingViewModel: ObservableObject {
 
     // MARK: - Realtime 購読
 
-    /// battles テーブルの UPDATE を監視し、status が matched になったら通知
+    /// battles テーブルの UPDATE を監視し、status が matched になったら通知（30秒でタイムアウト）
+    private var waitingTimeoutTask: Task<Void, Never>?
+
     func subscribeToMatch(battleId: UUID) async {
         print("[Matching] Realtime 購読開始 battleId: \(battleId)")
         let ch = client.channel("battle-\(battleId.uuidString)")
         channel = ch
+
+        // 30秒でタイムアウト
+        waitingTimeoutTask = Task {
+            try? await Task.sleep(for: .seconds(30))
+            if case .waiting = self.phase {
+                print("[Matching] マッチングタイムアウト（30秒）")
+                self.unsubscribe()
+                self.phase = .error("相手が見つかりませんでした。もう一度お試しください")
+            }
+        }
 
         // onPostgresChange は subscribe() の前に登録する必要がある
         subscription = ch.onPostgresChange(
@@ -147,6 +159,7 @@ class BattleMatchingViewModel: ObservableObject {
                status == "matched" {
                 print("[Matching] status=matched 検出！→ バトル開始")
                 Task { @MainActor [weak self] in
+                    self?.waitingTimeoutTask?.cancel()
                     self?.unsubscribe()
                     self?.phase = .battling
                 }
@@ -156,6 +169,9 @@ class BattleMatchingViewModel: ObservableObject {
         do {
             try await ch.subscribeWithError()
             print("[Matching] Realtime 購読成功 channel status: \(ch.status)")
+
+            // 相手の UPDATE イベントを取りこぼさないよう少し待つ（レースコンディション対策）
+            try await Task.sleep(for: .seconds(1))
 
             // 購読完了前に相手が参加していた場合のフォールバック
             let current: BattleRow = try await client
@@ -168,11 +184,14 @@ class BattleMatchingViewModel: ObservableObject {
 
             if current.status == "matched" {
                 print("[Matching] 購読前にマッチ済み → バトル開始")
+                waitingTimeoutTask?.cancel()
                 unsubscribe()
                 phase = .battling
             }
         } catch {
             print("[Matching] Realtime 購読失敗: \(error)")
+            waitingTimeoutTask?.cancel()
+            phase = .error("マッチング接続に失敗しました。もう一度お試しください")
         }
     }
 
@@ -201,6 +220,8 @@ class BattleMatchingViewModel: ObservableObject {
                 print("[Matching] バトル \(battleId) をキャンセル")
             }
         }
+        waitingTimeoutTask?.cancel()
+        waitingTimeoutTask = nil
         unsubscribe()
         phase = .idle
         battleId = nil
