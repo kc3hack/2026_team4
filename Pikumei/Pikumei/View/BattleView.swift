@@ -11,7 +11,6 @@ struct BattleView: View {
     @StateObject private var matchingVM = BattleMatchingViewModel()
     @Environment(\.modelContext) private var modelContext
     @State private var soloBattleVM: SoloBattleViewModel?
-    @State private var soloErrorMessage: String?
 
     var body: some View {
         NavigationStack {
@@ -21,8 +20,10 @@ struct BattleView: View {
                     BattleIdleSection(
                         onCreate: { Task { await matchingVM.createBattle() } },
                         onJoin: { Task { await matchingVM.joinBattle() } },
-                        onSolo: { startSoloBattle() },
-                        soloErrorMessage: soloErrorMessage
+                        onSolo: {
+                            soloBattleVM = matchingVM.startSoloBattle(modelContext: modelContext)
+                        },
+                        soloErrorMessage: matchingVM.soloErrorMessage
                     )
                 case .waiting:
                     BattleWaitingSection(
@@ -69,23 +70,6 @@ struct BattleView: View {
         }
     }
 
-    /// ソロバトルを開始する（モンスター2体以上の存在チェック付き）
-    private func startSoloBattle() {
-        soloErrorMessage = nil
-        do {
-            let descriptor = FetchDescriptor<Monster>()
-            let count = try modelContext.fetchCount(descriptor)
-            guard count >= 2 else {
-                soloErrorMessage = "モンスターが2体以上必要です。先にスキャンしてください"
-                return
-            }
-            let vm = SoloBattleViewModel(modelContext: modelContext)
-            soloBattleVM = vm
-            matchingVM.phase = .soloBattling
-        } catch {
-            soloErrorMessage = "モンスターの読み込みに失敗しました"
-        }
-    }
 }
 
 // MARK: - 初期状態

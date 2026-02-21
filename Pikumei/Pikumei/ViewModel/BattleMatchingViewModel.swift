@@ -8,6 +8,7 @@
 import Combine
 import Foundation
 import Supabase
+import SwiftData
 
 @MainActor
 class BattleMatchingViewModel: ObservableObject {
@@ -28,10 +29,32 @@ class BattleMatchingViewModel: ObservableObject {
 
     @Published var phase: MatchingPhase = .idle
     @Published var battleId: UUID?
+    @Published var soloErrorMessage: String?
 
     private let client = SupabaseClientProvider.shared
     private var channel: RealtimeChannelV2?
     private var subscription: RealtimeSubscription?
+
+    // MARK: - ソロバトル開始
+
+    /// モンスター2体以上の存在チェックをしてソロバトル用VMを返す
+    func startSoloBattle(modelContext: ModelContext) -> SoloBattleViewModel? {
+        soloErrorMessage = nil
+        do {
+            let descriptor = FetchDescriptor<Monster>()
+            let count = try modelContext.fetchCount(descriptor)
+            guard count >= 2 else {
+                soloErrorMessage = "モンスターが2体以上必要です。先にスキャンしてください"
+                return nil
+            }
+            let vm = SoloBattleViewModel(modelContext: modelContext)
+            phase = .soloBattling
+            return vm
+        } catch {
+            soloErrorMessage = "モンスターの読み込みに失敗しました"
+            return nil
+        }
+    }
 
     // MARK: - バトル作成（端末A用）
 
