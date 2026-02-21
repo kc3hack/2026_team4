@@ -125,6 +125,7 @@ class SoloBattleViewModel: BattleViewModel {
         if hit {
             SoundPlayerComponent.shared.play(chosen.sound)
             showAttackEffect(attack: chosen, target: .opponent)
+            parformDamageAnimation(target: .opponent)
             // メイン技（powerRate 1.0）は特攻、サブ技は攻撃を使用
             let attackStat = chosen.powerRate >= 1.0 ? myStats.specialAttack : myStats.attack
             let defStat = opponentStats.specialDefense
@@ -214,6 +215,7 @@ class SoloBattleViewModel: BattleViewModel {
         if hit {
             SoundPlayerComponent.shared.play(chosen.sound)
             showAttackEffect(attack: chosen, target: .me)
+            parformDamageAnimation(target: .me)
             let attackStat = chosen.powerRate >= 1.0 ? opponentStats.specialAttack : opponentStats.attack
             let defStat = myStats.specialDefense
             let rawDamage = Double(attackStat) * chosen.powerRate * multiplier

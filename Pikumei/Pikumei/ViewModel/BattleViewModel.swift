@@ -32,6 +32,8 @@ class BattleViewModel: ObservableObject {
     @Published var damageToOpponent: Int?  // 相手へのダメージ（0 = MISS）
     @Published var damageToMe: Int?  // 自分へのダメージ（0 = MISS）
     @Published var turnTimeRemaining: Int = 0  // ターン制限時間の残り秒数
+    @Published var myBlinkTrigger: Bool = false
+    @Published var opponentBlinkTrigger: Bool = false
 
     let battleId: UUID
     private var isPlayer1 = false
@@ -191,6 +193,14 @@ class BattleViewModel: ObservableObject {
             }
         }
     }
+    
+    // ダメージを受けたモンスターにアニメーションを適用する
+    func parformDamageAnimation(target: AttackTarget) {
+        switch target {
+        case .me: myBlinkTrigger.toggle()
+        case .opponent: opponentBlinkTrigger.toggle()
+        }
+    }
 
     // MARK: - 攻撃
 
@@ -220,6 +230,7 @@ class BattleViewModel: ObservableObject {
             // ヒット時のみ攻撃エフェクト・効果音を再生
             SoundPlayerComponent.shared.play(chosen.sound)
             showAttackEffect(attack: chosen, target: .opponent)
+            parformDamageAnimation(target: .opponent)
             // メイン技（powerRate 1.0）は特攻、サブ技は攻撃を使用
             let attackStat = chosen.powerRate >= 1.0 ? myStats.specialAttack : myStats.attack
             let defStat = opponentStats.specialDefense

@@ -8,7 +8,7 @@ import SwiftUI
 /// バトル中の画面コンポーネント
 struct BattlingComponent: View {
     @ObservedObject var viewModel: BattleViewModel
-
+    
     var body: some View {
         VStack(spacing: 15) {
             // 相手側 — 右寄せ・小さめ（遠近感）
@@ -20,7 +20,8 @@ struct BattlingComponent: View {
                     currentHp: viewModel.opponentHp,
                     maxHp: viewModel.opponentStats?.hp ?? 1,
                     type: viewModel.opponentLabel,
-                    size: 120
+                    size: 120,
+                    blinkTrigger: viewModel.opponentBlinkTrigger
                 )
                 .overlay {
                     if let gif = viewModel.effectOnOpponent {
@@ -31,7 +32,7 @@ struct BattlingComponent: View {
                 }
                 .overlay { DamageLabelComponent(damage: viewModel.damageToOpponent) }
             }
-
+            
             // 自分側 — 左寄せ・大きめ（手前）
             HStack {
                 BattleMonsterHUDComponent(
@@ -40,7 +41,8 @@ struct BattlingComponent: View {
                     currentHp: viewModel.myHp,
                     maxHp: viewModel.myStats?.hp ?? 1,
                     type: viewModel.myLabel,
-                    size: 160
+                    size: 160,
+                    blinkTrigger: viewModel.myBlinkTrigger
                 )
                 .overlay {
                     if let gif = viewModel.effectOnMe {
@@ -52,7 +54,7 @@ struct BattlingComponent: View {
                 .overlay { DamageLabelComponent(damage: viewModel.damageToMe) }
                 Spacer()
             }
-
+            
             // バトルメッセージ（高さ固定でボタンが動かないようにする）
             Group {
                 if let message = viewModel.battleMessage {
@@ -70,7 +72,7 @@ struct BattlingComponent: View {
             .background(.black.opacity(viewModel.battleMessage != nil ? 0.6 : 0))
             .cornerRadius(8)
             .animation(.easeInOut(duration: 0.3), value: viewModel.battleMessage)
-
+            
             // 攻撃ボタン
             HStack(spacing: 8) {
                 ForEach(viewModel.myAttacks.indices, id: \.self) { i in
@@ -86,7 +88,7 @@ struct BattlingComponent: View {
                     }
                 }
             }
-
+            
             // ターン情報（高さ固定でボタン位置がずれないようにする）
             Group {
                 if viewModel.isMyTurn && viewModel.turnTimeRemaining > 0 {
@@ -113,7 +115,7 @@ struct BattlingComponent: View {
 /// HUD 上にフローティング表示するダメージラベル
 struct DamageLabelComponent: View {
     let damage: Int?
-
+    
     var body: some View {
         Group {
             if let damage {
@@ -127,4 +129,23 @@ struct DamageLabelComponent: View {
         }
         .animation(.easeOut(duration: 0.15), value: damage)
     }
+}
+
+// MARK - Preview
+
+#Preview {
+    @Previewable @ObservedObject var viewModel = BattleViewModel(battleId: UUID())
+    
+    BattlingComponent(viewModel: viewModel)
+        .overlay(
+            VStack {
+                Button("Damage opponent") {
+                    viewModel.parformDamageAnimation(target: .opponent)
+                }
+                
+                Button("Damage me") {
+                    viewModel.parformDamageAnimation(target: .me)
+                }
+            }
+        )
 }

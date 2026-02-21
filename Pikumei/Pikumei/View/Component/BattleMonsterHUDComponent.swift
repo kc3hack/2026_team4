@@ -14,6 +14,7 @@ struct BattleMonsterHUDComponent: View {
     let maxHp: Int
     let type: MonsterType?
     var size: CGFloat = 100
+    var blinkTrigger: Bool = false
 
     var body: some View {
         VStack(spacing: 4) {
@@ -31,6 +32,7 @@ struct BattleMonsterHUDComponent: View {
                 }
             }
             .frame(width: size, height: size)
+            .blinkAnimation(trigger: blinkTrigger)
 
             // 名前
             Text(name)
@@ -75,23 +77,41 @@ struct BattleMonsterHUDComponent: View {
 }
 
 #Preview("大きめ（自分側）") {
-    BattleMonsterHUDComponent(
-        imageData: nil,
-        name: "テストメイティ",
-        currentHp: 80,
-        maxHp: 100,
-        type: .fire,
-        size: 110
-    )
+    @Previewable @State var trigger: Bool = false
+    
+    VStack(spacing: 20) {
+        BattleMonsterHUDComponent(
+            imageData: nil,
+            name: "テストメイティ",
+            currentHp: 80,
+            maxHp: 100,
+            type: .fire,
+            size: 110,
+            blinkTrigger: trigger
+        )
+        
+        Button("Blink") {
+            trigger.toggle()
+        }
+    }
 }
 
 #Preview("小さめ（相手側）") {
-    BattleMonsterHUDComponent(
-        imageData: nil,
-        name: "あいてメイティ",
-        currentHp: 45,
-        maxHp: 100,
-        type: .water,
-        size: 80
-    )
+    @Previewable @State var trigger: Bool = false
+    
+    VStack(spacing: 20) {
+        BattleMonsterHUDComponent(
+            imageData: nil,
+            name: "あいてメイティ",
+            currentHp: 45,
+            maxHp: 100,
+            type: .water,
+            size: 80,
+            blinkTrigger: trigger
+        )
+        
+        Button("Blink") {
+            trigger.toggle()
+        }
+    }
 }
