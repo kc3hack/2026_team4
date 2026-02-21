@@ -69,6 +69,7 @@ struct BattleView: View {
                         .ignoresSafeArea()
                 }
             }
+            .navigationTitle("バトル")
             .toolbar(
                 matchingVM.phase.isBattling ? .hidden : .visible,
                 for: .tabBar
