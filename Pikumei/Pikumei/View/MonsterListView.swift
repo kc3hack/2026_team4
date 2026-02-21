@@ -25,9 +25,9 @@ struct MonsterListView: View {
                         Image(systemName: "photo.on.rectangle.angled")
                             .font(.system(size: 48))
                             .foregroundStyle(.secondary)
-                        Text("モンスターがいません")
+                        Text("メイティがいません")
                             .font(.custom("RocknRollOne-Regular", size: 20))
-                        Text("スキャンしてモンスターを集めよう")
+                        Text("スキャンしてメイティを集めよう")
                             .font(.custom("DotGothic16-Regular", size: 15))
                             .foregroundStyle(.secondary)
                         Spacer()
@@ -72,7 +72,7 @@ struct MonsterListView: View {
                 .ignoresSafeArea()
             }
 
-            .navigationTitle("モンスター一覧")
+            .navigationTitle("メイティ一覧")
         }
     }
 }

@@ -44,14 +44,14 @@ class BattleMatchingViewModel: ObservableObject {
             let descriptor = FetchDescriptor<Monster>()
             let count = try modelContext.fetchCount(descriptor)
             guard count >= 2 else {
-                soloErrorMessage = "モンスターが2体以上必要です。先にスキャンしてください"
+                soloErrorMessage = "メイティが2体以上必要です。先にスキャンしてください"
                 return nil
             }
             let vm = SoloBattleViewModel(modelContext: modelContext)
             phase = .soloBattling
             return vm
         } catch {
-            soloErrorMessage = "モンスターの読み込みに失敗しました"
+            soloErrorMessage = "メイティの読み込みに失敗しました"
             return nil
         }
     }
@@ -287,7 +287,7 @@ enum MatchingError: LocalizedError {
     var errorDescription: String? {
         switch self {
         case .noMonsters:
-            return "モンスターがありません。先にスキャンしてアップロードしてください"
+            return "メイティがありません。先にスキャンしてアップロードしてください"
         }
     }
 }
