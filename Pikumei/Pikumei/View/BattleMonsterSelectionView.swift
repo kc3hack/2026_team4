@@ -49,12 +49,13 @@ struct BattleMonsterSelectionView: View {
                 }
             }
             .padding(8)
+            .padding(.bottom, 160)
         }
         .toolbarBackground(.visible, for: .tabBar)
         .overlay() {
             VStack() {
                 Spacer(minLength: 700)
-                
+
                 BlueButtonComponent(title: "決定") {
                     Task {
                         await selectionVM.confirmMonster()
@@ -63,8 +64,8 @@ struct BattleMonsterSelectionView: View {
                 }
                 .opacity(selectionVM.touched == nil ? 0.4 : 1.0)
                 .disabled(selectionVM.touched == nil)
-                
-                Spacer(minLength: .zero)
+
+                Spacer(minLength: 80)
             }
         }
     }
