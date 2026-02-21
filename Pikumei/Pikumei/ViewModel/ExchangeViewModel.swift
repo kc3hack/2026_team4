@@ -304,6 +304,13 @@ class ExchangeViewModel: ObservableObject {
                 supabaseId: opponentMonster.id,
                 name: opponentMonster.name
             )
+            // DB 側を先に確定してからローカルデータを変更する（DB 更新失敗時にローカルが不整合にならないようにする）
+            try await client
+                .from("exchanges")
+                .update(["status": "completed"])
+                .eq("id", value: exchangeId.uuidString)
+                .execute()
+
             context.insert(newMonster)
 
             // 渡したモンスターをローカルから削除
@@ -312,13 +319,6 @@ class ExchangeViewModel: ObservableObject {
             }
 
             try context.save()
-
-            // exchanges の status を completed に更新
-            try await client
-                .from("exchanges")
-                .update(["status": "completed"])
-                .eq("id", value: exchangeId.uuidString)
-                .execute()
 
             print("[Exchange] 交換完了")
             phase = .completed(newMonster)
