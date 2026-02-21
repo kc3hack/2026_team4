@@ -19,6 +19,10 @@ enum Sound: String {
 
     // UI効果音
     case sceneTransition = "bamentenkan"
+    
+    //バトル勝利/敗北時の効果音
+    case victory = "victory_sound"
+    case defeat = "defeat_sound"
 }
 
 extension BattleAttack {

@@ -98,7 +98,7 @@ class BattleViewModel: ObservableObject {
 
             let myMonster: MonsterLabelRow = try await client
                 .from("monsters")
-                .select("id, classification_label, classification_confidence, name, thumbnail")
+                .select("id, classification_label, classification_confidence, name, thumbnail, fused_hp, fused_attack, fused_special_attack, fused_special_defense")
                 .eq("id", value: myMonsterId.uuidString)
                 .single()
                 .execute()
@@ -106,15 +106,15 @@ class BattleViewModel: ObservableObject {
 
             let oppMonster: MonsterLabelRow = try await client
                 .from("monsters")
-                .select("id, classification_label, classification_confidence, name, thumbnail")
+                .select("id, classification_label, classification_confidence, name, thumbnail, fused_hp, fused_attack, fused_special_attack, fused_special_defense")
                 .eq("id", value: oppMonsterId.uuidString)
                 .single()
                 .execute()
                 .value
 
-            // BattleStats を算出
-            let my = BattleStatsGenerator.generate(label: myMonster.classificationLabel, confidence: myMonster.classificationConfidence ?? 0.85)
-            let opp = BattleStatsGenerator.generate(label: oppMonster.classificationLabel, confidence: oppMonster.classificationConfidence ?? 0.85)
+            // BattleStats を算出（合体モンスターは合体ステータスを使用）
+            let my = myMonster.battleStats
+            let opp = oppMonster.battleStats
 
             myStats = my
             opponentStats = opp

@@ -72,6 +72,7 @@ struct VictoryComponent: View {
         }
         .onAppear {
             startWinAnimation()
+            SoundPlayerComponent.shared.play(.victory)
         }
     }
     

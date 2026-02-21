@@ -43,15 +43,9 @@ class SoloBattleViewModel: BattleViewModel {
             let myType = myMonster.classificationLabel ?? .fire
             let cpuType = cpuMonster.classificationLabel ?? .fire
 
-            // ステータス算出
-            let my = BattleStatsGenerator.generate(
-                label: myMonster.classificationLabel,
-                confidence: myMonster.classificationConfidence ?? 0.85
-            )
-            let opp = BattleStatsGenerator.generate(
-                label: cpuMonster.classificationLabel,
-                confidence: cpuMonster.classificationConfidence ?? 0.85
-            )
+            // ステータス算出（合体モンスターは合体ステータスを使用）
+            let my = myMonster.battleStats
+            let opp = cpuMonster.battleStats
 
             myStats = my
             opponentStats = opp

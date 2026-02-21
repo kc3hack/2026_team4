@@ -24,6 +24,13 @@ jobs:
         with:
           xcode-version: latest-stable
 
+      - name: Cache SPM packages
+        uses: actions/cache@v4
+        with:
+          path: Pikumei/SourcePackages
+          key: spm-${{ hashFiles('Pikumei/Pikumei.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved') }}
+          restore-keys: spm-
+
       - name: Generate dummy Secrets.swift
         run: |
           cat > Pikumei/Secrets.swift << 'EOF'
@@ -43,4 +50,9 @@ jobs:
           xcodebuild test \
             -scheme Pikumei \
             -destination 'platform=iOS Simulator,name=iPhone 16' \
+            -only-testing:PikumeiTests \
+            -clonedSourcePackagesDirPath SourcePackages \
+            -skipPackagePluginValidation \
+            CODE_SIGNING_ALLOWED=NO \
+            COMPILER_INDEX_STORE_ENABLE=NO \
             2>&1 | tee build.log | tail -50
