@@ -59,12 +59,14 @@ struct ExchangeView: View {
                 }
             }
             .padding()
-            .background(
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .background {
                 Image("back_gray")
                     .resizable()
                     .scaledToFill()
                     .ignoresSafeArea()
-            )
+            }
+            .toolbarBackground(.hidden, for: .navigationBar)
             .navigationTitle("こうかん")
             .onAppear {
                 viewModel.setModelContext(modelContext)
@@ -90,28 +92,48 @@ private struct ExchangeSelectSection: View {
 
     var body: some View {
         if monsters.isEmpty {
-            ContentUnavailableView(
-                "交換できるモンスターがいません",
-                systemImage: "arrow.triangle.2.circlepath",
-                description: Text("スキャンしてアップロードしたモンスターが必要です")
-            )
+            VStack(spacing: 16) {
+                Spacer()
+                Image(systemName: "arrow.triangle.2.circlepath")
+                    .font(.system(size: 48))
+                    .foregroundStyle(.secondary)
+                Text("交換できるモンスターがいません")
+                    .font(.custom("RocknRollOne-Regular", size: 20))
+                Text("スキャンしてアップロードした\nモンスターが必要です")
+                    .font(.custom("DotGothic16-Regular", size: 15))
+                    .foregroundStyle(.secondary)
+                    .multilineTextAlignment(.center)
+                Spacer()
+            }
         } else {
             VStack(spacing: 12) {
                 Text("交換に出すモンスターを選んでください")
                     .font(.custom("DotGothic16-Regular", size: 17))
 
                 ScrollView {
-                    LazyVGrid(columns: columns, spacing: 12) {
-                        ForEach(monsters) { monster in
-                            Button {
-                                onSelect(monster)
-                            } label: {
-                                MonsterCardComponent(
-                                    monster: monster,
-                                    stats: statsFor(monster)
-                                )
+                    VStack(spacing: 16) {
+                        ForEach(MonsterType.allCases, id: \.self) { type in
+                            let filtered = monsters.filter { $0.classificationLabel == type }
+                            if !filtered.isEmpty {
+                                Section {
+                                    LazyVGrid(columns: columns, spacing: 12) {
+                                        ForEach(filtered) { monster in
+                                            Button {
+                                                onSelect(monster)
+                                            } label: {
+                                                MonsterCardComponent(
+                                                    monster: monster,
+                                                    stats: statsFor(monster)
+                                                )
+                                            }
+                                            .buttonStyle(.plain)
+                                        }
+                                    }
+                                } header: {
+                                    TypeLabelComponent(type: type, text: "\(type.displayName)タイプ", iconSize: 22, fontSize: 16)
+                                        .frame(maxWidth: .infinity, alignment: .leading)
+                                }
                             }
-                            .buttonStyle(.plain)
                         }
                     }
                 }
