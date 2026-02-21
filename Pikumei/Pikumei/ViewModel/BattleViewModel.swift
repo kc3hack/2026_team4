@@ -199,8 +199,6 @@ class BattleViewModel: ObservableObject {
         isMyTurn = false
 
         let chosen = myAttacks[index]
-        SoundPlayerComponent.shared.play(chosen.sound)
-        showAttackEffect(attack: chosen, target: .opponent)
         let multiplier = chosen.type.effectiveness(against: opponentLabel)
 
         // PP 消費
@@ -212,6 +210,9 @@ class BattleViewModel: ObservableObject {
 
         let damage: Int
         if hit {
+            // ヒット時のみ攻撃エフェクト・効果音を再生
+            SoundPlayerComponent.shared.play(chosen.sound)
+            showAttackEffect(attack: chosen, target: .opponent)
             // メイン技（powerRate 1.0）は特攻、サブ技は攻撃を使用
             let attackStat = chosen.powerRate >= 1.0 ? myStats.specialAttack : myStats.attack
             let defStat = opponentStats.specialDefense
@@ -223,6 +224,8 @@ class BattleViewModel: ObservableObject {
             if multiplier > 1.0 { battleLog.append("こうかはばつぐんだ！") }
             else if multiplier < 1.0 { battleLog.append("こうかはいまひとつ...") }
         } else {
+            // ミス時はGIFエフェクトなしでミス効果音のみ再生
+            SoundPlayerComponent.shared.play(.miss)
             damage = 0
             damageToOpponent = 0  // 0 = MISS 表示用
             battleLog.append("\(chosen.name)攻撃！ ...しかし外れた！")
@@ -377,13 +380,12 @@ class BattleViewModel: ObservableObject {
         let opponentAttack = opponentLabel.attacks.first { $0.type == attackType }
         let attackName = opponentAttack?.name ?? "???"
 
-        // 相手の技の効果音・エフェクトを再生
-        SoundPlayerComponent.shared.play(opponentAttack?.sound ?? .panch)
-        if let opponentAttack {
-            showAttackEffect(attack: opponentAttack, target: .me)
-        }
-
         if hit {
+            // ヒット時のみ攻撃エフェクト・効果音を再生
+            SoundPlayerComponent.shared.play(opponentAttack?.sound ?? .panch)
+            if let opponentAttack {
+                showAttackEffect(attack: opponentAttack, target: .me)
+            }
             let actualDamage: Int
             if let receivedDamage, receivedDamage > 0 {
                 // 送信側が計算したダメージ値を使用
@@ -405,6 +407,8 @@ class BattleViewModel: ObservableObject {
             if multiplier > 1.0 { battleLog.append("こうかはばつぐんだ！") }
             else if multiplier < 1.0 { battleLog.append("こうかはいまひとつ...") }
         } else {
+            // ミス時はGIFエフェクトなしでミス効果音のみ再生
+            SoundPlayerComponent.shared.play(.miss)
             damageToMe = 0  // 0 = MISS 表示用
             battleLog.append("\(attackName)攻撃！ ...しかし外れた！")
         }
