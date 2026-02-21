@@ -64,6 +64,7 @@ struct DefeatComponent: View {
         }
         .onAppear {
             startLoseAnimation()
+            SoundPlayerComponent.shared.play(.defeat)
         }
     }
     
