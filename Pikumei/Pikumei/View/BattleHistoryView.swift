@@ -12,7 +12,7 @@ import Charts
 struct BattleHistoryView: View {
     @Query(sort: \BattleHistory.battleDate, order: .reverse)
     private var histories: [BattleHistory]
-
+    
     var body: some View {
         Group {
             if histories.isEmpty {
@@ -24,10 +24,13 @@ struct BattleHistoryView: View {
             } else {
                 ScrollView {
                     VStack(spacing: 20) {
+                        // 【変更点】履歴リストを一番上に配置しました
+                        historyListSection
+                        
+                        // 統計・グラフセクションを下に配置
                         summarySection
                         winRateChartSection
                         typeMatchupChartSection
-                        historyListSection
                     }
                     .padding()
                 }
@@ -41,9 +44,34 @@ struct BattleHistoryView: View {
                 .ignoresSafeArea()
         )
     }
-
+    
+    // MARK: - バトル履歴リスト (一番上に表示)
+    
+    private var historyListSection: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text("最新の履歴")
+                .font(.custom("RocknRollOne-Regular", size: 16))
+                .foregroundStyle(Color.pikumeiNavy)
+            
+            LazyVStack(spacing: 0) {
+                ForEach(histories) { history in
+                    BattleHistoryRowComponent(history: history)
+                    // 最後の要素以外に区切り線を表示
+                    if history.id != histories.last?.id {
+                        Divider()
+                    }
+                }
+            }
+        }
+        .padding()
+        .background(
+            RoundedRectangle(cornerRadius: 12)
+                .fill(.white.opacity(0.85))
+        )
+    }
+    
     // MARK: - 戦績サマリー
-
+    
     private var summarySection: some View {
         let summary = BattleHistoryViewModel.summary(from: histories)
         return HStack(spacing: 0) {
@@ -58,23 +86,23 @@ struct BattleHistoryView: View {
                 .fill(.white.opacity(0.85))
         )
     }
-
+    
     // MARK: - 勝率推移グラフ
-
+    
     private var winRateChartSection: some View {
         let trend = BattleHistoryViewModel.winRateTrend(from: histories)
         return VStack(alignment: .leading, spacing: 8) {
             Text("勝率推移")
                 .font(.custom("RocknRollOne-Regular", size: 16))
                 .foregroundStyle(Color.pikumeiNavy)
-
+            
             Chart(trend) { point in
                 LineMark(
                     x: .value("バトル", point.id),
                     y: .value("勝率", point.winRate * 100)
                 )
                 .foregroundStyle(.orange)
-
+                
                 PointMark(
                     x: .value("バトル", point.id),
                     y: .value("勝率", point.winRate * 100)
@@ -102,16 +130,16 @@ struct BattleHistoryView: View {
                 .fill(.white.opacity(0.85))
         )
     }
-
+    
     // MARK: - タイプ別戦績グラフ
-
+    
     private var typeMatchupChartSection: some View {
         let stats = BattleHistoryViewModel.typeMatchupStats(from: histories)
         return VStack(alignment: .leading, spacing: 8) {
             Text("タイプ別戦績")
                 .font(.custom("RocknRollOne-Regular", size: 16))
                 .foregroundStyle(Color.pikumeiNavy)
-
+            
             Chart(stats) { stat in
                 BarMark(
                     x: .value("タイプ", stat.opponentType.displayName),
@@ -131,30 +159,6 @@ struct BattleHistoryView: View {
                 .fill(.white.opacity(0.85))
         )
     }
-
-    // MARK: - バトル履歴リスト
-
-    private var historyListSection: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Text("履歴")
-                .font(.custom("RocknRollOne-Regular", size: 16))
-                .foregroundStyle(Color.pikumeiNavy)
-
-            LazyVStack(spacing: 0) {
-                ForEach(histories) { history in
-                    BattleHistoryRowComponent(history: history)
-                    if history.id != histories.last?.id {
-                        Divider()
-                    }
-                }
-            }
-        }
-        .padding()
-        .background(
-            RoundedRectangle(cornerRadius: 12)
-                .fill(.white.opacity(0.85))
-        )
-    }
 }
 
 // MARK: - サマリーアイテム
@@ -163,7 +167,7 @@ private struct SummaryItem: View {
     let title: String
     let value: String
     let color: Color
-
+    
     var body: some View {
         VStack(spacing: 4) {
             Text(value)
