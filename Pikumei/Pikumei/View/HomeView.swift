@@ -1,7 +1,10 @@
 import SwiftUI
 
 struct HomeView: View {
+    @State private var showFusion = false
+
     var body: some View {
+        NavigationStack {
         ZStack {
             Image("back_butai")
                 .resizable()
@@ -37,7 +40,16 @@ struct HomeView: View {
                     SoundPlayerComponent.shared.play(.honou)
                 }
                 .buttonStyle(.borderedProminent)
+
+                // 合体ボタン
+                BlueButtonComponent(title: "合体") {
+                    showFusion = true
+                }
             }
         }
+        .navigationDestination(isPresented: $showFusion) {
+            FusionView()
+        }
+        } // NavigationStack
     }
 }
