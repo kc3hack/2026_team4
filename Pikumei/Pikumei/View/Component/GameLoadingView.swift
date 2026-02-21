@@ -47,7 +47,7 @@ struct GameLoadingView: View {
             }
         }
         .onAppear {
-            selectedTip = tips.randomElement() ?? "冒険の準備中..."
+            selectedTip = tips.randomElement() ?? "準備中..."
         }
     }
     
@@ -61,8 +61,11 @@ struct GameLoadingView: View {
                     .foregroundColor(.white)
                     .padding(.horizontal, 10)
                     .padding(.vertical, 4)
-                    .background(Color.blue) // アクセントカラー
+                    .background(
+                        Color.blue
+                    )
                     .cornerRadius(20)
+                
                 Spacer()
             }
             
@@ -78,7 +81,12 @@ struct GameLoadingView: View {
         .background(
             RoundedRectangle(cornerRadius: 16)
                 .fill(Color.white)
-                .shadow(color: .black.opacity(0.1), radius: 10, x: 0, y: 5)
+                .shadow(
+                    color: .black.opacity(0.1),
+                    radius: 10,
+                    x: 0,
+                    y: 5
+                )
         )
     }
 }
