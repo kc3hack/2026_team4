@@ -35,24 +35,24 @@ class MonsterFusionViewModel {
 
     // MARK: - 合体可能なモンスターの取得
 
-    /// 自分のモンスター（交換産でも合体済みでもない）
+    /// 自分のモンスター（交換産でないもの、合体済み含む）
     func fetchOwnMonsters() -> [Monster] {
         guard let context = modelContext else { return [] }
         let descriptor = FetchDescriptor<Monster>(
             sortBy: [SortDescriptor(\.createdAt, order: .reverse)]
         )
         let all = (try? context.fetch(descriptor)) ?? []
-        return all.filter { !$0.isExchanged && !$0.isFused }
+        return all.filter { !$0.isExchanged }
     }
 
-    /// 交換で手に入れたモンスター（合体済みでない）
+    /// 交換で手に入れたモンスター（合体済み含む）
     func fetchExchangedMonsters() -> [Monster] {
         guard let context = modelContext else { return [] }
         let descriptor = FetchDescriptor<Monster>(
             sortBy: [SortDescriptor(\.createdAt, order: .reverse)]
         )
         let all = (try? context.fetch(descriptor)) ?? []
-        return all.filter { $0.isExchanged && !$0.isFused }
+        return all.filter { $0.isExchanged }
     }
 
     // MARK: - 選択
