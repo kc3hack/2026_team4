@@ -74,6 +74,18 @@ struct MonsterCardComponent: View {
             RoundedRectangle(cornerRadius: 14)
                 .stroke(monsterType.color.opacity(0.3), lineWidth: 1)
         )
+        .overlay(alignment: .topLeading) {
+            if monster.isExchanged {
+                Text("交換")
+                    .font(.custom("DotGothic16-Regular", size: 10))
+                    .foregroundStyle(.white)
+                    .padding(.horizontal, 6)
+                    .padding(.vertical, 2)
+                    .background(monsterType.color.opacity(0.8))
+                    .clipShape(RoundedRectangle(cornerRadius: 6))
+                    .padding(6)
+            }
+        }
         .shadow(color: .black.opacity(0.1), radius: 4, x: 0, y: 2)
     }
 
@@ -103,6 +115,20 @@ struct MonsterCardComponent: View {
         name: "ほのおくん"
     )
     let stats = BattleStats(hp: 180, attack: 120, specialAttack: 90, specialDefense: 70)
+
+    MonsterCardComponent(monster: monster, stats: stats)
+        .frame(width: 160)
+        .padding()
+}
+
+#Preview("交換モンスター") {
+    let monster = Monster(
+        imageData: UIImage(systemName: "arrow.triangle.2.circlepath")!.pngData()!,
+        classificationLabel: .water,
+        name: "みずちゃん",
+        isExchanged: true
+    )
+    let stats = BattleStats(hp: 160, attack: 100, specialAttack: 110, specialDefense: 80)
 
     MonsterCardComponent(monster: monster, stats: stats)
         .frame(width: 160)
