@@ -92,7 +92,7 @@ struct MonsterDetailView: View {
             )
             .ignoresSafeArea()
         )
-        .navigationTitle(monster.name ?? "モンスター詳細")
+        .navigationTitle(monster.name ?? "メイティ詳細")
         .navigationBarTitleDisplayMode(.inline)
     }
 

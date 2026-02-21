@@ -6,9 +6,11 @@
 //
 
 import SwiftUI
+import SwiftData
 
 struct BattleGameView: View {
     @StateObject private var viewModel: BattleViewModel
+    @Environment(\.modelContext) private var modelContext
     var onFinish: () -> Void
 
     // バトル背景をランダムで選択（画面生成時に固定）
@@ -22,6 +24,13 @@ struct BattleGameView: View {
 
     init(battleId: UUID, onFinish: @escaping () -> Void) {
         _viewModel = StateObject(wrappedValue: BattleViewModel(battleId: battleId))
+        self.onFinish = onFinish
+        self.backgroundImage = Self.battleBackgrounds.randomElement()!
+    }
+
+    /// ソロバトル用: 生成済みの ViewModel を直接受け取る
+    init(viewModel: BattleViewModel, onFinish: @escaping () -> Void) {
+        _viewModel = StateObject(wrappedValue: viewModel)
         self.onFinish = onFinish
         self.backgroundImage = Self.battleBackgrounds.randomElement()!
     }
@@ -41,29 +50,25 @@ struct BattleGameView: View {
                 case .battling:
                     BattlingComponent(viewModel: viewModel)
                 case .won:
-                    VictoryComponent(battleLog: viewModel.battleLog) {
+                    VictoryComponent {
+                        saveBattleHistory(isWin: true)
                         viewModel.cleanup()
                         onFinish()
                     }
                 case .lost:
-                    DefeatComponent(battleLog: viewModel.battleLog) {
+                    DefeatComponent {
+                        saveBattleHistory(isWin: false)
                         viewModel.cleanup()
                         onFinish()
                     }
                 case .connectionError:
-                    ConnectionErrorComponent(battleLog: viewModel.battleLog) {
+                    ConnectionErrorComponent {
                         viewModel.cleanup()
                         onFinish()
                     }
                 }
             }
 
-            // 攻撃エフェクト
-            if let gif = viewModel.attackEffectGif {
-                GifImageComponent(name: gif, repeatCount: 1, speed: 3.0)
-                    .frame(width: 80, height: 80)
-                    .allowsHitTesting(false)
-            }
         }
         .task {
             await viewModel.prepare()
@@ -71,5 +76,20 @@ struct BattleGameView: View {
         .onDisappear {
             viewModel.cleanup()
         }
+    }
+
+    /// バトル結果をSwiftDataに保存する
+    private func saveBattleHistory(isWin: Bool) {
+        guard let myType = viewModel.myLabel,
+              let opponentType = viewModel.opponentLabel else { return }
+        let store = BattleHistoryStore(modelContext: modelContext)
+        store.save(
+            isWin: isWin,
+            myType: myType,
+            myName: viewModel.myName,
+            opponentType: opponentType,
+            opponentName: viewModel.opponentName,
+            opponentThumbnail: viewModel.opponentThumbnail
+        )
     }
 }
