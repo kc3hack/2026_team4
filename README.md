@@ -48,12 +48,17 @@ Pikumeiにおける「人との関わり」は目的ではなく、
 | **コレクション管理** | タイプ別グリッド表示・レーダーチャートによるステータス可視化・バトル履歴 |
 
 ## 操作説明・デモ動画
+### メイティ召喚
+https://github.com/user-attachments/assets/46a39ad0-3b20-456b-b41f-63ec9ba68dbd
+
 ### バトル
-https://github.com/user-attachments/assets/597ca89a-cc8a-4338-ba25-a3d887e73ef1
+https://github.com/user-attachments/assets/281a0c54-439e-4b9a-9e7a-b948fe0bf839
+
 ### メイティ交換
 https://github.com/user-attachments/assets/568dfd81-996c-4126-918d-511d661b6c45
 
 ### メイティ合体
+
 
 ## 注力したポイント
 ### アイデア面
