@@ -56,7 +56,7 @@ https://github.com/user-attachments/assets/281a0c54-439e-4b9a-9e7a-b948fe0bf839
 https://github.com/user-attachments/assets/568dfd81-996c-4126-918d-511d661b6c45
 
 ### メイティ合体
-
+https://github.com/user-attachments/assets/4274ad8c-74d8-4005-aa8c-e4ea439ad6c7
 
 ## 注力したポイント
 ### アイデア面
