@@ -2,8 +2,7 @@
 
 ----
 
-# プロダクト名 
-**Pikumei(ピクメイ)**
+# Pikumei(ぴくめい) 
 Pikumei（ピクメイ） は、スマホのカメラで身の回りのモノを撮影すると、それが "メイティ"（相棒）になる iOS ゲームアプリ。撮影した写真から被写体を自動で切り抜き、CoreML で 7 タイプに分類。生まれたモンスターで **リアルタイム対戦・交換・合体** を楽しめる
 <img width="1920" height="1080" alt="ぴくめい" src="https://github.com/user-attachments/assets/43de332a-ec4c-4b8a-bf04-3dd94118994c" />
 
