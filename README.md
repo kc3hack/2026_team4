@@ -2,11 +2,9 @@
 
 ----
 
-# Pikumei(ぴくめい) 
+## Pikumei(ぴくめい) 
+### チーム4:KSD(京都産業大学)
 <img width="1920" height="1080" alt="ぴくめい" src="https://github.com/user-attachments/assets/43de332a-ec4c-4b8a-bf04-3dd94118994c" />
-
-## チーム名
-チーム4 KSD(京都産業大学)
 
 ## 背景・課題・解決されること
 ### 背景
